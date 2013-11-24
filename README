@@ -1,0 +1,30 @@
+This directory contains all necessary scripts and data to start a genome browser
+instance for the CT genome.
+
+The framework has three components:
+
+- ctbrowser/ : genome browser HTML application. Is all based on js code that runs in the
+  client and calls web-services (WS) to fetch genome data.
+
+- start_server.py: a little python script that reads all genebank information
+  and serves data as a web service. The script starts a minimal web server that
+  should be started listining on a different port than apache, ie. 9000.
+  
+  If the script is call without arguments, cached data is used. If changes are
+  present in the GBF, fasta or annotation files, the --refresh option should be
+  passed. This will produce a full scan of the files and an upgrade of all
+  databases and data sources (search engine and blast DB included). 
+
+- sphinx/: search engine providing searching functionality to the genome
+  browser. It uses the sphinx system to index all information, and it requires
+  the searchd deamon to be running. However, this should be transparent, as the
+  stop/start and upgrading options are all managed by the start_server.py
+  script. 
+
+  Note that this application may need to be recompiled if it is planned to be
+  executed in a different machine:
+      cd sphinx
+      ./configure --without-mysql 
+      ./make
+
+

@@ -1,0 +1,306 @@
+<!DOCTYPE HTML>
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <title>Genome Viewer Demo</title>
+        <!-- CSS from vendors -->
+        <link type="text/css" rel="stylesheet" href="vendor/jquery.qtip.min.css" />
+        <link type="text/css" rel="stylesheet" href="vendor/ChemDoodleWeb.css" />
+        <link type="text/css" rel="stylesheet" href="vendor/bootstrap-scoped-dist/css/bootstrap.min.css" />
+        <link type="text/css" rel="stylesheet" href="vendor/typeahead.js-bootstrap.css" />
+        <!-- CSS from Genome Viewer -->
+        <link type="text/css" rel="stylesheet" href="styles/css/style.css" />
+        <!-- JS from vendors -->
+        <script type="text/javascript" src="vendor/underscore-min.js"></script>
+        <script type="text/javascript" src="vendor/backbone-min.js"></script>
+        <script type="text/javascript" src="vendor/rawdeflate.js"></script>
+        <script type="text/javascript" src="vendor/jquery.min.js"></script>
+        <script type="text/javascript" src="vendor/bootstrap-scoped-dist/js/bootstrap.min.js"></script>
+        <script type="text/javascript" src="vendor/typeahead.min.js"></script>
+        <script type="text/javascript" src="vendor/jquery.qtip.min.js"></script>
+        <script type="text/javascript" src="vendor/jquery.cookie.js"></script>
+        <script type="text/javascript" src="vendor/jquery.sha1.js"></script>
+        <script type="text/javascript" src="vendor/purl.min.js"></script>
+        <script type="text/javascript" src="vendor/jquery.mousewheel.min.js"></script>
+        <script type="text/javascript" src="vendor/gl-matrix-min.js"></script>
+        <script type="text/javascript" src="vendor/ChemDoodleWeb.js"></script>
+        <!-- JS from Genome Viewer -->
+        <!-- Genome-viewer -->
+        <script type="text/javascript" src="gv-config.js"></script>
+        <script type="text/javascript" src="genome-viewer-1.0.2.js"></script>
+
+        <!-- ctbrowser custom-->
+        <script type="text/javascript" src="ct-js/ct-sequence-adapter.js"></script>
+        <script type="text/javascript" src="ct-js/embl-adapter.js"></script>
+        <!-- 
+        "scf7180000011816 with 1873 genes"
+        "scf7180000011820 with 911 genes"
+        "scf7180000011822 with 830 genes"
+        "scf7180000011806 with 734 genes"
+        "scf7180000011818 with 731 genes"
+        "scf7180000011814 with 580 genes"
+        "scf7180000011821 with 532 genes"
+        "scf7180000011815 with 503 genes"
+        "scf7180000011819 with 271 genes"
+        "scf7180000011812 with 248 genes"
+        "scf7180000011823 with 199 genes"
+        "scf7180000011801 with 48 genes"
+        "scf7180000011817 with 47 genes"
+        "rrn with 5 genes"
+        "scf7180000011813 with 2 genes"
+        "scf7180000011802 with 1 genes"
+        "scf7180000011824 with 0 genes"
+        "scf7180000011808 with 0 genes"
+        "scf7180000011809 with 0 genes"
+        "scf7180000011807 with 0 genes"
+        "mito with 0 genes"
+        "scf7180000011810 with 0 genes" 
+        -->
+        <script type="text/javascript">
+            CELLBASE_HOST = ""
+            CT_HOST = "http://ctbrowser.embl.de";
+
+            var genomeViewer = null;
+            var run = function() {
+                /* region and species configuration */
+                var region = new Region({
+                    chromosome: "scf7180000011816",
+                    start: 379031,
+                    end: 404027, 
+                });
+                var availableSpecies= {
+                    "text": "Species",
+                            "items": [{
+                        "text": "Chaetomium",
+                        "items": [{
+                            "text": "Chaetomium thermophilum",
+                            "assembly": "EMBL v1.0",
+                            "region": {
+                                  "chromosome":"scf7180000011816",
+                                  "start": 379031,
+                                  "end": 404027,
+                            },
+                            "chromosomes": ["scf7180000011816",
+                                            "scf7180000011820",
+                                            "scf7180000011822",
+                                            "scf7180000011806",
+                                            "scf7180000011818",
+                                            "scf7180000011814",
+                                            "scf7180000011821",
+                                            "scf7180000011815",
+                                            "scf7180000011819",
+                                            "scf7180000011812",
+                                            "scf7180000011823",
+                                            "scf7180000011801",
+                                            "scf7180000011817",
+                                            "rrn",
+                                            "scf7180000011813",
+                                            "scf7180000011802",
+                                            "scf7180000011824",
+                                            "scf7180000011808",
+                                            "scf7180000011809",
+                                            "scf7180000011807",
+                                            "scf7180000011810",
+                                            "mito"],
+                            "url": "ct.bork.embl.de"
+                        }
+                        ]
+                    }
+                    ]
+                }
+                var species = availableSpecies.items[0].items[0];
+
+                genomeViewer = new GenomeViewer({
+                        targetId: 'application',
+                        region: region,
+                        availableSpecies: availableSpecies,
+                        species: species,
+                        sidePanel: true,
+                        autoRender: true,
+                        border: true,
+                        resizable: true,
+                        drawKaryotypePanel: false,
+                        drawChromosomePanel: false,
+                        karyotypePanelConfig: {
+                            collapsed: false,
+                            collapsible: true
+                        },
+                        chromosomePanelConfig: {
+                            collapsed: false,
+                            collapsible: true
+                        }
+                    }); //the div must exist
+
+                genomeViewer.draw();
+
+                tracks = [];
+
+           this.gccont = new FeatureTrack({
+                    targetId: null,
+                    id: 3,
+                    title: 'GC content',
+                    histogramZoom: 100,
+                    histogramMaxFreqValue: 1,
+                    transcriptZoom: 0,
+                    height: 100,
+                    visibleRange: {
+                        start: 0,
+                        end: 94,
+                    },
+                    featureTypes: FEATURE_TYPES,
+
+                    renderer: new GeneRenderer(),
+
+                    dataAdapter: new EmblAdapter({
+                        host: CT_HOST,
+                        resource: "gc_content",
+                        params: {
+                        },
+
+                        species: genomeViewer.species,
+                        cacheConfig: {
+                            chunkSize: 500000
+                        },
+                        filters: {},
+                        options: {},
+                    })
+                });
+
+                tracks.push(this.gccont);
+
+
+
+                this.sequence = new SequenceTrack({
+                    targetId: null,
+                    id: 1,
+                    //title: 'Sequence',
+                    histogramZoom: 0,
+                    transcriptZoom: 0,
+                    height: 20,
+                    visibleRange: {
+                        start: 94,
+                        end: 100
+                    },
+                    featureTypes: FEATURE_TYPES,
+
+                    renderer: new SequenceRenderer(),
+
+                    dataAdapter: new CtSequenceAdapter({
+                        host: CT_HOST,
+                        subCategory: "region",
+                        resource: "sequence",
+                        species: genomeViewer.species,
+                        featureCache: {
+                            gzip: true,
+                            chunkSize: 1000
+                        }
+                    })
+                });
+
+                tracks.push(this.sequence);
+
+                this.gene = new GeneTrack({
+                    targetId: null,
+                    id: 2,
+                    title: 'Genes (CDS, tRNA, rRNA, misc_RNA)',
+                    histogramZoom: 0,
+                    transcriptZoom: 40,
+                    histogramMaxFreqValue: 1,
+                    height: 400,
+                    visibleRange: {
+                        start: 1,
+                        end: 100
+                    },
+                    featureTypes: FEATURE_TYPES,
+
+                    renderer: new GeneRenderer(),
+
+                    dataAdapter: new EmblAdapter({
+                        host: CT_HOST,
+                        resource: "gene",
+                        params: {
+                            biotypes: 'CDS,tRNA,rRNA,misc_RNA'
+                        },
+
+                        species: genomeViewer.species,
+                        cacheConfig: {
+                            chunkSize: 500000
+                        },
+                        filters: {},
+                        options: {},
+                        featureConfig: FEATURE_CONFIG.tRNA
+                    })
+                });
+
+                tracks.push(this.gene);
+
+                var renderer = new FeatureRenderer('gene');
+                renderer.on({
+                    'feature:click': function(event) {
+                        console.log(event)
+                        new GeneInfoWidget(null, genomeViewer.species).draw(event);
+                    }
+                });
+                var geneOver = new FeatureTrack({
+                    targetId: null,
+                    id: 4,
+                    //title: 'Region overview',
+                    histogramZoom: 0,
+                    histogramMaxFreqValue: 1,
+                    labelZoom: 40,
+                    height: 150,
+                    visibleRange: {
+                        start: 0,
+                        end: 100
+                    },
+                    titleVisibility: 'hidden',
+                    featureTypes: FEATURE_TYPES,
+
+                    renderer: renderer,
+
+                    dataAdapter: new EmblAdapter({
+                        host: CT_HOST,
+                        resource: "gene",
+                        params: {
+                            exclude: 'transcripts',
+                        },
+                        species: genomeViewer.species,
+                        cacheConfig: {
+                            chunkSize: 500000
+                        }
+                    })
+                });
+                genomeViewer.addOverviewTrack(geneOver);
+
+                genomeViewer.addTrack(tracks);
+
+            };
+
+            $(document).ready(run);
+        </script>
+        <style type="text/css">
+            html, body {
+                /*height: 100%;*/
+                /*position:relative;*/
+            }
+            body {
+                /*overflow: hidden;*/
+                /*padding:50px;*/
+            }
+            #application {
+           width: 80%;
+           height: 100%;
+           /*overflow-y: auto;*/
+           /*overflow-x: hidden;*/
+           padding: 10px;
+            }
+        </style>
+    </head>
+
+    <body>
+        <div style=""></div>
+        <div id="application"></div>
+        <div style=""></div>
+    </body>
+
+</html>
