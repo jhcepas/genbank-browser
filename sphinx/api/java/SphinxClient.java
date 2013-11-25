@@ -1,5 +1,5 @@
 /*
- * $Id: SphinxClient.java 3701 2013-02-20 18:10:18Z deogar $
+ * $Id: SphinxClient.java 4097 2013-08-20 09:28:24Z kevg $
  *
  * Java version of Sphinx searchd client (Java API)
  *
@@ -160,7 +160,7 @@ public class SphinxClient
 
 		_offset	= 0;
 		_limit	= 20;
-		_mode	= SPH_MATCH_ALL;
+		_mode	= SPH_MATCH_EXTENDED2;
 		_sort	= SPH_SORT_RELEVANCE;
 		_sortby	= "";
 		_minId	= 0;
@@ -1519,5 +1519,5 @@ public class SphinxClient
 }
 
 /*
- * $Id: SphinxClient.java 3701 2013-02-20 18:10:18Z deogar $
+ * $Id: SphinxClient.java 4097 2013-08-20 09:28:24Z kevg $
  */

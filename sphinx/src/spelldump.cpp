@@ -1,5 +1,5 @@
 //
-// $Id: spelldump.cpp 3701 2013-02-20 18:10:18Z deogar $
+// $Id: spelldump.cpp 3870 2013-05-22 15:09:45Z shodan $
 //
 
 //
@@ -296,18 +296,14 @@ bool CISpellAffixRule::CheckSuffix ( const CSphString & sWord ) const
 		if ( m_sCondition.cstr()[iCondI]=='.' )
 		{
 			--iCondI;
-		}
-		else if ( m_sCondition.cstr()[iCondI]!=']' )
+		} else if ( m_sCondition.cstr()[iCondI]!=']' )
 		{
 			if ( m_sCondition.cstr()[iCondI]!=sWord.cstr()[i] )
 				return false;
-
 			--iCondI;
-
 		} else
 		{
 			int iRangeStart = -1;
-
 			for ( int j=iCondI; j>=0 && iRangeStart==-1; --j )
 				if ( m_sCondition.cstr()[j]=='[' )
 					iRangeStart = j;
@@ -318,12 +314,10 @@ bool CISpellAffixRule::CheckSuffix ( const CSphString & sWord ) const
 			{
 				if ( !IsInSet ( sWord.cstr () [i], m_sCondition.SubString ( iRangeStart + 1, iCondI - iRangeStart - 1 ).cstr () ) )
 					return false;
-
 				iCondI = iRangeStart - 1;
 			}
 		}
 	}
-
 	return true;
 }
 
@@ -1195,5 +1189,5 @@ int main ( int iArgs, char ** dArgs )
 }
 
 //
-// $Id: spelldump.cpp 3701 2013-02-20 18:10:18Z deogar $
+// $Id: spelldump.cpp 3870 2013-05-22 15:09:45Z shodan $
 //

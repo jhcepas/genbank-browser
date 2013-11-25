@@ -1,5 +1,5 @@
 //
-// $Id: sphinxstd.cpp 4048 2013-07-31 15:31:59Z kevg $
+// $Id: sphinxstd.cpp 4280 2013-10-29 12:32:43Z tomat $
 //
 
 //
@@ -444,6 +444,7 @@ void operator delete [] ( void * pPtr )						{ sphDebugDelete ( pPtr ); }
 
 //////////////////////////////////////////////////////////////////////////////
 // MEMORY STATISTICS
+//////////////////////////////////////////////////////////////////////////////
 
 /// TLS key of memory category stack
 SphThreadKey_t g_tTLSMemCategory;
@@ -862,13 +863,18 @@ CSphProcessSharedMutex::~CSphProcessSharedMutex()
 }
 #else
 CSphProcessSharedMutex::CSphProcessSharedMutex ( int )
-{}
+{
+	m_tLock.Init();
+}
+
 CSphProcessSharedMutex::~CSphProcessSharedMutex()
-{}
+{
+	m_tLock.Done();
+}
 #endif
 
 
-void CSphProcessSharedMutex::Lock () const
+void CSphProcessSharedMutex::Lock ()
 {
 #if !USE_WINDOWS
 #ifdef __FreeBSD__
@@ -878,11 +884,13 @@ void CSphProcessSharedMutex::Lock () const
 	if ( m_pMutex )
 		pthread_mutex_lock ( m_pMutex );
 #endif
+#else
+	m_tLock.Lock();
 #endif
 }
 
 
-void CSphProcessSharedMutex::Unlock () const
+void CSphProcessSharedMutex::Unlock ()
 {
 #if !USE_WINDOWS
 #ifdef __FreeBSD__
@@ -892,6 +900,8 @@ void CSphProcessSharedMutex::Unlock () const
 	if ( m_pMutex )
 		pthread_mutex_unlock ( m_pMutex );
 #endif
+#else
+	m_tLock.Unlock();
 #endif
 }
 
@@ -981,6 +991,13 @@ const char * CSphProcessSharedMutex::GetError() const
 // THREADING FUNCTIONS
 //////////////////////////////////////////////////////////////////////////
 
+// This is a working context for a thread wrapper. It wraps every thread to
+// store information about it's stack size, cleanup threads and something else.
+// This struct always should be allocated in the heap, cause wrapper need
+// to see it all the time and it frees it out of the heap by itself. Wrapper thread function
+// receives as an argument a pointer to ThreadCall_t with one function pointer to
+// a main thread function. Afterwards, thread can set up one or more cleanup functions
+// which will be executed by a wrapper in the linked list order after it dies.
 struct ThreadCall_t
 {
 	void			( *m_pCall )( void * pArg );
@@ -1004,7 +1021,12 @@ static SphThreadKey_t g_tMyThreadStack;
 
 SPH_THDFUNC sphThreadProcWrapper ( void * pArg )
 {
-	// this is the first local variable in the new thread. So, it's address is the top of the stack.
+	// This is the first local variable in the new thread. So, its address is the top of the stack.
+	// We need to know thread stack size for both expression and query evaluating engines.
+	// We store expressions as a linked tree of structs and execution is a calls of mutually
+	// recursive methods. Before executing we compute tree height and multiply it by a constant
+	// with experimentally measured value to check whether we have enough stack to execute current query.
+	// The check is not ideal and do not work for all compilers and compiler settings.
 	char	cTopOfMyStack;
 	assert ( sphThreadGet ( g_tThreadCleanupKey )==NULL );
 	assert ( sphThreadGet ( g_tMyThreadStack )==NULL );
@@ -1110,8 +1132,8 @@ void sphThreadDone ( int )
 
 bool sphThreadCreate ( SphThread_t * pThread, void (*fnThread)(void*), void * pArg, bool bDetached )
 {
-	// we can not merely put this on current stack
-	// as it might get destroyed before wrapper sees it
+	// we can not put this on current stack because wrapper need to see
+	// it all the time and it will destroy this data from heap by itself
 	ThreadCall_t * pCall = new ThreadCall_t;
 	pCall->m_pCall = fnThread;
 	pCall->m_pArg = pArg;
@@ -1167,7 +1189,10 @@ bool sphThreadJoin ( SphThread_t * pThread )
 #endif
 }
 
-
+// Adds a function call (a new task for a wrapper) to a linked list
+// of thread contexts. They will be executed one by one right after
+// the main thread ends its execution. This is a way for a wrapper
+// to free local resources allocated by its main thread.
 void sphThreadOnExit ( void (*fnCleanup)(void*), void * pArg )
 {
 	ThreadCall_t * pCleanup = new ThreadCall_t;
@@ -1221,10 +1246,7 @@ int64_t sphGetStackUsed()
 	if ( !pStackTop )
 		return 0;
 	int64_t iHeight = pStackTop - &cStack;
-	if ( iHeight>=0 )
-		return iHeight;
-	else
-		return -iHeight;
+	return ( iHeight>=0 ) ? iHeight : -iHeight;
 }
 
 void sphSetMyStackSize ( int iStackSize )
@@ -1393,9 +1415,8 @@ void CSphAutoEvent::SetEvent ()
 {
 	if ( !m_bInitialized )
 		return;
-// pthread_mutex_lock ( m_pMutex ); // locking is done from outside
-	pthread_cond_signal ( &m_tCond );
-// pthread_mutex_unlock ( m_pMutex );
+
+	pthread_cond_signal ( &m_tCond ); // locking is done from outside
 	m_bSent = true;
 }
 
@@ -1405,7 +1426,7 @@ bool CSphAutoEvent::WaitEvent ()
 		return true;
 	pthread_mutex_lock ( m_pMutex );
 	if ( !m_bSent )
-	pthread_cond_wait ( &m_tCond, m_pMutex );
+		pthread_cond_wait ( &m_tCond, m_pMutex );
 	m_bSent = false;
 	pthread_mutex_unlock ( m_pMutex );
 	return true;
@@ -1429,7 +1450,7 @@ CSphRwlock::CSphRwlock ()
 {}
 
 
-bool CSphRwlock::Init ()
+bool CSphRwlock::Init ( bool )
 {
 	assert ( !m_bInitialized );
 	assert ( !m_hWriteMutex && !m_hReadEvent && !m_iReaders );
@@ -1466,6 +1487,12 @@ bool CSphRwlock::Done ()
 	m_iReaders = 0;
 	m_bInitialized = false;
 	return true;
+}
+
+
+const char * CSphRwlock::GetError () const
+{
+	return m_sError.cstr();
 }
 
 
@@ -1547,12 +1574,63 @@ CSphRwlock::CSphRwlock ()
 	: m_bInitialized ( false )
 {}
 
-bool CSphRwlock::Init ()
+bool CSphRwlock::Init ( bool bProcessShared )
 {
 	assert ( !m_bInitialized );
 
-	m_bInitialized = ( pthread_rwlock_init ( &m_tLock, NULL )==0 );
-	return m_bInitialized;
+#ifdef __FreeBSD__
+	if ( bProcessShared )
+	{
+		m_sError = "process shared rwlock is not supported by FreeBSD";
+		return false;
+	}
+#endif
+
+	pthread_rwlockattr_t tAttr;
+	pthread_rwlockattr_t * pAttrUsed = NULL;
+	int iRes;
+
+	if ( bProcessShared )
+	{
+		iRes = pthread_rwlockattr_init ( &tAttr );
+		if ( iRes )
+		{
+			m_sError.SetSprintf ( "pthread_rwlockattr_init, errno=%d", iRes );
+			return false;
+		}
+		iRes = pthread_rwlockattr_setpshared ( &tAttr, PTHREAD_PROCESS_SHARED );
+		if ( iRes )
+		{
+			m_sError.SetSprintf ( "pthread_rwlockattr_setpshared, errno = %d", iRes );
+			pthread_rwlockattr_destroy ( &tAttr );
+			return false;
+		}
+
+		pAttrUsed = &tAttr;
+	}
+
+	iRes = pthread_rwlock_init ( &m_tLock, pAttrUsed );
+	if ( iRes )
+	{
+		m_sError.SetSprintf ( "pthread_rwlock_init, errno = %d", iRes );
+		if ( pAttrUsed )
+			pthread_rwlockattr_destroy ( pAttrUsed );
+		return false;
+	}
+
+	if ( pAttrUsed )
+	{
+		iRes = pthread_rwlockattr_destroy ( pAttrUsed );
+		if ( iRes )
+		{
+			m_sError.SetSprintf ( "pthread_rwlockattr_destroy, errno = %d", iRes );
+			return false;
+		}
+	}
+
+	m_bInitialized = true;
+
+	return true;
 }
 
 bool CSphRwlock::Done ()
@@ -1562,6 +1640,11 @@ bool CSphRwlock::Done ()
 
 	m_bInitialized = !( pthread_rwlock_destroy ( &m_tLock )==0 );
 	return !m_bInitialized;
+}
+
+const char * CSphRwlock::GetError () const
+{
+	return m_sError.cstr();
 }
 
 bool CSphRwlock::ReadLock ()
@@ -1732,5 +1815,5 @@ DWORD sphCRC32 ( const BYTE * pString, int iLen, DWORD uPrevCRC )
 }
 
 //
-// $Id: sphinxstd.cpp 4048 2013-07-31 15:31:59Z kevg $
+// $Id: sphinxstd.cpp 4280 2013-10-29 12:32:43Z tomat $
 //

@@ -1,5 +1,5 @@
 //
-// $Id: sphinxexpr.h 3890 2013-05-25 10:48:43Z kevg $
+// $Id: sphinxexpr.h 4279 2013-10-29 11:47:14Z kevg $
 //
 
 //
@@ -20,7 +20,8 @@
 
 /// forward decls
 class CSphMatch;
-struct CSphSchema;
+class ISphSchema;
+class CSphSchema;
 struct CSphString;
 struct CSphColumnInfo;
 
@@ -41,7 +42,7 @@ enum ESphAttr
 	SPH_ATTR_WORDCOUNT	= 8,			///< string word count (only in indexer! integer at search time, but tokenized and counted at indexing time)
 	SPH_ATTR_POLY2D		= 9,			///< vector of floats, 2D polygon (see POLY2D)
 	SPH_ATTR_STRINGPTR	= 10,			///< string (binary, in-memory, stored as pointer to the zero-terminated string)
-	SPH_ATTR_TOKENCOUNT	= 11,			///< field token count (only in indexer! integer at search time)
+	SPH_ATTR_TOKENCOUNT	= 11,			///< field token count, 32-bit integer
 	SPH_ATTR_JSON		= 12,			///< JSON subset; converted, packed, and stored as string
 
 	SPH_ATTR_UINT32SET	= 0x40000001UL,	///< MVA, set of unsigned 32-bit integers
@@ -49,7 +50,7 @@ enum ESphAttr
 
 	// these types are runtime only
 	// used as intermediate types in the expression engine
-	SPH_ATTR_CONSTHASH	= 1000,
+	SPH_ATTR_MAPARG		= 1000,
 	SPH_ATTR_FACTORS	= 1001,			///< packed search factors (binary, in-memory, pooled)
 	SPH_ATTR_JSON_FIELD	= 1002			///< points to particular field in JSON column subset
 };
@@ -59,7 +60,7 @@ enum ESphEvalStage
 {
 	SPH_EVAL_STATIC = 0,		///< static data, no real evaluation needed
 	SPH_EVAL_OVERRIDE,			///< static but possibly overridden
-	SPH_EVAL_PREFILTER,			///< expression needed for full-text candidate matches filtering
+	SPH_EVAL_PREFILTER,			///< expression needed for candidate matches filtering
 	SPH_EVAL_PRESORT,			///< expression needed for final matches sorting
 	SPH_EVAL_SORTER,			///< expression evaluated by sorter object
 	SPH_EVAL_FINAL,				///< expression not (!) used in filters/sorting; can be postponed until final result set cooking
@@ -73,7 +74,7 @@ enum ESphExprCommand
 	SPH_EXPR_SET_MVA_POOL,
 	SPH_EXPR_SET_STRING_POOL,
 	SPH_EXPR_SET_EXTRA_DATA,
-	SPH_EXPR_GET_DEPENDENT_COLS,
+	SPH_EXPR_GET_DEPENDENT_COLS, ///< used to determine proper evaluating stage
 	SPH_EXPR_GET_UDF
 };
 
@@ -92,7 +93,10 @@ public:
 	/// evaluate this expression for that match, using int64 math
 	virtual int64_t Int64Eval ( const CSphMatch & tMatch ) const { assert ( 0 ); return (int64_t) Eval ( tMatch ); }
 
-	/// evaluate string attr
+	/// Evaluate string attr.
+	/// Note, that sometimes this method returns pointer to a static buffer
+	/// and sometimes it allocates a new buffer, so aware of memory leaks.
+	/// IsStringPtr() returns true if this method allocates a new buffer and false otherwise.
 	virtual int StringEval ( const CSphMatch &, const BYTE ** ppStr ) const { *ppStr = NULL; return 0; }
 
 	/// evaluate MVA attr
@@ -112,11 +116,12 @@ public:
 	/// get Nth arg of an arglist
 	virtual ISphExpr * GetArg ( int ) const { return NULL; }
 
-	/// run a tree wide action
-	virtual void Command ( ESphExprCommand, void * ) {}
+	/// get the number of args in an arglist
+	virtual int GetNumArgs() const { return 0; }
 
 	/// run a tree wide action
-	virtual void Command ( ESphExprCommand, void * ) const {}
+	/// usually sets something into ISphExpr like string pool or gets something from it like dependent columns
+	virtual void Command ( ESphExprCommand /* eCmd */, void * /* pArg */ ) {}
 };
 
 /// string expression traits
@@ -144,7 +149,7 @@ struct ISphExprHook
 	/// create node by OID
 	/// pEvalStage is an optional out-parameter
 	/// hook may fill it, but that is *not* required
-	virtual ISphExpr * CreateNode ( int iID, ISphExpr * pLeft, ESphEvalStage * pEvalStage ) = 0;
+	virtual ISphExpr * CreateNode ( int iID, ISphExpr * pLeft, ESphEvalStage * pEvalStage, CSphString & sError ) = 0;
 
 	/// get identifier return type by OID
 	virtual ESphAttr GetIdentType ( int iID ) = 0;
@@ -160,12 +165,24 @@ struct ISphExprHook
 	virtual void CheckExit ( int iID ) = 0;
 };
 
-/// a container used to pass hashes of constants around the evaluation tree
-struct Expr_ConstHash_c : public ISphExpr
-{
-	CSphVector<CSphNamedInt> m_dValues;
 
-	explicit Expr_ConstHash_c ( CSphVector<CSphNamedInt> & dValues )
+/// named int/string variant
+/// used for named expression function arguments block
+/// ie. {..} part in, for example, BM25F(1.2, 0.8, {title=3}) call
+struct CSphNamedVariant
+{
+	CSphString		m_sKey;		///< key
+	CSphString		m_sValue;	///< value for strings, empty for ints
+	int				m_iValue;	///< value for ints
+};
+
+
+/// a container used to pass maps of constants/variables around the evaluation tree
+struct Expr_MapArg_c : public ISphExpr
+{
+	CSphVector<CSphNamedVariant> m_dValues;
+
+	explicit Expr_MapArg_c ( CSphVector<CSphNamedVariant> & dValues )
 	{
 		m_dValues.SwapData ( dValues );
 	}
@@ -184,8 +201,8 @@ struct Expr_ConstHash_c : public ISphExpr
 /// fills pUsesWeight with a flag whether match relevance is referenced in expression AST
 /// fills pEvalStage with a required (!) evaluation stage
 class CSphQueryProfile;
-ISphExpr * sphExprParse ( const char * sExpr, const CSphSchema & tSchema, ESphAttr * pAttrType, bool * pUsesWeight,
-	CSphString & sError, CSphQueryProfile * pProfiler, CSphSchema * pExtra=NULL, ISphExprHook * pHook=NULL,
+ISphExpr * sphExprParse ( const char * sExpr, const ISphSchema & tSchema, ESphAttr * pAttrType, bool * pUsesWeight,
+	CSphString & sError, CSphQueryProfile * pProfiler, ISphExprHook * pHook=NULL,
 	bool * pZonespanlist=NULL, bool * pPackedFactors=NULL, ESphEvalStage * pEvalStage=NULL );
 
 //////////////////////////////////////////////////////////////////////////
@@ -206,11 +223,31 @@ bool sphUDFDrop ( const char * szFunc, CSphString & sError );
 class CSphWriter;
 void sphUDFSaveState ( CSphWriter & tWriter );
 
-/// JSON expression wrapper
-ISphExpr * sphExprJsonField ( const CSphColumnInfo & tCol, int iAttr, const char * sField );
+/// call reinit func in every UDF lib
+void sphUDFReinit();
+
+//////////////////////////////////////////////////////////////////////////
+
+/// init tables used by our geodistance functions
+void GeodistInit();
+
+/// haversine sphere distance, radians
+float GeodistSphereRad ( float lat1, float lon1, float lat2, float lon2 );
+
+/// haversine sphere distance, degrees
+float GeodistSphereDeg ( float lat1, float lon1, float lat2, float lon2 );
+
+/// flat ellipsoid distance, degrees
+float GeodistFlatDeg ( float fLat1, float fLon1, float fLat2, float fLon2 );
+
+/// adaptive flat/haversine distance, degrees
+float GeodistAdaptiveDeg ( float lat1, float lon1, float lat2, float lon2 );
+
+/// adaptive flat/haversine distance, radians
+float GeodistAdaptiveRad ( float lat1, float lon1, float lat2, float lon2 );
 
 #endif // _sphinxexpr_
 
 //
-// $Id: sphinxexpr.h 3890 2013-05-25 10:48:43Z kevg $
+// $Id: sphinxexpr.h 4279 2013-10-29 11:47:14Z kevg $
 //

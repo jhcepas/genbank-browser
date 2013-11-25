@@ -1,5 +1,4 @@
-//
-// $Id: sphinxint.h 4299 2013-11-05 13:58:19Z klirichek $
+// $Id: sphinxint.h 4301 2013-11-06 07:41:00Z tomat $
 //
 
 //
@@ -46,7 +45,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 const DWORD		INDEX_MAGIC_HEADER			= 0x58485053;		///< my magic 'SPHX' header
-const DWORD		INDEX_FORMAT_VERSION		= 38;				///< my format version
+const DWORD		INDEX_FORMAT_VERSION		= 40;				///< my format version
 
 const char		MAGIC_SYNONYM_WHITESPACE	= 1;				// used internally in tokenizer only
 const char		MAGIC_CODE_SENTENCE			= 2;				// emitted from tokenizer on sentence boundary
@@ -83,29 +82,13 @@ extern bool g_bJsonKeynamesToLowercase;
 // INTERNAL HELPER FUNCTIONS, CLASSES, ETC
 //////////////////////////////////////////////////////////////////////////
 
-
-/// some low-level query stats
-struct CSphQueryStats
-{
-	int64_t *	m_pNanoBudget;		///< pointer to max_predicted_time budget (counted in nanosec)
-	DWORD		m_iFetchedDocs;		///< processed documents
-	DWORD		m_iFetchedHits;		///< processed hits (aka positions)
-	DWORD		m_iSkips;			///< number of Skip() calls
-
-	CSphQueryStats()
-		: m_pNanoBudget ( NULL )
-		, m_iFetchedDocs ( 0 )
-		, m_iFetchedHits ( 0 )
-		, m_iSkips ( 0 )
-	{}
-};
-
-
 #define SPH_QUERY_STATES \
 	SPH_QUERY_STATE ( UNKNOWN,		"unknown" ) \
 	SPH_QUERY_STATE ( NET_READ,		"net_read" ) \
 	SPH_QUERY_STATE ( IO,			"io" ) \
 	SPH_QUERY_STATE ( DIST_CONNECT,	"dist_connect" ) \
+	SPH_QUERY_STATE ( LOCAL_DF,		"local_df" ) \
+	SPH_QUERY_STATE ( LOCAL_SEARCH,	"local_search" ) \
 	SPH_QUERY_STATE ( SQL_PARSE,	"sql_parse" ) \
 	SPH_QUERY_STATE ( DICT_SETUP,	"dict_setup" ) \
 	SPH_QUERY_STATE ( PARSE,		"parse" ) \
@@ -125,7 +108,8 @@ struct CSphQueryStats
 	SPH_QUERY_STATE ( NET_WRITE,	"net_write" ) \
 	SPH_QUERY_STATE ( EVAL_POST,	"eval_post" ) \
 	SPH_QUERY_STATE ( SNIPPET,		"eval_snippet" ) \
-	SPH_QUERY_STATE ( EVAL_UDF,		"eval_udf" )
+	SPH_QUERY_STATE ( EVAL_UDF,		"eval_udf" ) \
+	SPH_QUERY_STATE ( TABLE_FUNC,	"table_func" )
 
 
 /// possible query states, used for profiling
@@ -151,8 +135,6 @@ public:
 
 	int				m_dSwitches [ SPH_QSTATE_TOTAL+1 ];	///< number of switches to given state
 	int64_t			m_tmTotal [ SPH_QSTATE_TOTAL+1 ];	///< total time spent per state
-	CSphQueryStats	m_tStats;							///< query prediction counters
-	bool			m_bHasPrediction;					///< is prediction counters set?
 
 	CSphStringBuilder	m_sTransformedTree;					///< transformed query tree
 
@@ -183,9 +165,6 @@ public:
 		memset ( m_tmTotal, 0, sizeof(m_tmTotal) );
 		m_eState = eNew;
 		m_tmStamp = sphMicroTimer();
-
-		m_tStats = CSphQueryStats();
-		m_bHasPrediction = false;
 	}
 
 	/// stop profiling
@@ -377,6 +356,7 @@ public:
 	int			GetFD () { return m_iFD; }
 };
 
+
 //////////////////////////////////////////////////////////////////////////
 
 /// generic COM-like uids
@@ -387,6 +367,10 @@ enum ExtraData_e
 	EXTRA_GET_DATA_RANKFACTORS,
 	EXTRA_GET_DATA_PACKEDFACTORS,
 	EXTRA_GET_DATA_RANKER_STATE,
+
+	EXTRA_GET_QUEUE_WORST,
+	EXTRA_GET_QUEUE_SORTVAL,
+
 	EXTRA_SET_MVAPOOL,
 	EXTRA_SET_STRINGPOOL,
 	EXTRA_SET_MAXMATCHES,
@@ -409,6 +393,10 @@ private:
 		return false;
 	}
 };
+
+
+class ISphRanker;
+class ISphMatchSorter;
 
 
 /// per-query search context
@@ -444,15 +432,17 @@ public:
 
 	void *						m_pIndexData;			///< backend specific data
 	CSphQueryProfile *			m_pProfile;
+	const SmallStringHash_T<int64_t> *		m_pLocalDocs;
+	int64_t									m_iTotalDocs;
 
 public:
 	CSphQueryContext ();
 	~CSphQueryContext ();
 
-	void						BindWeights ( const CSphQuery * pQuery, const CSphSchema & tSchema, int iIndexWeight );
-	bool						SetupCalc ( CSphQueryResult * pResult, const CSphSchema & tInSchema, const CSphSchema & tSchema, const DWORD * pMvaPool );
-	bool						CreateFilters ( bool bFullscan, const CSphVector<CSphFilterSettings> * pdFilters, const CSphSchema & tSchema, const DWORD * pMvaPool, const BYTE * pStrings, CSphString & sError );
-	bool						SetupOverrides ( const CSphQuery * pQuery, CSphQueryResult * pResult, const CSphSchema & tIndexSchema );
+	void						BindWeights ( const CSphQuery * pQuery, const CSphSchema & tSchema );
+	bool						SetupCalc ( CSphQueryResult * pResult, const ISphSchema & tInSchema, const CSphSchema & tSchema, const DWORD * pMvaPool );
+	bool						CreateFilters ( bool bFullscan, const CSphVector<CSphFilterSettings> * pdFilters, const ISphSchema & tSchema, const DWORD * pMvaPool, const BYTE * pStrings, CSphString & sError );
+	bool						SetupOverrides ( const CSphQuery * pQuery, CSphQueryResult * pResult, const CSphSchema & tIndexSchema, const ISphSchema & tOutgoingSchema );
 
 	void						CalcFilter ( CSphMatch & tMatch ) const;
 	void						CalcSort ( CSphMatch & tMatch ) const;
@@ -466,7 +456,7 @@ public:
 	void						ExprCommand ( ESphExprCommand eCmd, void * pArg );
 	void						SetStringPool ( const BYTE * pStrings );
 	void						SetMVAPool ( const DWORD * pMva );
-	void						SetupExtraData ( ISphExtra * pData );
+	void						SetupExtraData ( ISphRanker * pRanker, ISphMatchSorter * pSorter );
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -498,6 +488,7 @@ namespace Memory
 		SPH_MEM_COMMIT_SET_SQL,
 		SPH_MEM_COMMIT_BEGIN_SQL,
 		SPH_MEM_COMMIT_SQL,
+		SPH_MEM_ALTER_SQL,
 
 		SPH_MEM_IDX_DISK_MULTY_QUERY,
 		SPH_MEM_IDX_DISK_MULTY_QUERY_EX,
@@ -1017,17 +1008,17 @@ inline int FindBit ( DWORD uValue )
 #define SPH_MAX_UTF8_BYTES 4
 
 /// decode UTF-8 codepoint
-/// advances buffer ptr in all cases but end of buffer
+/// advances buffer ptr in all cases, including the end of buffer (ie. zero byte)!
+/// so eof MUST be handled, otherwise, you get OOB
 ///
 /// returns -1 on failure
 /// returns 0 on end of buffer
 /// returns codepoint on success
-inline int sphUTF8Decode ( BYTE * & pBuf )
+inline int sphUTF8Decode ( const BYTE * & pBuf )
 {
-	BYTE v = *pBuf;
+	BYTE v = *pBuf++;
 	if ( !v )
 		return 0;
-	pBuf++;
 
 	// check for 7-bit case
 	if ( v<128 )
@@ -1129,7 +1120,7 @@ inline int sphUTF8Len ( const char * pStr )
 	if ( !pStr || *pStr=='\0' )
 		return 0;
 
-	BYTE * pBuf = (BYTE*) pStr;
+	const BYTE * pBuf = (const BYTE*) pStr;
 	int iRes = 0, iCode;
 
 	while ( ( iCode = sphUTF8Decode(pBuf) )!=0 )
@@ -1146,8 +1137,8 @@ inline int sphUTF8Len ( const char * pStr, int iMax )
 	if ( !pStr || *pStr=='\0' )
 		return 0;
 
-	BYTE * pBuf = (BYTE*) pStr;
-	BYTE * pMax = pBuf + iMax;
+	const BYTE * pBuf = (const BYTE*) pStr;
+	const BYTE * pMax = pBuf + iMax;
 	int iRes = 0, iCode;
 
 	while ( pBuf<pMax && iRes<iMax && ( iCode = sphUTF8Decode ( pBuf ) )!=0 )
@@ -1171,6 +1162,7 @@ struct ExtHit_t
 	WORD		m_uSpanlen;
 	WORD		m_uMatchlen;
 	DWORD		m_uWeight;
+	DWORD		m_uQposMask;
 };
 
 enum SphZoneHit_e
@@ -1281,9 +1273,11 @@ inline const char * sphTypeName ( ESphAttr eType )
 		case SPH_ATTR_FLOAT:		return "float";
 		case SPH_ATTR_BIGINT:		return "bigint";
 		case SPH_ATTR_STRING:		return "string";
-		case SPH_ATTR_JSON:			return "json";
 		case SPH_ATTR_WORDCOUNT:	return "wordcount";
 		case SPH_ATTR_STRINGPTR:	return "stringptr";
+		case SPH_ATTR_TOKENCOUNT:	return "tokencount";
+		case SPH_ATTR_JSON:			return "json";
+
 		case SPH_ATTR_UINT32SET:	return "mva";
 		case SPH_ATTR_INT64SET:		return "mva64";
 		default:					return "unknown";
@@ -1301,10 +1295,12 @@ inline const char * sphTypeDirective ( ESphAttr eType )
 		case SPH_ATTR_BOOL:			return "sql_attr_bool";
 		case SPH_ATTR_FLOAT:		return "sql_attr_float";
 		case SPH_ATTR_BIGINT:		return "sql_attr_bigint";
-		case SPH_ATTR_STRING:
-		case SPH_ATTR_STRINGPTR:	return "sql_attr_string";
-		case SPH_ATTR_JSON:			return "sql_attr_json";
+		case SPH_ATTR_STRING:		return "sql_attr_string";
 		case SPH_ATTR_WORDCOUNT:	return "sql_attr_wordcount";
+		case SPH_ATTR_STRINGPTR:	return "sql_attr_string";
+		case SPH_ATTR_TOKENCOUNT:	return "_autogenerated_tokencount";
+		case SPH_ATTR_JSON:			return "sql_attr_json";
+
 		case SPH_ATTR_UINT32SET:	return "sql_attr_multi";
 		case SPH_ATTR_INT64SET:		return "sql_attr_multi bigint";
 		default:					return "???";
@@ -1395,15 +1391,18 @@ public:
 	virtual int			SetMorphology ( const char * szMorph, bool bUseUTF8, CSphString & sMessage ) { return m_pDict->SetMorphology ( szMorph, bUseUTF8, sMessage ); }
 
 	virtual SphWordID_t	GetWordID ( const BYTE * pWord, int iLen, bool bFilterStops ) { return m_pDict->GetWordID ( pWord, iLen, bFilterStops ); }
-	virtual SphWordID_t GetWordID ( BYTE * ) { assert ( 0 && "not implemented" ); return 0; }
+	virtual SphWordID_t GetWordID ( BYTE * pWord );
 
 	virtual void		Setup ( const CSphDictSettings & ) {}
 	virtual const CSphDictSettings & GetSettings () const { return m_pDict->GetSettings (); }
 	virtual const CSphVector <CSphSavedFile> & GetStopwordsFileInfos () { return m_pDict->GetStopwordsFileInfos (); }
 	virtual const CSphVector <CSphSavedFile> & GetWordformsFileInfos () { return m_pDict->GetWordformsFileInfos (); }
 	virtual const CSphMultiformContainer * GetMultiWordforms () const { return m_pDict->GetMultiWordforms (); }
+	virtual const CSphWordforms * GetWordforms () { return m_pDict->GetWordforms(); }
 
-	virtual bool IsStopWord ( const BYTE * pWord ) const { return m_pDict->IsStopWord ( pWord ); }
+	virtual bool		IsStopWord ( const BYTE * pWord ) const { return m_pDict->IsStopWord ( pWord ); }
+	virtual uint64_t	GetSettingsFNV () const { return m_pDict->GetSettingsFNV(); }
+	virtual void		SetApplyMorph ( bool bApply ) { m_pDict->SetApplyMorph ( bApply ); }
 
 protected:
 	CSphDict *			m_pDict;
@@ -1482,9 +1481,12 @@ public:
 	virtual const char *			GetBufferPtr () const						{ return m_pTokenizer->GetBufferPtr(); }
 	virtual const char *			GetBufferEnd () const						{ return m_pTokenizer->GetBufferEnd (); }
 	virtual void					SetBufferPtr ( const char * sNewPtr )		{ m_pTokenizer->SetBufferPtr ( sNewPtr ); }
+	virtual uint64_t				GetSettingsFNV () const						{ return m_pTokenizer->GetSettingsFNV(); }
 
-	virtual void					SetBuffer ( BYTE * sBuffer, int iLength )	{ m_pTokenizer->SetBuffer ( sBuffer, iLength ); }
-	virtual BYTE *					GetToken ()									{ return m_pTokenizer->GetToken(); }
+	virtual void					SetBuffer ( const BYTE * sBuffer, int iLength )	{ m_pTokenizer->SetBuffer ( sBuffer, iLength ); }
+	virtual BYTE *					GetToken ()										{ return m_pTokenizer->GetToken(); }
+
+	virtual ISphTokenizer *			GetEmbeddedTokenizer () const					{ return m_pTokenizer; }
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -1533,10 +1535,9 @@ struct ThrottleState_t
 	{}
 };
 
-void			SafeClose ( int & iFD );
 const BYTE *	SkipQuoted ( const BYTE * p );
 
-bool			sphSortGetStringRemap ( const CSphSchema & tSorterSchema, const CSphSchema & tIndexSchema, CSphVector<SphStringSorterRemap_t> & dAttrs );
+bool			sphSortGetStringRemap ( const ISphSchema & tSorterSchema, const ISphSchema & tIndexSchema, CSphVector<SphStringSorterRemap_t> & dAttrs );
 bool			sphIsSortStringInternal ( const char * sColumnName );
 /// make string lowercase but keep case of JSON.field
 void			sphColumnToLowercase ( char * sVal );
@@ -1561,7 +1562,8 @@ void			SaveDictionarySettings ( CSphWriter & tWriter, CSphDict * pDict, bool bFo
 void			LoadDictionarySettings ( CSphReader & tReader, CSphDictSettings & tSettings, CSphEmbeddedFiles & tEmbeddedFiles, DWORD uVersion, CSphString & sWarning );
 void			SaveFieldFilterSettings ( CSphWriter & tWriter, ISphFieldFilter * pFieldFilter );
 
-DWORD ReadVersion ( const char * sPath, CSphString & sError );
+DWORD			ReadVersion ( const char * sPath, CSphString & sError );
+bool			AddFieldLens ( CSphSchema & tSchema, bool bDynamic, CSphString & sError );
 
 // all indexes should produce same terms for same query
 struct SphWordStatChecker_t
@@ -1576,18 +1578,22 @@ struct SphWordStatChecker_t
 
 enum ESphExtType
 {
-	SPH_EXT_CUR,
-	SPH_EXT_NEW,
-	SPH_EXT_OLD,
-	SPH_EXT_LOC
+	SPH_EXT_TYPE_CUR = 0,
+	SPH_EXT_TYPE_NEW,
+	SPH_EXT_TYPE_OLD,
+	SPH_EXT_TYPE_LOC
+};
+
+enum ESphExt
+{
+	SPH_EXT_SPH = 0,
+	SPH_EXT_SPA = 1,
+	SPH_EXT_MVP = 9
 };
 
 const char ** sphGetExts ( ESphExtType eType, DWORD uVersion=INDEX_FORMAT_VERSION );
-
 int sphGetExtCount ( DWORD uVersion=INDEX_FORMAT_VERSION );
-
-const char * sphGetCurMvp();
-const char * sphGetOldMvp();
+const char * sphGetExt ( ESphExtType eType, ESphExt eExt );
 
 int sphDictCmp ( const char * pStr1, int iLen1, const char * pStr2, int iLen2 );
 int sphDictCmpStrictly ( const char * pStr1, int iLen1, const char * pStr2, int iLen2 );
@@ -1850,15 +1856,13 @@ public:
 		SafeDelete ( m_pQueryTokenizer );
 	}
 
-	static CSphDict * SetupExactDict ( const CSphIndexSettings & tSettings, const ExcerptQuery_t & q,
-		CSphScopedPtr<CSphDict> & tExact, CSphDict * pDict, ISphTokenizer * pTok )
+	static CSphDict * SetupExactDict ( const CSphIndexSettings & tSettings, CSphScopedPtr<CSphDict> & tExact, CSphDict * pDict )
 	{
 		// handle index_exact_words
-		if ( !( q.m_bHighlightQuery && tSettings.m_bIndexExactWords ) )
+		if ( !tSettings.m_bIndexExactWords )
 			return pDict;
 
 		tExact = new CSphDictExact ( pDict );
-		pTok->AddPlainChar ( '=' );
 		return tExact.Ptr();
 	}
 
@@ -1930,16 +1934,45 @@ public:
 		m_pDict = pIndex->GetDictionary();
 		if ( m_pDict->HasState() )
 			m_tDictCloned = m_pDict = m_pDict->Clone();
-		m_tTokenizer = pIndex->GetTokenizer()->Clone ( SPH_CLONE_INDEX ); // OPTIMIZE! do a lightweight indexing clone here
-		m_pQueryTokenizer = pIndex->GetQueryTokenizer()->Clone ( SPH_CLONE_QUERY_LIGHTWEIGHT );
+
+		// AOT tokenizer works only with query mode
+		if ( pIndex->GetSettings().m_uAotFilterMask &&
+			( !tSettings.m_bHighlightQuery || tSettings.m_bExactPhrase ) )
+		{
+			if ( !tSettings.m_bHighlightQuery )
+				sError.SetSprintf ( "failed to setup AOT with query_mode=0, use query_mode=1" );
+			else
+				sError.SetSprintf ( "failed to setup AOT with exact_phrase, use phrase search operator with query_mode=1" );
+			return false;
+		}
+
+		// OPTIMIZE! do a lightweight indexing clone here
+		if ( tSettings.m_bHighlightQuery && pIndex->GetSettings().m_uAotFilterMask )
+			m_tTokenizer = sphAotCreateFilter ( pIndex->GetTokenizer()->Clone ( SPH_CLONE_INDEX ), m_pDict, pIndex->GetSettings().m_bIndexExactWords, pIndex->GetSettings().m_uAotFilterMask );
+		else
+			m_tTokenizer = pIndex->GetTokenizer()->Clone ( SPH_CLONE_INDEX );
+
+		m_pQueryTokenizer = NULL;
+		if ( tSettings.m_bHighlightQuery || tSettings.m_bExactPhrase )
+		{
+			m_pQueryTokenizer =	pIndex->GetQueryTokenizer()->Clone ( SPH_CLONE_QUERY_LIGHTWEIGHT );
+		} else
+		{
+			// legacy query mode should handle exact form modifier and star wildcard
+			m_pQueryTokenizer = pIndex->GetTokenizer()->Clone ( SPH_CLONE_INDEX );
+			if ( pIndex->IsStarDict() )
+				m_pQueryTokenizer->AddPlainChar ( '*' );
+			if ( pIndex->GetSettings().m_bIndexExactWords )
+				m_pQueryTokenizer->AddPlainChar ( '=' );
+		}
 
 		// setup exact dictionary if needed
-		m_pDict = SetupExactDict ( pIndex->GetSettings(), tSettings, m_tExactDict, m_pDict, m_tTokenizer.Ptr() );
+		m_pDict = SetupExactDict ( pIndex->GetSettings(), m_tExactDict, m_pDict );
 
 		if ( tSettings.m_bHighlightQuery )
 		{
 			// OPTIMIZE? double lightweight clone here? but then again it's lightweight
-			if ( !sphParseExtendedQuery ( m_tExtQuery, tSettings.m_sWords.cstr(), pIndex->GetQueryTokenizer(),
+			if ( !sphParseExtendedQuery ( m_tExtQuery, tSettings.m_sWords.cstr(), m_pQueryTokenizer,
 				&pIndex->GetMatchSchema(), m_pDict, pIndex->GetSettings() ) )
 			{
 				sError = m_tExtQuery.m_sParseError;
@@ -1952,6 +1985,9 @@ public:
 			m_eExtQuerySPZ |= CollectQuerySPZ ( m_tExtQuery.m_pRoot );
 			if ( m_tExtQuery.m_dZones.GetLength() )
 				m_eExtQuerySPZ |= SPH_SPZ_ZONE;
+
+			if ( pIndex->GetSettings().m_uAotFilterMask )
+				TransformAotFilter ( m_tExtQuery.m_pRoot, m_pQueryTokenizer->IsUtf8(), m_pDict->GetWordforms(), pIndex->GetSettings() );
 		}
 
 		bool bSetupSPZ = ( tSettings.m_ePassageSPZ!=SPH_SPZ_NONE || m_eExtQuerySPZ!=SPH_SPZ_NONE ||
@@ -1964,8 +2000,448 @@ public:
 	}
 };
 
+struct StoredToken_t
+{
+	BYTE			m_sToken [3*SPH_MAX_WORD_LEN+4];
+	// tokenized state
+	const char *	m_szTokenStart;
+	const char *	m_szTokenEnd;
+	const char *	m_pBufferPtr;
+	int				m_iTokenLen;
+	int				m_iOvershortCount;
+	bool			m_bBoundary;
+	bool			m_bSpecial;
+	bool			m_bBlended;
+	bool			m_bBlendedPart;
+};
+
+void FillStoredTokenInfo ( StoredToken_t & tToken, const BYTE * sToken, ISphTokenizer * pTokenizer );
+CSphSource * sphCreateSourceTSVpipe ( const CSphConfigSection * pSource, FILE * pPipe, const char * sSourceName, bool bUTF8, bool bProxy );
+CSphSource * sphCreateSourceCSVpipe ( const CSphConfigSection * pSource, FILE * pPipe, const char * sSourceName, bool bUTF8, bool bProxy );
+
+
+#if USE_RLP
+#define RLPARG(_arg) _arg
+#else
+#define RLPARG(_arg)
+#endif
+
+
+#if USE_RLP
+
+struct StoredDoc_t
+{
+	CSphMatch							m_tDocInfo;
+	CSphVector<CSphString>				m_dStrAttrs;
+	CSphVector<DWORD>					m_dMva;
+	CSphTightVector<BYTE*>				m_dFields;
+	CSphTightVector<bool>				m_dChinese;
+	CSphTightVector< CSphVector<BYTE> >	m_dFieldStorage;
+	CSphTightVector< StoredToken_t >	m_dNonChineseTokens;
+};
+
+// these are used to separate text before passing it to RLP
+const int PROXY_DOCUMENT_START = 0xFFFA;
+const int PROXY_FIELD_START_CHINESE = 0xFFFB;
+const int PROXY_FIELD_START_NONCHINESE = 0xFFFC;
+const int PROXY_TOKEN_SEPARATOR = 0xFFFD;
+
+// these are used on text that is already tokenized
+const int PROXY_TOKENIZED = 0xFFFA;
+const int PROXY_MORPH = 0xFFFB;
+
+const int PROXY_MARKER_LEN = 3;
+
+enum
+{
+	PROXY_BOUNDARY_FLAG		= 1<<7,
+	PROXY_SPECIAL_FLAG		= 1<<8,
+	PROXY_BLENDED_FLAG		= 1<<9,
+	PROXY_BLENDED_PART_FLAG	= 1<<10,
+	PROXY_HAVE_OVERSHORT	= 1<<11
+};
+
+
+#define COPY_MARKER(_ptr,_marker) \
+{\
+	*_ptr++ = _marker[0]; \
+	*_ptr++ = _marker[1]; \
+	*_ptr++ = _marker[2]; \
+}
+
+#define CMP_MARKER(_ptr, _marker) \
+	( _ptr[0]==_marker[0] && _ptr[1]==_marker[1] && _ptr[2]==_marker[2] )
+
+// proxy source
+template <class T>
+class CSphSource_Proxy : public T
+{
+public:
+	explicit CSphSource_Proxy ( const char * sSourceName )
+		: T ( sSourceName )
+		, m_dBatchedDocs ( g_iRLPMaxBatchDocs )
+		, m_iDocStart ( 0 )
+		, m_iDocCount ( 0 )
+		, m_pExtraTokenizer ( NULL )
+		, m_bProxyStripHTML ( false )
+	{
+		assert ( sphUTF8Encode ( m_pMarkerDocStart, PROXY_DOCUMENT_START )==PROXY_MARKER_LEN );
+
+		sphUTF8Encode ( m_pMarkerDocStart, PROXY_DOCUMENT_START );
+		sphUTF8Encode ( m_pMarkerChineseField, PROXY_FIELD_START_CHINESE );
+		sphUTF8Encode ( m_pMarkerNonChineseField, PROXY_FIELD_START_NONCHINESE );
+		sphUTF8Encode ( m_pMarkerTokenSeparator, PROXY_TOKEN_SEPARATOR );
+
+		sphUTF8Encode ( m_pMarkerTokenized, PROXY_TOKENIZED );
+		sphUTF8Encode ( m_pMarkerMorph, PROXY_MORPH );
+
+		const int INITIAL_BUFFER_SIZE = 1048576;
+		m_dDocBuffer.Reserve ( INITIAL_BUFFER_SIZE );
+	}
+
+	virtual ~CSphSource_Proxy()
+	{
+		SafeDelete ( m_pExtraTokenizer );
+	}
+
+	void AppendToField ( StoredDoc_t * pCurDoc, int iField, BYTE * pToken, int iTokenLen, BYTE * pMarker )
+	{
+		assert ( pCurDoc && iField>=0 );
+		CSphVector<BYTE> & tStorage = pCurDoc->m_dFieldStorage[iField];
+
+		int iNewSize, iOldSize;
+		iNewSize = iOldSize = tStorage.GetLength();
+		if ( !iNewSize )
+			iNewSize += PROXY_MARKER_LEN + 1;	// tokenized field marker + trailing zero
+
+		iNewSize += iTokenLen+1;				// space before each token + token
+
+		if ( pMarker )
+			iNewSize += PROXY_MARKER_LEN;		// non-chinese token marker
+
+		tStorage.Resize ( iNewSize );
+		BYTE * pPtr = tStorage.Begin() + ( iOldSize ? iOldSize-1 : 0 );
+
+		if ( !iOldSize )
+		{
+			memcpy ( pPtr, m_pMarkerTokenized, PROXY_MARKER_LEN );
+			pPtr += PROXY_MARKER_LEN;
+		}
+
+		*pPtr++ = ' ';
+
+		if ( pMarker )
+			COPY_MARKER ( pPtr, pMarker );
+
+		memcpy ( pPtr, pToken, iTokenLen+1 );
+		pCurDoc->m_dFields[iField] = tStorage.Begin();
+	}
+
+	virtual BYTE ** NextDocument ( CSphString & sError )
+	{
+		ISphTokenizer * pEmbeddedTokenizer = T::m_pTokenizer->GetEmbeddedTokenizer();
+		assert ( pEmbeddedTokenizer );
+
+		// do not run the stripper twice
+		if ( CSphSource_Proxy<T>::m_bStripHTML )
+		{
+			m_bProxyStripHTML = true;
+			CSphSource_Proxy<T>::m_bStripHTML = false;
+		}
+
+		if ( !m_pExtraTokenizer )
+		{
+			m_pExtraTokenizer = ISphTokenizer::CreateRLPFilter ( pEmbeddedTokenizer->Clone ( SPH_CLONE_INDEX ), true, g_sRLPRoot.cstr(),
+				g_sRLPEnv.cstr(), T::m_pTokenizer->GetRLPContext(), false, sError );
+			if ( !m_pExtraTokenizer )
+				return NULL;
+		}
+
+		if ( !IsDocCacheEmpty() )
+			return CopyDoc();
+
+		if ( m_dFieldLengths.GetLength()!=T::m_tSchema.m_dFields.GetLength() )
+			m_dFieldLengths.Resize ( T::m_tSchema.m_dFields.GetLength() );
+
+		char szTmp [256];
+
+		m_iDocStart = 0;
+		int iCurDoc = 0;
+
+		m_dDocBuffer.Resize(0);
+
+		while ( !IsDocCacheFull() && m_dDocBuffer.GetLength() < g_iRLPMaxBatchSize )
+		{
+			BYTE ** pFields = T::NextDocument ( sError );
+			if ( !pFields )
+				break;
+
+			int iTotalFieldLen = 0;
+			for ( int i = 0; i < T::m_tSchema.m_dFields.GetLength(); i++ )
+			{
+				m_dFieldLengths[i] = pFields[i] ? strlen ( (const char*)pFields[i] ) : 0;
+				iTotalFieldLen += PROXY_MARKER_LEN+m_dFieldLengths[i]+2;
+			}
+
+			const int MAX_INDEX_LEN = 8;
+			int iOldBufferLen = m_dDocBuffer.GetLength();
+			m_dDocBuffer.Resize ( iOldBufferLen+PROXY_MARKER_LEN+MAX_INDEX_LEN+2+iTotalFieldLen );
+			BYTE * pCurDocPtr = &(m_dDocBuffer[iOldBufferLen]);
+
+			StoredDoc_t * pDoc = PushDoc();
+			int nFields = T::m_tSchema.m_dFields.GetLength();
+			CopyDocInfo ( pDoc->m_tDocInfo, T::m_tDocInfo );
+			pDoc->m_dMva = T::m_dMva;
+			pDoc->m_dStrAttrs = T::m_dStrAttrs;
+			pDoc->m_dFields.Resize ( nFields );
+			pDoc->m_dFieldStorage.Resize ( nFields );
+			pDoc->m_dChinese.Resize ( nFields );
+			pDoc->m_dNonChineseTokens.Resize ( 0 );
+
+			// document start tag
+			COPY_MARKER ( pCurDocPtr, m_pMarkerDocStart );
+
+			// space
+			*pCurDocPtr++ = ' ';
+
+			// index in plain text
+			int iLen = snprintf ( szTmp, sizeof(szTmp), "%d", iCurDoc );
+			iLen = iLen>=0 ? iLen : sizeof(szTmp);
+			memcpy ( pCurDocPtr, szTmp, iLen );
+			pCurDocPtr += iLen;
+
+			// space
+			*pCurDocPtr++ = ' ';
+
+			for ( int i = 0; i < T::m_tSchema.m_dFields.GetLength(); i++ )
+			{
+				pDoc->m_dChinese[i] = sphDetectChinese ( pFields[i], m_dFieldLengths[i] );
+
+				if ( m_bProxyStripHTML )
+				{
+					CSphSource_Proxy<T>::m_pStripper->Strip ( pFields[i] );
+					m_dFieldLengths[i] = strlen ( (const char *)pFields[i] );
+				}
+
+				int iFieldLen = m_dFieldLengths[i];
+
+				if ( !pDoc->m_dChinese[i] )
+				{
+					// no chinese? just save the field storage without tokenizing it
+					// it will be tokenized later in the splitter
+					pDoc->m_dFieldStorage[i].Resize ( iFieldLen+1 );
+					if ( pFields[i] )
+						memcpy ( pDoc->m_dFieldStorage[i].Begin(), pFields[i], iFieldLen+1 );
+					else
+						pDoc->m_dFieldStorage[i][0] = 0;
+
+					pDoc->m_dFields[i] = pDoc->m_dFieldStorage[i].Begin();
+
+					COPY_MARKER ( pCurDocPtr, m_pMarkerNonChineseField );
+					*pCurDocPtr++ = ' ';
+				} else
+				{
+					COPY_MARKER ( pCurDocPtr, m_pMarkerChineseField );
+					*pCurDocPtr++ = ' ';
+
+					pEmbeddedTokenizer->SetBuffer ( pFields[i], iFieldLen );
+					BYTE * pToken;
+					while ( ( pToken = pEmbeddedTokenizer->GetToken() )!=NULL )
+					{
+						int iTokenLen = strlen ( (const char*)pToken );
+						if ( sphDetectChinese ( pToken, iTokenLen ) )
+						{
+							// collect it in one big chinese token buffer that will be processed by RLP
+							memcpy ( pCurDocPtr, pToken, iTokenLen );
+							pCurDocPtr += iTokenLen;
+						} else
+						{
+							// drop it into "non-chinese" token vector
+							StoredToken_t & tStored = pDoc->m_dNonChineseTokens.Add();
+							FillStoredTokenInfo ( tStored, pToken, pEmbeddedTokenizer );
+
+							// add a 'non-chinese token' marker to the chinese token stream
+							*pCurDocPtr++ = ' ';
+							COPY_MARKER ( pCurDocPtr, m_pMarkerTokenSeparator );
+						}
+
+						*pCurDocPtr++ = ' ';
+					}
+				}
+			}
+
+			m_dDocBuffer.Resize ( pCurDocPtr-m_dDocBuffer.Begin() );
+			iCurDoc++;
+		}
+
+		if ( IsDocCacheEmpty() )
+			return NULL;
+
+		m_pExtraTokenizer->SetBuffer ( m_dDocBuffer.Begin(), m_dDocBuffer.GetLength() );
+		BYTE * pToken;
+
+		StoredDoc_t * pCurDoc = NULL;
+		bool bIndexNext = false;
+		int iField = -1;
+		int iStoredToken = 0;
+		while ( ( pToken = m_pExtraTokenizer->GetToken() )!=NULL )
+		{
+			bool bSpecial = false;
+			int iTokenLen = strlen ( (const char *)pToken );
+			if ( bIndexNext )
+			{
+				int iDoc = atoi ( (const char*)pToken );
+				pCurDoc = &(m_dBatchedDocs[iDoc]);
+				bIndexNext = false;
+				iField = -1;
+				iStoredToken = 0;
+			} else
+			{
+				if ( iTokenLen==PROXY_MARKER_LEN )
+				{
+					if ( CMP_MARKER ( pToken, m_pMarkerDocStart ) )
+					{
+						bIndexNext = true;
+						bSpecial = true;
+					} else if ( CMP_MARKER ( pToken, m_pMarkerChineseField ) )
+					{
+						assert ( pCurDoc );
+						iField++;
+						pCurDoc->m_dFieldStorage[iField].Resize(0);
+						pCurDoc->m_dFields[iField] = pCurDoc->m_dFieldStorage[iField].Begin();
+						bSpecial = true;
+					} else if ( CMP_MARKER ( pToken, m_pMarkerNonChineseField ) )
+					{
+						iField++;
+						bSpecial = true;
+					} else if ( CMP_MARKER ( pToken, m_pMarkerTokenSeparator ) )
+					{
+						StoredToken_t & tStored = pCurDoc->m_dNonChineseTokens[iStoredToken];
+
+						// copy stored non-chinese token && pack token data
+						AppendToField ( pCurDoc, iField, tStored.m_sToken, strlen ( (const char*)tStored.m_sToken ), m_pMarkerMorph );
+
+						// this depends on SPH_MAX_WORD_LEN being 6 bits max
+						DWORD uPacked = iTokenLen;
+
+						if ( tStored.m_bBoundary )
+							uPacked |= PROXY_BOUNDARY_FLAG;
+
+						if ( tStored.m_bSpecial )
+							uPacked |= PROXY_SPECIAL_FLAG;
+
+						if ( tStored.m_bBlended )
+							uPacked |= PROXY_BLENDED_FLAG;
+
+						if ( tStored.m_bBlendedPart )
+							uPacked |= PROXY_BLENDED_PART_FLAG;
+
+						int iTmpLen;
+						if ( tStored.m_iOvershortCount )
+						{
+							uPacked |= PROXY_HAVE_OVERSHORT;
+							iTmpLen = snprintf ( szTmp, sizeof(szTmp), " %x %x", uPacked, tStored.m_iOvershortCount );
+						} else
+							iTmpLen = snprintf ( szTmp, sizeof(szTmp), " %x", uPacked );
+
+						if ( iTmpLen < 0 )
+							iTmpLen = sizeof(szTmp);
+
+						int iStoredLen = pCurDoc->m_dFieldStorage[iField].GetLength();
+						pCurDoc->m_dFieldStorage[iField].Resize ( iStoredLen + iTmpLen );
+						memcpy ( pCurDoc->m_dFieldStorage[iField].Begin()+iStoredLen-1, szTmp, iTmpLen+1 );
+
+						pCurDoc->m_dFields[iField] = pCurDoc->m_dFieldStorage[iField].Begin();
+
+						iStoredToken++;
+						bSpecial = true;
+					}
+				}
+
+				// simple token; append to current field
+				if ( !bSpecial )
+					AppendToField ( pCurDoc, iField, pToken, iTokenLen, NULL );
+			}
+		}
+
+		return CopyDoc ();
+	}
+
+private:
+	CSphSource_Document *	m_pSource;
+	CSphFixedVector<StoredDoc_t> m_dBatchedDocs;
+	CSphVector<BYTE>		m_dDocBuffer;
+	CSphVector<int>			m_dFieldLengths;
+	int						m_iDocStart;
+	int						m_iDocCount;
+	ISphTokenizer *			m_pExtraTokenizer;
+	bool					m_bProxyStripHTML;
+
+	BYTE					m_pMarkerDocStart[PROXY_MARKER_LEN];
+	BYTE					m_pMarkerChineseField[PROXY_MARKER_LEN];
+	BYTE					m_pMarkerNonChineseField[PROXY_MARKER_LEN];
+	BYTE					m_pMarkerTokenSeparator[PROXY_MARKER_LEN];
+
+	BYTE					m_pMarkerTokenized[PROXY_MARKER_LEN];
+	BYTE					m_pMarkerMorph[PROXY_MARKER_LEN];
+
+	bool					IsDocCacheEmpty() const	{ return !m_iDocCount; }
+	bool					IsDocCacheFull() const { return m_iDocCount==m_dBatchedDocs.GetLength(); }
+
+	StoredDoc_t * PushDoc()
+	{
+		assert ( !IsDocCacheFull() );
+
+		int iEnd = (m_iDocStart+m_iDocCount) % m_dBatchedDocs.GetLength();
+		m_iDocCount++;
+
+		return &(m_dBatchedDocs[iEnd]);
+	}
+
+	StoredDoc_t * PopDoc()
+	{
+		assert ( !IsDocCacheEmpty() );
+
+		StoredDoc_t * pDoc = &(m_dBatchedDocs[m_iDocStart]);
+		m_iDocStart = (m_iDocStart+1) % m_dBatchedDocs.GetLength();
+		m_iDocCount--;
+		return pDoc;
+	}
+
+	BYTE ** CopyDoc ()
+	{
+		StoredDoc_t * pDoc = PopDoc();
+		CopyDocInfo ( T::m_tDocInfo, pDoc->m_tDocInfo );
+		T::m_tState.m_dFields = pDoc->m_dFields.Begin();
+		T::m_dMva.SwapData ( pDoc->m_dMva );
+		T::m_dStrAttrs.SwapData ( pDoc->m_dStrAttrs );
+
+		return T::m_tState.m_dFields;
+	}
+
+	void CopyDocInfo ( CSphMatch & tTo, const CSphMatch & tFrom )
+	{
+		if ( tFrom.m_pDynamic )
+		{
+			int iDynamic = T::m_tSchema.GetRowSize();
+
+			if ( !tTo.m_pDynamic )
+				tTo.Reset ( iDynamic );
+
+			memcpy ( tTo.m_pDynamic, tFrom.m_pDynamic, iDynamic*sizeof(CSphRowitem) );
+		}
+
+		tTo.m_pStatic = NULL;
+		tTo.m_iDocID = tFrom.m_iDocID;
+		tTo.m_iWeight = tFrom.m_iWeight;
+		tTo.m_iTag = tFrom.m_iTag;
+	}
+};
+
+#endif // USE_RLP
+
 #endif // _sphinxint_
 
 //
-// $Id: sphinxint.h 4299 2013-11-05 13:58:19Z klirichek $
+// $Id: sphinxint.h 4301 2013-11-06 07:41:00Z tomat $
 //

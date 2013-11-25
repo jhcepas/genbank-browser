@@ -1,7 +1,7 @@
 <?php
 
 //
-// $Id: helpers.inc 4017 2013-07-18 12:38:02Z tomat $
+// $Id: helpers.inc 4022 2013-07-19 11:47:03Z kevg $
 //
 
 ini_set ( "display_errors", 1 );
@@ -51,6 +51,11 @@ function ConnectDB ()
 	if ( !function_exists ( "mysql_connect" ) )
 	{
 		print ( "ERROR: missing required mysql_connect(); add php_mysql.so (.dll on Windows) to your php.ini!\n" );
+		exit ( 1 );
+	}
+	if ( !function_exists ( "mysqli_connect" ) )
+	{
+		print ( "ERROR: missing required mysqli_connect(); add php_mysqli.so (.dll on Windows) to your php.ini!\n" );
 		exit ( 1 );
 	}
 
@@ -2710,5 +2715,5 @@ function RunTest ( $test_dir, $skipdemo, $usemarks )
 }
 
 //
-// $Id: helpers.inc 4017 2013-07-18 12:38:02Z tomat $
+// $Id: helpers.inc 4022 2013-07-19 11:47:03Z kevg $
 //

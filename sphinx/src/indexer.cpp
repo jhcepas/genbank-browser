@@ -1,5 +1,5 @@
 //
-// $Id: indexer.cpp 4048 2013-07-31 15:31:59Z kevg $
+// $Id: indexer.cpp 4301 2013-11-06 07:41:00Z tomat $
 //
 
 //
@@ -25,6 +25,7 @@
 
 #if USE_WINDOWS
 	#define snprintf	_snprintf
+	#define popen		_popen
 
 	#include <io.h>
 	#include <tlhelp32.h>
@@ -44,8 +45,9 @@ static int				g_iTopStops		= 100;
 static bool			g_bRotate		= false;
 static bool			g_bRotateEach	= false;
 static bool			g_bBuildFreqs	= false;
+static bool			g_bSendHUP		= true;
 
-static int				g_iMemLimit				= 32*1024*1024;
+static int				g_iMemLimit				= 128*1024*1024;
 static int				g_iMaxXmlpipe2Field		= 0;
 static int				g_iWriteBuffer			= 0;
 static int				g_iMaxFileFieldBuffer	= 1024*1024;
@@ -208,6 +210,8 @@ public:
 	virtual const CSphVector <CSphSavedFile> & GetStopwordsFileInfos () { return m_dSWFileInfos; }
 	virtual const CSphVector <CSphSavedFile> & GetWordformsFileInfos () { return m_dWFFileInfos; }
 	virtual const CSphMultiformContainer * GetMultiWordforms () const { return NULL; }
+	virtual uint64_t		GetSettingsFNV () const { return 0; }
+	virtual void		SetApplyMorph ( bool ) {}
 
 	virtual bool IsStopWord ( const BYTE * ) const { return false; }
 
@@ -662,7 +666,7 @@ bool SqlParamsConfigure ( CSphSourceParams_SQL & tParams, const CSphConfigSectio
 
 
 #if USE_PGSQL
-CSphSource * SpawnSourcePgSQL ( const CSphConfigSection & hSource, const char * sSourceName )
+CSphSource * SpawnSourcePgSQL ( const CSphConfigSection & hSource, const char * sSourceName, bool RLPARG(bProxy) )
 {
 	assert ( hSource["type"]=="pgsql" );
 
@@ -672,7 +676,13 @@ CSphSource * SpawnSourcePgSQL ( const CSphConfigSection & hSource, const char * 
 
 	LOC_GETS ( tParams.m_sClientEncoding,	"sql_client_encoding" );
 
-	CSphSource_PgSQL * pSrcPgSQL = new CSphSource_PgSQL ( sSourceName );
+	CSphSource_PgSQL * pSrcPgSQL;
+#if USE_RLP
+	if ( bProxy )
+		pSrcPgSQL = new CSphSource_Proxy<CSphSource_PgSQL> ( sSourceName );
+	else
+#endif
+	pSrcPgSQL = new CSphSource_PgSQL ( sSourceName );
 	if ( !pSrcPgSQL->Setup ( tParams ) )
 		SafeDelete ( pSrcPgSQL );
 
@@ -682,7 +692,7 @@ CSphSource * SpawnSourcePgSQL ( const CSphConfigSection & hSource, const char * 
 
 
 #if USE_MYSQL
-CSphSource * SpawnSourceMySQL ( const CSphConfigSection & hSource, const char * sSourceName )
+CSphSource * SpawnSourceMySQL ( const CSphConfigSection & hSource, const char * sSourceName, bool RLPARG(bProxy) )
 {
 	assert ( hSource["type"]=="mysql" );
 
@@ -696,7 +706,14 @@ CSphSource * SpawnSourceMySQL ( const CSphConfigSection & hSource, const char * 
 	LOC_GETS ( tParams.m_sSslCert,			"mysql_ssl_cert" );
 	LOC_GETS ( tParams.m_sSslCA,			"mysql_ssl_ca" );
 
-	CSphSource_MySQL * pSrcMySQL = new CSphSource_MySQL ( sSourceName );
+	CSphSource_MySQL * pSrcMySQL;
+#if USE_RLP
+	if ( bProxy )
+		pSrcMySQL = new CSphSource_Proxy<CSphSource_MySQL> ( sSourceName );
+	else
+#endif
+		pSrcMySQL = new CSphSource_MySQL ( sSourceName );
+
 	if ( !pSrcMySQL->Setup ( tParams ) )
 		SafeDelete ( pSrcMySQL );
 
@@ -706,7 +723,7 @@ CSphSource * SpawnSourceMySQL ( const CSphConfigSection & hSource, const char * 
 
 
 #if USE_ODBC
-CSphSource * SpawnSourceODBC ( const CSphConfigSection & hSource, const char * sSourceName )
+CSphSource * SpawnSourceODBC ( const CSphConfigSection & hSource, const char * sSourceName, bool RLPARG(bProxy) )
 {
 	assert ( hSource["type"]=="odbc" );
 
@@ -717,15 +734,21 @@ CSphSource * SpawnSourceODBC ( const CSphConfigSection & hSource, const char * s
 	LOC_GETS ( tParams.m_sOdbcDSN, "odbc_dsn" );
 	LOC_GETS ( tParams.m_sColBuffers, "sql_column_buffers" );
 
-	CSphSource_ODBC * pSrc = new CSphSource_ODBC ( sSourceName );
+	CSphSource_ODBC * pSrc;
+#if USE_RLP
+	if ( bProxy )
+		pSrc = new CSphSource_Proxy<CSphSource_ODBC> ( sSourceName );
+	else
+#endif
+	pSrc = new CSphSource_ODBC ( sSourceName );
+
 	if ( !pSrc->Setup ( tParams ) )
 		SafeDelete ( pSrc );
 
 	return pSrc;
 }
 
-
-CSphSource * SpawnSourceMSSQL ( const CSphConfigSection & hSource, const char * sSourceName )
+CSphSource * SpawnSourceMSSQL ( const CSphConfigSection & hSource, const char * sSourceName, bool RLPARG(bProxy) )
 {
 	assert ( hSource["type"]=="mssql" );
 
@@ -738,7 +761,14 @@ CSphSource * SpawnSourceMSSQL ( const CSphConfigSection & hSource, const char * 
 	LOC_GETS ( tParams.m_sColBuffers, "sql_column_buffers" );
 	LOC_GETS ( tParams.m_sOdbcDSN, "odbc_dsn" ); // a shortcut, may be used instead of other specific combination
 
-	CSphSource_MSSQL * pSrc = new CSphSource_MSSQL ( sSourceName );
+	CSphSource_MSSQL * pSrc;
+#if USE_RLP
+	if ( bProxy )
+		pSrc = new CSphSource_Proxy<CSphSource_MSSQL> ( sSourceName );
+	else
+#endif
+	pSrc = new CSphSource_MSSQL ( sSourceName );
+
 	if ( !pSrc->Setup ( tParams ) )
 		SafeDelete ( pSrc );
 
@@ -747,59 +777,95 @@ CSphSource * SpawnSourceMSSQL ( const CSphConfigSection & hSource, const char * 
 #endif // USE_ODBC
 
 
-CSphSource * SpawnSourceXMLPipe ( const CSphConfigSection & hSource, const char * sSourceName, bool bUTF8 )
+CSphSource * SpawnSourceXMLPipe ( const CSphConfigSection & hSource, const char * sSourceName, bool bUTF8, bool RLPARG(bProxy) )
 {
-	assert ( hSource["type"]=="xmlpipe" || hSource["type"]=="xmlpipe2" );
+	assert ( hSource["type"]=="xmlpipe2" );
 
-	if (! ( hSource.Exists ( "xmlpipe_command" ) ))
+#if USE_LIBEXPAT
+	if ( !( hSource.Exists ( "xmlpipe_command" ) ))
 	{
 		fprintf ( stdout, "ERROR: key 'xmlpipe_command' not found in source '%s'\n", sSourceName );
 		return NULL;
 	}
 
-	CSphSource * pSrcXML = NULL;
-
-	CSphString sCommand = hSource["xmlpipe_command"];
-	const int MAX_BUF_SIZE = 1024;
-	BYTE dBuffer [MAX_BUF_SIZE];
-	int iBufSize = 0;
-	bool bUsePipe2 = true;
-
-	FILE * pPipe = sphDetectXMLPipe ( sCommand.cstr (), dBuffer, iBufSize, MAX_BUF_SIZE, bUsePipe2 );
-	if ( !pPipe )
+	if ( !bUTF8 )
 	{
-		fprintf ( stdout, "ERROR: xmlpipe: failed to popen '%s'", sCommand.cstr() );
+		fprintf ( stdout, "ERROR: source '%s': xmlpipe2 should only be used with charset_type=utf-8\n", sSourceName );
 		return NULL;
 	}
 
-	if ( bUsePipe2 )
+	FILE * pPipe = popen ( hSource [ "xmlpipe_command" ].cstr(), "r" );
+	if ( !pPipe )
 	{
-#if USE_LIBEXPAT || USE_LIBXML
-		pSrcXML = sphCreateSourceXmlpipe2 ( &hSource, pPipe, dBuffer, iBufSize, sSourceName, g_iMaxXmlpipe2Field );
-
-		if ( !bUTF8 )
-		{
-			SafeDelete ( pSrcXML );
-			fprintf ( stdout, "ERROR: source '%s': xmlpipe2 should only be used with charset_type=utf-8\n", sSourceName );
-		}
-#else
-		fprintf ( stdout, "WARNING: source '%s': xmlpipe2 support NOT compiled in. To use xmlpipe2, "
-			"install missing XML libraries, reconfigure, and rebuild Sphinx\n", sSourceName );
-#endif
-	} else
-	{
-		CSphSource_XMLPipe * pXmlPipe = new CSphSource_XMLPipe ( dBuffer, iBufSize, sSourceName );
-		if ( !pXmlPipe->Setup ( pPipe, sCommand.cstr () ) )
-			SafeDelete ( pXmlPipe );
-
-		pSrcXML = pXmlPipe;
+		fprintf ( stdout, "ERROR: xmlpipe: failed to popen '%s'", hSource [ "xmlpipe_command" ].cstr() );
+		return NULL;
 	}
 
-	return pSrcXML;
+#if USE_RLP
+	return sphCreateSourceXmlpipe2 ( &hSource, pPipe, sSourceName, g_iMaxXmlpipe2Field, bProxy );
+#else
+	return sphCreateSourceXmlpipe2 ( &hSource, pPipe, sSourceName, g_iMaxXmlpipe2Field, false );
+#endif // USE_RLP
+
+#else
+	fprintf ( stdout, "WARNING: source '%s': xmlpipe2 support NOT compiled in. To use xmlpipe2, "
+			"install missing XML libraries, reconfigure, and rebuild Sphinx\n", sSourceName );
+	return NULL;
+#endif // USE_LIBEXPAT
 }
 
 
-CSphSource * SpawnSource ( const CSphConfigSection & hSource, const char * sSourceName, bool bUTF8, bool bWordDict )
+CSphSource * SpawnSourceTSVPipe ( const CSphConfigSection & hSource, const char * sSourceName, bool bUTF8, bool RLPARG(bProxy) )
+{
+	assert ( hSource["type"]=="tsvpipe" );
+
+	if ( !( hSource.Exists ( "tsvpipe_command" ) ))
+	{
+		fprintf ( stdout, "ERROR: key 'tsvpipe_command' not found in source '%s'\n", sSourceName );
+		return NULL;
+	}
+
+	FILE * pPipe = popen ( hSource [ "tsvpipe_command" ].cstr(), "r" );
+	if ( !pPipe )
+	{
+		fprintf ( stdout, "ERROR: tsvpipe: failed to popen '%s'", hSource [ "tsvpipe_command" ].cstr() );
+		return NULL;
+	}
+
+#if USE_RLP
+	return sphCreateSourceTSVpipe ( &hSource, pPipe, sSourceName, bUTF8, bProxy );
+#else
+	return sphCreateSourceTSVpipe ( &hSource, pPipe, sSourceName, bUTF8, false );
+#endif
+}
+
+
+CSphSource * SpawnSourceCSVPipe ( const CSphConfigSection & hSource, const char * sSourceName, bool bUTF8, bool RLPARG(bProxy) )
+{
+	assert ( hSource["type"]=="csvpipe" );
+
+	if ( !( hSource.Exists ( "csvpipe_command" ) ))
+	{
+		fprintf ( stdout, "ERROR: key 'csvpipe_command' not found in source '%s'\n", sSourceName );
+		return NULL;
+	}
+
+	FILE * pPipe = popen ( hSource [ "csvpipe_command" ].cstr(), "r" );
+	if ( !pPipe )
+	{
+		fprintf ( stdout, "ERROR: csvpipe: failed to popen '%s'", hSource [ "csvpipe_command" ].cstr() );
+		return NULL;
+	}
+
+#if USE_RLP
+	return sphCreateSourceCSVpipe ( &hSource, pPipe, sSourceName, bUTF8, bProxy );
+#else
+	return sphCreateSourceCSVpipe ( &hSource, pPipe, sSourceName, bUTF8, false );
+#endif
+}
+
+
+CSphSource * SpawnSource ( const CSphConfigSection & hSource, const char * sSourceName, bool bUTF8, bool bBatchedRLP )
 {
 	if ( !hSource.Exists ( "type" ) )
 	{
@@ -809,31 +875,30 @@ CSphSource * SpawnSource ( const CSphConfigSection & hSource, const char * sSour
 
 	#if USE_PGSQL
 	if ( hSource["type"]=="pgsql" )
-		return SpawnSourcePgSQL ( hSource, sSourceName );
+		return SpawnSourcePgSQL ( hSource, sSourceName, bBatchedRLP );
 	#endif
 
 	#if USE_MYSQL
 	if ( hSource["type"]=="mysql" )
-		return SpawnSourceMySQL ( hSource, sSourceName );
+		return SpawnSourceMySQL ( hSource, sSourceName, bBatchedRLP );
 	#endif
 
 	#if USE_ODBC
 	if ( hSource["type"]=="odbc" )
-		return SpawnSourceODBC ( hSource, sSourceName );
+		return SpawnSourceODBC ( hSource, sSourceName, bBatchedRLP );
 
 	if ( hSource["type"]=="mssql" )
-		return SpawnSourceMSSQL ( hSource, sSourceName );
+		return SpawnSourceMSSQL ( hSource, sSourceName, bBatchedRLP );
 	#endif
 
-	if ( hSource["type"]=="xmlpipe" && bWordDict )
-	{
-		fprintf ( stdout, "ERROR: source '%s': type xmlpipe incompatible with dict=keywords option;"
-			" use xmlpipe2 instead; skipping.\n", sSourceName );
-		return NULL;
-	}
+	if ( hSource["type"]=="xmlpipe2" )
+		return SpawnSourceXMLPipe ( hSource, sSourceName, bUTF8, bBatchedRLP );
 
-	if ( hSource["type"]=="xmlpipe" || hSource["type"]=="xmlpipe2" )
-		return SpawnSourceXMLPipe ( hSource, sSourceName, bUTF8 );
+	if ( hSource["type"]=="tsvpipe" )
+		return SpawnSourceTSVPipe ( hSource, sSourceName, bUTF8, bBatchedRLP );
+
+	if ( hSource["type"]=="csvpipe" )
+		return SpawnSourceCSVPipe ( hSource, sSourceName, bUTF8, bBatchedRLP );
 
 	fprintf ( stdout, "ERROR: source '%s': unknown type '%s'; skipping.\n", sSourceName,
 		hSource["type"].cstr() );
@@ -860,7 +925,7 @@ bool DoIndex ( const CSphConfigSection & hIndex, const char * sIndexName,
 		const CSphString & sType = hIndex["type"];
 		bPlain = ( sType=="plain" );
 
-		if ( sType!="plain" && sType!="distributed" && sType!="rt" )
+		if ( sType!="plain" && sType!="distributed" && sType!="rt" && sType!="template" )
 		{
 			fprintf ( stdout, "ERROR: index '%s': unknown type '%s'; fix your config file.\n", sIndexName, sType.cstr() );
 			fflush ( stdout );
@@ -893,7 +958,7 @@ bool DoIndex ( const CSphConfigSection & hIndex, const char * sIndexName,
 
 	bool bInfix = hIndex.GetInt ( "min_infix_len", 0 ) > 0;
 	if ( ( hIndex.GetInt ( "min_prefix_len", 0 ) > 0 || bInfix )
-		&& hIndex.GetInt ( "enable_star" )==0 )
+		&& hIndex.GetInt ( "enable_star", 1 )==0 )
 	{
 		const char * szMorph = hIndex.GetStr ( "morphology", "" );
 		if ( szMorph && *szMorph && strcmp ( szMorph, "none" ) )
@@ -942,14 +1007,6 @@ bool DoIndex ( const CSphConfigSection & hIndex, const char * sIndexName,
 		// multiforms filter
 		sphConfDictionary ( hIndex, tDictSettings );
 
-		if ( tSettings.m_bAotFilter )
-		{
-			CSphString sDictFile;
-			sDictFile.SetSprintf ( "%s/ru.pak", g_sLemmatizerBase.cstr() );
-			if ( !sphAotInitRu ( sDictFile, sError ) )
-				sphDie ( "index '%s': %s", sIndexName, sError.cstr() );
-		}
-
 		pDict = tDictSettings.m_bWordDict
 			? sphCreateDictionaryKeywords ( tDictSettings, NULL, pTokenizer, sIndexName, sError )
 			: sphCreateDictionaryCRC ( tDictSettings, NULL, pTokenizer, sIndexName, sError );
@@ -964,9 +1021,18 @@ bool DoIndex ( const CSphConfigSection & hIndex, const char * sIndexName,
 			sphDie ( "index '%s': %s", sIndexName, sError.cstr() );
 
 		// aot filter
-		if ( tSettings.m_bAotFilter )
-			pTokenizer = sphAotCreateFilter ( pTokenizer, pDict, tSettings.m_bIndexExactWords );
+		if ( tSettings.m_uAotFilterMask )
+			pTokenizer = sphAotCreateFilter ( pTokenizer, pDict, tSettings.m_bIndexExactWords, tSettings.m_uAotFilterMask );
 	}
+#if USE_RLP
+	if ( tSettings.m_eChineseRLP==SPH_RLP_BATCHED )
+		pTokenizer = ISphTokenizer::CreateRLPResultSplitter ( pTokenizer, tSettings.m_sRLPContext.cstr() );
+	else
+		pTokenizer = ISphTokenizer::CreateRLPFilter ( pTokenizer, tSettings.m_eChineseRLP!=SPH_RLP_NONE, g_sRLPRoot.cstr(), g_sRLPEnv.cstr(), tSettings.m_sRLPContext.cstr(), true, sError );
+
+	if ( !pTokenizer )
+		sphDie ( "index '%s': %s", sIndexName, sError.cstr() );
+#endif
 
 	ISphFieldFilter * pFieldFilter = NULL;
 	CSphFieldFilterSettings tFilterSettings;
@@ -1048,7 +1114,7 @@ bool DoIndex ( const CSphConfigSection & hIndex, const char * sIndexName,
 		}
 		const CSphConfigSection & hSource = hSources [ pSourceName->cstr() ];
 
-		CSphSource * pSource = SpawnSource ( hSource, pSourceName->cstr(), pTokenizer->IsUtf8 (), tDictSettings.m_bWordDict );
+		CSphSource * pSource = SpawnSource ( hSource, pSourceName->cstr(), pTokenizer->IsUtf8 (), tSettings.m_eChineseRLP==SPH_RLP_BATCHED );
 		if ( !pSource )
 		{
 			bSpawnFailed = true;
@@ -1214,7 +1280,7 @@ bool DoIndex ( const CSphConfigSection & hIndex, const char * sIndexName,
 		pIndex->Setup ( tSettings );
 
 		bOK = pIndex->Build ( dSources, g_iMemLimit, g_iWriteBuffer )!=0;
-		if ( bOK && g_bRotate )
+		if ( bOK && g_bRotate && g_bSendHUP )
 		{
 			sIndexPath.SetSprintf ( "%s.new", hIndex["path"].cstr() );
 			bOK = pIndex->Rename ( sIndexPath.cstr() );
@@ -1482,7 +1548,7 @@ void SetSignalHandlers ()
 
 bool SendRotate ( const CSphConfig & hConf, bool bForce )
 {
-	if ( !( g_bRotate && ( g_bRotateEach || bForce ) ) )
+	if ( !( g_bRotate && ( g_bRotateEach || bForce ) ) || !g_bSendHUP )
 		return false;
 
 	int iPID = -1;
@@ -1607,11 +1673,11 @@ int main ( int argc, char ** argv )
 
 		} else if ( bMerge && strcasecmp ( argv[i], "--merge-dst-range" )==0 && (i+3)<argc )
 		{
-			dMergeDstFilters.Add();
-			dMergeDstFilters.Last().m_eType = SPH_FILTER_RANGE;
-			dMergeDstFilters.Last().m_sAttrName = argv[i+1];
-			dMergeDstFilters.Last().m_iMinValue = strtoll ( argv[i+2], NULL, 10 );
-			dMergeDstFilters.Last().m_iMaxValue = strtoll ( argv[i+3], NULL, 10 );
+			CSphFilterSettings& dLast = dMergeDstFilters.Add();
+			dLast.m_eType = SPH_FILTER_RANGE;
+			dLast.m_sAttrName = argv[i+1];
+			dLast.m_iMinValue = strtoll ( argv[i+2], NULL, 10 );
+			dLast.m_iMaxValue = strtoll ( argv[i+3], NULL, 10 );
 			i += 3;
 
 		} else if ( strcasecmp ( argv[i], "--buildstops" )==0 && (i+2)<argc )
@@ -1629,6 +1695,9 @@ int main ( int argc, char ** argv )
 		} else if ( strcasecmp ( argv[i], "--sighup-each" )==0 )
 		{
 			g_bRotateEach = true;
+		} else if ( strcasecmp ( argv[i], "--nohup" )==0 )
+		{
+			g_bSendHUP = false;
 
 		} else if ( strcasecmp ( argv[i], "--buildfreqs" )==0 )
 		{
@@ -1695,6 +1764,9 @@ int main ( int argc, char ** argv )
 
 	if ( !g_bQuiet )
 		fprintf ( stdout, SPHINX_BANNER );
+
+	if ( !g_bQuiet && sizeof(SphDocID_t)==4 )
+		fprintf ( stdout, "32-bit IDs are deprecated, rebuild your binaries with --enable-id64" );
 
 	if ( !isatty ( fileno(stdout) ) )
 		g_bProgress = false;
@@ -1820,10 +1892,10 @@ int main ( int argc, char ** argv )
 
 		sphSetThrottling ( hIndexer.GetInt ( "max_iops", 0 ), hIndexer.GetSize ( "max_iosize", 0 ) );
 
-		if ( hIndexer("lemmatizer_base") )
-			g_sLemmatizerBase = hIndexer["lemmatizer_base"];
 		sphAotSetCacheSize ( hIndexer.GetSize ( "lemmatizer_cache", 262144 ) );
 	}
+
+	sphConfigureCommon ( hConf );
 
 	/////////////////////
 	// index each index
@@ -1927,5 +1999,5 @@ int main ( int argc, char ** argv )
 }
 
 //
-// $Id: indexer.cpp 4048 2013-07-31 15:31:59Z kevg $
+// $Id: indexer.cpp 4301 2013-11-06 07:41:00Z tomat $
 //

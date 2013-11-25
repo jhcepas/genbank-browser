@@ -1,5 +1,5 @@
 //
-// $Id: sphinxquery.h 3802 2013-04-10 12:49:42Z tomat $
+// $Id: sphinxquery.h 4111 2013-08-24 08:44:44Z kevg $
 //
 
 //
@@ -65,14 +65,15 @@ enum XQOperator_e
 	SPH_QUERY_QUORUM,
 	SPH_QUERY_NEAR,
 	SPH_QUERY_SENTENCE,
-	SPH_QUERY_PARAGRAPH
+	SPH_QUERY_PARAGRAPH,
+	SPH_QUERY_NULL
 };
 
 // the limit of field or zone or zonespan
 struct XQLimitSpec_t
 {
 	bool					m_bFieldSpec;	///< whether field spec was already explicitly set
-	CSphSmallBitvec			m_dFieldMask;	///< fields mask (spec part)
+	FieldMask_t			m_dFieldMask;	///< fields mask (spec part)
 	int						m_iFieldMaxPos;	///< max position within field (spec part)
 	CSphVector<int>			m_dZones;		///< zone indexes in per-query zones list
 	bool					m_bZoneSpan;	///< if we need to hits within only one span
@@ -88,7 +89,7 @@ public:
 		m_bFieldSpec = false;
 		m_iFieldMaxPos = 0;
 		m_bZoneSpan = false;
-		m_dFieldMask.Set();
+		m_dFieldMask.SetAll();
 		m_dZones.Reset();
 	}
 
@@ -120,7 +121,7 @@ public:
 	}
 public:
 	void SetZoneSpec ( const CSphVector<int> & dZones, bool bZoneSpan );
-	void SetFieldSpec ( const CSphSmallBitvec& uMask, int iMaxPos );
+	void SetFieldSpec ( const FieldMask_t& uMask, int iMaxPos );
 };
 
 /// extended query node
@@ -166,7 +167,7 @@ public:
 	}
 
 	/// setup field limits
-	void SetFieldSpec ( const CSphSmallBitvec& uMask, int iMaxPos );
+	void SetFieldSpec ( const FieldMask_t& uMask, int iMaxPos );
 
 	/// setup zone limits
 	void SetZoneSpec ( const CSphVector<int> & dZones, bool bZoneSpan=false );
@@ -307,5 +308,5 @@ int		sphMarkCommonSubtrees ( int iXQ, const XQQuery_t * pXQ );
 #endif // _sphinxquery_
 
 //
-// $Id: sphinxquery.h 3802 2013-04-10 12:49:42Z tomat $
+// $Id: sphinxquery.h 4111 2013-08-24 08:44:44Z kevg $
 //

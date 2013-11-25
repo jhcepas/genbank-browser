@@ -1,5 +1,5 @@
 //
-// $Id: sphinxutils.cpp 4098 2013-08-20 10:00:44Z kevg $
+// $Id: sphinxutils.cpp 4301 2013-11-06 07:41:00Z tomat $
 //
 
 //
@@ -336,6 +336,31 @@ static KeyDesc_t g_dKeysSource[] =
 	{ "hook_connect",			KEY_HIDDEN, NULL },
 	{ "hook_query_range",		KEY_HIDDEN, NULL },
 	{ "hook_post_index",		KEY_HIDDEN, NULL },
+	{ "tsvpipe_command",		0, NULL },
+	{ "tsvpipe_field",			KEY_LIST, NULL },
+	{ "tsvpipe_attr_uint",		KEY_LIST, NULL },
+	{ "tsvpipe_attr_timestamp",	KEY_LIST, NULL },
+	{ "tsvpipe_attr_bool",		KEY_LIST, NULL },
+	{ "tsvpipe_attr_float",		KEY_LIST, NULL },
+	{ "tsvpipe_attr_bigint",	KEY_LIST, NULL },
+	{ "tsvpipe_attr_multi",		KEY_LIST, NULL },
+	{ "tsvpipe_attr_multi_64",	KEY_LIST, NULL },
+	{ "tsvpipe_attr_string",	KEY_LIST, NULL },
+	{ "tsvpipe_attr_json",		KEY_LIST, NULL },
+	{ "tsvpipe_field_string",	KEY_LIST, NULL },
+	{ "csvpipe_command",		0, NULL },
+	{ "csvpipe_field",			KEY_LIST, NULL },
+	{ "csvpipe_attr_uint",		KEY_LIST, NULL },
+	{ "csvpipe_attr_timestamp",	KEY_LIST, NULL },
+	{ "csvpipe_attr_bool",		KEY_LIST, NULL },
+	{ "csvpipe_attr_float",		KEY_LIST, NULL },
+	{ "csvpipe_attr_bigint",	KEY_LIST, NULL },
+	{ "csvpipe_attr_multi",		KEY_LIST, NULL },
+	{ "csvpipe_attr_multi_64",	KEY_LIST, NULL },
+	{ "csvpipe_attr_string",	KEY_LIST, NULL },
+	{ "csvpipe_attr_json",		KEY_LIST, NULL },
+	{ "csvpipe_field_string",	KEY_LIST, NULL },
+	{ "csvpipe_delimiter",		0, NULL },
 	{ NULL,						0, NULL }
 };
 
@@ -366,7 +391,7 @@ static KeyDesc_t g_dKeysIndex[] =
 	{ "ngram_chars",			0, NULL },
 	{ "phrase_boundary",		0, NULL },
 	{ "phrase_boundary_step",	0, NULL },
-	{ "ondisk_dict",			0, NULL },
+	{ "ondisk_dict",			KEY_DEPRECATED, "default value" },
 	{ "type",					0, NULL },
 	{ "local",					KEY_LIST, NULL },
 	{ "agent",					KEY_LIST, NULL },
@@ -391,7 +416,7 @@ static KeyDesc_t g_dKeysIndex[] =
 	{ "blend_chars",			0, NULL },
 	{ "expand_keywords",		0, NULL },
 	{ "hitless_words",			0, NULL },
-	{ "hit_format",				KEY_HIDDEN, NULL },
+	{ "hit_format",				KEY_HIDDEN | KEY_DEPRECATED, "default value" },
 	{ "rt_field",				KEY_LIST, NULL },
 	{ "rt_attr_uint",			KEY_LIST, NULL },
 	{ "rt_attr_bigint",			KEY_LIST, NULL },
@@ -414,6 +439,8 @@ static KeyDesc_t g_dKeysIndex[] =
 	{ "divide_remote_ranges",	KEY_HIDDEN, NULL },
 	{ "stopwords_unstemmed",	0, NULL },
 	{ "global_idf",				0, NULL },
+	{ "rlp_context",			0, NULL },
+	{ "ondisk_attrs",			0, NULL },
 	{ NULL,						0, NULL }
 };
 
@@ -427,10 +454,9 @@ static KeyDesc_t g_dKeysIndexer[] =
 	{ "max_file_field_buffer",	0, NULL },
 	{ "write_buffer",			0, NULL },
 	{ "on_file_field_error",	0, NULL },
-	{ "on_json_attr_error",		0, NULL },
-	{ "json_autoconv_numbers",	0, NULL },
-	{ "json_autoconv_keynames",	0, NULL },
-	{ "lemmatizer_base",		0, NULL },
+	{ "on_json_attr_error",		KEY_DEPRECATED, "on_json_attr_error in common{..} section" },
+	{ "json_autoconv_numbers",	KEY_DEPRECATED, "json_autoconv_numbers in common{..} section" },
+	{ "json_autoconv_keynames",	KEY_DEPRECATED, "json_autoconv_keynames in common{..} section" },
 	{ "lemmatizer_cache",		0, NULL },
 	{ NULL,						0, NULL }
 };
@@ -451,7 +477,7 @@ static KeyDesc_t g_dKeysSearchd[] =
 	{ "seamless_rotate",		0, NULL },
 	{ "preopen_indexes",		0, NULL },
 	{ "unlink_old",				0, NULL },
-	{ "ondisk_dict_default",	0, NULL },
+	{ "ondisk_dict_default",	KEY_DEPRECATED, "default value" },
 	{ "attr_flush_period",		0, NULL },
 	{ "max_packet_size",		0, NULL },
 	{ "mva_updates_pool",		0, NULL },
@@ -472,7 +498,6 @@ static KeyDesc_t g_dKeysSearchd[] =
 	{ "binlog_max_log_size",	0, NULL },
 	{ "thread_stack",			0, NULL },
 	{ "expansion_limit",		0, NULL },
-	{ "compat_sphinxql_magics",	0, NULL },
 	{ "rt_flush_period",		0, NULL },
 	{ "query_log_format",		0, NULL },
 	{ "mysql_version_string",	0, NULL },
@@ -489,7 +514,22 @@ static KeyDesc_t g_dKeysSearchd[] =
 	{ "ha_period_karma",		0, NULL },
 	{ "predicted_time_costs",	0, NULL },
 	{ "persistent_connections_limit",	0, NULL },
+	{ "ondisk_attrs_default",	0, NULL },
+	{ "shutdown_timeout",		0, NULL },
 	{ NULL,						0, NULL }
+};
+
+/// allowed keys for common section
+static KeyDesc_t g_dKeysCommon[] =
+{
+	{ "lemmatizer_base",		0, NULL },
+	{ "on_json_attr_error",		0, NULL },
+	{ "json_autoconv_numbers",	0, NULL },
+	{ "json_autoconv_keynames",	0, NULL },
+	{ "rlp_root",				0, NULL },
+	{ "rlp_environment",		0, NULL },
+	{ "rlp_max_batch_size",		0, NULL },
+	{ "rlp_max_batch_docs",		0, NULL }
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -506,6 +546,7 @@ bool CSphConfigParser::IsPlainSection ( const char * sKey )
 	if ( !strcasecmp ( sKey, "indexer" ) )		return true;
 	if ( !strcasecmp ( sKey, "searchd" ) )		return true;
 	if ( !strcasecmp ( sKey, "search" ) )		return true;
+	if ( !strcasecmp ( sKey, "common" ) )		return true;
 	return false;
 }
 
@@ -544,13 +585,15 @@ void CSphConfigParser::AddKey ( const char * sKey, char * sValue )
 
 	sValue = trim ( sValue );
 	CSphConfigSection & tSec = m_tConf[m_sSectionType][m_sSectionName];
+	int iTag = tSec.m_iTag;
+	tSec.m_iTag++;
 	if ( tSec(sKey) )
 	{
 		if ( tSec[sKey].m_bTag )
 		{
 			// override value or list with a new value
 			SafeDelete ( tSec[sKey].m_pNext ); // only leave the first array element
-			tSec[sKey] = sValue; // update its value
+			tSec[sKey] = CSphVariant ( sValue, iTag ); // update its value
 			tSec[sKey].m_bTag = false; // mark it as overridden
 
 		} else
@@ -559,13 +602,13 @@ void CSphConfigParser::AddKey ( const char * sKey, char * sValue )
 			CSphVariant * pTail = &tSec[sKey];
 			while ( pTail->m_pNext )
 				pTail = pTail->m_pNext;
-			pTail->m_pNext = new CSphVariant ( sValue );
+			pTail->m_pNext = new CSphVariant ( sValue, iTag );
 		}
 
 	} else
 	{
 		// just add
-		tSec.Add ( sValue, sKey ); // FIXME! be paranoid, verify that it returned true
+		tSec.Add ( CSphVariant ( sValue, iTag ), sKey ); // FIXME! be paranoid, verify that it returned true
 	}
 }
 
@@ -579,6 +622,7 @@ bool CSphConfigParser::ValidateKey ( const char * sKey )
 	else if ( m_sSectionType=="index" )		pDesc = g_dKeysIndex;
 	else if ( m_sSectionType=="indexer" )	pDesc = g_dKeysIndexer;
 	else if ( m_sSectionType=="searchd" )	pDesc = g_dKeysSearchd;
+	else if ( m_sSectionType=="common" )	pDesc = g_dKeysCommon;
 	if ( !pDesc )
 	{
 		snprintf ( m_sError, sizeof(m_sError), "unknown section type '%s'", m_sSectionType.cstr() );
@@ -1038,11 +1082,7 @@ bool sphConfTokenizer ( const CSphConfigSection & hIndex, CSphTokenizerSettings 
 {
 	tSettings.m_iNgramLen = Max ( hIndex.GetInt ( "ngram_len" ), 0 );
 
-	if ( !hIndex("charset_type") || hIndex["charset_type"]=="sbcs" )
-	{
-		tSettings.m_iType = TOKENIZER_SBCS;
-
-	} else if ( hIndex["charset_type"]=="utf-8" )
+	if ( !hIndex("charset_type") || hIndex["charset_type"]=="utf-8" )
 	{
 		tSettings.m_iType = TOKENIZER_UTF8;
 		if ( hIndex ( "ngram_chars" ) )
@@ -1053,6 +1093,10 @@ bool sphConfTokenizer ( const CSphConfigSection & hIndex, CSphTokenizerSettings 
 				sphWarning ( "ngram_chars specified, but ngram_len=0; IGNORED" );
 		}
 
+	} else if ( hIndex["charset_type"]=="sbcs" )
+	{
+		sphWarning ( "charset_type=sbcs is deprecated, use charset_type=utf-8" );
+		tSettings.m_iType = TOKENIZER_SBCS;
 	} else
 	{
 		sError.SetSprintf ( "unknown charset type '%s'", hIndex["charset_type"].cstr() );
@@ -1151,11 +1195,14 @@ void sphConfDictionary ( const CSphConfigSection & hIndex, CSphDictSettings & tS
 
 	if ( hIndex("dict") )
 	{
-		tSettings.m_bWordDict = false; // default to crc
-		if ( hIndex["dict"]=="keywords" )
-			tSettings.m_bWordDict = true;
-		else if ( hIndex["dict"]!="crc" )
-			fprintf ( stdout, "WARNING: unknown dict=%s, defaulting to crc\n", hIndex["dict"].cstr() );
+		tSettings.m_bWordDict = true; // default to keywords
+		if ( hIndex["dict"]=="crc" )
+		{
+			sphWarning ( "dict=crc deprecated, use dict=keywords instead" );
+			tSettings.m_bWordDict = false;
+
+		} else if ( hIndex["dict"]!="keywords" )
+			fprintf ( stdout, "WARNING: unknown dict=%s, defaulting to keywords\n", hIndex["dict"].cstr() );
 	}
 }
 
@@ -1245,7 +1292,10 @@ bool sphConfIndex ( const CSphConfigSection & hIndex, CSphIndexSettings & tSetti
 		return false;
 	}
 
-	bool bWordDict = ( strcmp ( hIndex.GetStr ( "dict", "" ), "keywords" )==0 );
+	bool bWordDict = ( strcmp ( hIndex.GetStr ( "dict", "keywords" ), "keywords" )==0 );
+	if ( !bWordDict )
+		sphWarning ( "dict=crc deprecated, use dict=keywords instead" );
+
 	if ( hIndex("type") && hIndex["type"]=="rt" && ( tSettings.m_iMinInfixLen>0 || tSettings.m_iMinPrefixLen>0 ) && !bWordDict )
 	{
 		sError.SetSprintf ( "RT indexes support prefixes and infixes with only dict=keywords" );
@@ -1275,6 +1325,9 @@ bool sphConfIndex ( const CSphConfigSection & hIndex, CSphIndexSettings & tSetti
 		else if ( hIndex["docinfo"]=="extern" )	tSettings.m_eDocinfo = SPH_DOCINFO_EXTERN;
 		else
 			fprintf ( stdout, "WARNING: unknown docinfo=%s, defaulting to extern\n", hIndex["docinfo"].cstr() );
+
+		if ( tSettings.m_eDocinfo==SPH_DOCINFO_INLINE )
+			fprintf ( stdout, "WARNING: docinfo=inline is deprecated, use ondisc_attrs=1 instead\n" );
 
 		if ( tSettings.m_eDocinfo==SPH_DOCINFO_INLINE && tSettings.m_bIndexFieldLens )
 		{
@@ -1346,14 +1399,45 @@ bool sphConfIndex ( const CSphConfigSection & hIndex, CSphIndexSettings & tSetti
 	CSphVector<CSphString> dMorphs;
 	sphSplit ( dMorphs, hIndex.GetStr ( "morphology" ) );
 
-	tSettings.m_bAotFilter = ARRAY_ANY ( tSettings.m_bAotFilter, dMorphs, dMorphs[_any]=="lemmatize_ru_all" );
+	tSettings.m_uAotFilterMask = 0;
+	for ( int j=0; j<AOT_LENGTH; ++j )
+	{
+		char buf_all[20];
+		sprintf ( buf_all, "lemmatize_%s_all", AOT_LANGUAGES[j] ); //NOLINT
+		ARRAY_FOREACH ( i, dMorphs )
+			if ( dMorphs[i]==buf_all )
+			{
+				tSettings.m_uAotFilterMask |= (1UL) << j;
+				break;
+			}
+	}
+
+	bool bPlainRLP = ARRAY_ANY ( bPlainRLP, dMorphs, dMorphs[_any]=="rlp_chinese" );
+	bool bBatchedRLP = ARRAY_ANY ( bBatchedRLP, dMorphs, dMorphs[_any]=="rlp_chinese_batched" );
+
+	if ( bPlainRLP && bBatchedRLP )
+	{
+		fprintf ( stdout, "WARNING: both rlp_chinese and rlp_chinese_batched options specified; switching to rlp_chinese\n" );
+		bBatchedRLP = false;
+	}
+
+	tSettings.m_eChineseRLP = bPlainRLP ? SPH_RLP_PLAIN : ( bBatchedRLP ? SPH_RLP_BATCHED : SPH_RLP_NONE );
+	tSettings.m_sRLPContext = hIndex.GetStr ( "rlp_context" );
+
+#if !USE_RLP
+	if ( tSettings.m_eChineseRLP!=SPH_RLP_NONE || !tSettings.m_sRLPContext.IsEmpty() )
+	{
+		tSettings.m_eChineseRLP = SPH_RLP_NONE;
+		fprintf ( stdout, "WARNING: RLP options specified, but no RLP support compiled; ignoring\n" );
+	}
+#endif
 
 	// all good
 	return true;
 }
 
 
-bool sphFixupIndexSettings ( CSphIndex * pIndex, const CSphConfigSection & hIndex, CSphString & sError )
+bool sphFixupIndexSettings ( CSphIndex * pIndex, const CSphConfigSection & hIndex, CSphString & sError, bool bTemplateDict )
 {
 	bool bTokenizerSpawned = false;
 
@@ -1373,11 +1457,19 @@ bool sphFixupIndexSettings ( CSphIndex * pIndex, const CSphConfigSection & hInde
 
 	if ( !pIndex->GetDictionary () )
 	{
+		CSphDict * pDict = NULL;
 		CSphDictSettings tSettings;
-		if ( pIndex->m_bId32to64 )
-			tSettings.m_bCrc32 = true;
-		sphConfDictionary ( hIndex, tSettings );
-		CSphDict * pDict = sphCreateDictionaryCRC ( tSettings, NULL, pIndex->GetTokenizer (), pIndex->GetName(), sError );
+		if ( bTemplateDict )
+		{
+			sphConfDictionary ( hIndex, tSettings );
+			pDict = sphCreateDictionaryTemplate ( tSettings, NULL, pIndex->GetTokenizer (), pIndex->GetName(), sError );
+		} else
+		{
+			if ( pIndex->m_bId32to64 )
+				tSettings.m_bCrc32 = true;
+			sphConfDictionary ( hIndex, tSettings );
+			pDict = sphCreateDictionaryCRC ( tSettings, NULL, pIndex->GetTokenizer (), pIndex->GetName(), sError );
+		}
 		if ( !pDict )
 		{
 			sphWarning ( "index '%s': %s", pIndex->GetName(), sError.cstr() );
@@ -2104,7 +2196,7 @@ void sphUnlinkIndex ( const char * sName, bool bForce )
 	// +1 is for .mvp
 	for ( int i=0; i<sphGetExtCount()+1; i++ )
 	{
-		snprintf ( sFileName, sizeof(sFileName), "%s%s", sName, sphGetExts ( SPH_EXT_CUR )[i] );
+		snprintf ( sFileName, sizeof(sFileName), "%s%s", sName, sphGetExts ( SPH_EXT_TYPE_CUR )[i] );
 		// 'mvp' is optional file
 		if ( ::unlink ( sFileName ) && errno!=ENOENT )
 			sphWarning ( "unlink failed (file '%s', error '%s'", sFileName, strerror(errno) );
@@ -2130,6 +2222,76 @@ void sphCheckDuplicatePaths ( const CSphConfig & hConf )
 }
 
 
+void sphConfigureCommon ( const CSphConfig & hConf )
+{
+	if ( hConf("common") && hConf["common"]("common") )
+	{
+		CSphConfigSection & hCommon = hConf["common"]["common"];
+		g_sLemmatizerBase = hCommon.GetStr ( "lemmatizer_base" );
+#if USE_RLP
+		g_sRLPRoot = hCommon.GetStr ( "rlp_root" );
+		g_sRLPEnv = hCommon.GetStr ( "rlp_environment" );
+		g_iRLPMaxBatchSize = hCommon.GetSize ( "rlp_max_batch_size", 51200 );
+		g_iRLPMaxBatchDocs = hCommon.GetInt ( "rlp_max_batch_docs", 50 );
+#endif
+		bool bJsonStrict = false;
+		bool bJsonAutoconvNumbers = false;
+		bool bJsonKeynamesToLowercase = false;
+
+		if ( hCommon("on_json_attr_error") )
+		{
+			const CSphString & sVal = hCommon["on_json_attr_error"];
+			if ( sVal=="ignore_attr" )
+				bJsonStrict = false;
+			else if ( sVal=="fail_index" )
+				bJsonStrict = true;
+			else
+				sphDie ( "unknown on_json_attr_error value (must be one of ignore_attr, fail_index)" );
+		}
+
+		if ( hCommon("json_autoconv_keynames") )
+		{
+			const CSphString & sVal = hCommon["json_autoconv_keynames"];
+			if ( sVal=="lowercase" )
+				bJsonKeynamesToLowercase = true;
+			else
+				sphDie ( "unknown json_autoconv_keynames value (must be 'lowercase')" );
+		}
+
+		bJsonAutoconvNumbers = ( hCommon.GetInt ( "json_autoconv_numbers", 0 )!=0 );
+		sphSetJsonOptions ( bJsonStrict, bJsonAutoconvNumbers, bJsonKeynamesToLowercase );
+	}
+}
+
+static bool IsChineseCode ( int iCode )
+{
+	return ( ( iCode>=0x2E80 && iCode<=0x2EF3 ) ||	// CJK radicals
+		( iCode>=0x2F00 && iCode<=0x2FD5 ) ||	// Kangxi radicals
+		( iCode>=0x3105 && iCode<=0x312D ) ||	// Bopomofo
+		( iCode>=0x31C0 && iCode<=0x31E3 ) ||	// CJK strokes
+		( iCode>=0x3400 && iCode<=0x4DB5 ) ||	// CJK Ideograph Extension A
+		( iCode>=0x4E00 && iCode<=0x9FCC ) ||	// Ideograph
+		( iCode>=0xF900 && iCode<=0xFAD9 ) ||	// compatibility ideographs
+		( iCode>=0x20000 && iCode<=0x2FA1D ) );	// CJK Ideograph Extensions B/C/D, and compatibility ideographs
+}
+
+bool sphDetectChinese ( const BYTE * szBuffer, int iLength )
+{
+	if ( !szBuffer || !iLength )
+		return false;
+
+	const BYTE * pBuffer = szBuffer;
+	while ( pBuffer<szBuffer+iLength )
+	{
+		int iCode = sphUTF8Decode ( pBuffer );
+		if ( IsChineseCode ( iCode ) )
+			return true;
+	}
+
+	return false;
+}
+
+
 //
-// $Id: sphinxutils.cpp 4098 2013-08-20 10:00:44Z kevg $
+// $Id: sphinxutils.cpp 4301 2013-11-06 07:41:00Z tomat $
 //

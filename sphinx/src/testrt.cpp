@@ -1,5 +1,5 @@
 //
-// $Id: testrt.cpp 3737 2013-03-14 14:09:23Z klirichek $
+// $Id: testrt.cpp 4267 2013-10-18 08:14:50Z tomat $
 //
 
 //
@@ -44,14 +44,17 @@ void DoSearch ( CSphIndex * pIndex )
 
 	CSphQuery tQuery;
 	CSphQueryResult tResult;
+	CSphMultiQueryArgs tArgs ( NULL, 1 );
 	tQuery.m_sQuery = "@title cat";
 
-	ISphMatchSorter * pSorter = sphCreateQueue ( &tQuery, pIndex->GetMatchSchema(), tResult.m_sError, NULL, false );
+	SphQueueSettings_t tQueueSettings ( tQuery, pIndex->GetMatchSchema(), tResult.m_sError, NULL );
+	tQueueSettings.m_bComputeItems = false;
+	ISphMatchSorter * pSorter = sphCreateQueue ( tQueueSettings );
 	if ( !pSorter )
 	{
 		printf ( "failed to create sorter; error=%s", tResult.m_sError.cstr() );
 
-	} else if ( !pIndex->MultiQuery ( &tQuery, &tResult, 1, &pSorter, NULL ) )
+	} else if ( !pIndex->MultiQuery ( &tQuery, &tResult, 1, &pSorter, tArgs ) )
 	{
 		printf ( "query failed; error=%s", pIndex->GetLastError().cstr() );
 
@@ -184,6 +187,7 @@ int main ( int argc, char ** argv )
 
 	CSphString sError;
 	CSphDictSettings tDictSettings;
+	tDictSettings.m_bWordDict = false;
 
 	ISphTokenizer * pTok = sphCreateUTF8Tokenizer();
 	CSphDict * pDict = sphCreateDictionaryCRC ( tDictSettings, NULL, pTok, "rt1", sError );
@@ -270,5 +274,5 @@ int main ( int argc, char ** argv )
 }
 
 //
-// $Id: testrt.cpp 3737 2013-03-14 14:09:23Z klirichek $
+// $Id: testrt.cpp 4267 2013-10-18 08:14:50Z tomat $
 //

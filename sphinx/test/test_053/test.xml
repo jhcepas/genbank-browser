@@ -12,7 +12,6 @@ indexer
 searchd
 {
 	<searchd_settings/>
-compat_sphinxql_magics = 1
 }
 
 source srctest1
@@ -46,7 +45,7 @@ index test2
 </config>
 
 <queries>
-<query index="test1 test2">test"</query>
+<query index="test1 test2" mode="any">test"</query>
 </queries>
 
 <db_create>

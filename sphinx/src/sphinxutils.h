@@ -1,5 +1,5 @@
 //
-// $Id: sphinxutils.h 4048 2013-07-31 15:31:59Z kevg $
+// $Id: sphinxutils.h 4117 2013-08-26 12:01:41Z klirichek $
 //
 
 //
@@ -64,6 +64,10 @@ bool sphWildcardMatch ( const char * sSstring, const char * sPattern );
 class CSphConfigSection : public SmallStringHash_T < CSphVariant >
 {
 public:
+	CSphConfigSection ()
+		: m_iTag ( 0 )
+	{}
+
 	/// get integer option value by key and default value
 	int GetInt ( const char * sKey, int iDefault=0 ) const
 	{
@@ -88,6 +92,8 @@ public:
 	/// get size option (plain int, or with K/M prefix) value by key and default value
 	int		GetSize ( const char * sKey, int iDefault ) const;
 	int64_t GetSize64 ( const char * sKey, int64_t iDefault ) const;
+
+	int m_iTag;
 };
 
 /// config section type (hash of sections)
@@ -161,7 +167,7 @@ bool			sphConfFieldFilter ( const CSphConfigSection & hIndex, CSphFieldFilterSet
 bool			sphConfIndex ( const CSphConfigSection & hIndex, CSphIndexSettings & tSettings, CSphString & sError );
 
 /// try to set dictionary, tokenizer and misc settings for an index (if not already set)
-bool			sphFixupIndexSettings ( CSphIndex * pIndex, const CSphConfigSection & hIndex, CSphString & sError );
+bool			sphFixupIndexSettings ( CSphIndex * pIndex, const CSphConfigSection & hIndex, CSphString & sError, bool bTemplateDict=false );
 
 enum ESphLogLevel
 {
@@ -226,8 +232,14 @@ const char * DoBacktrace ( int iDepth=0, int iSkip=0 );
 
 void sphCheckDuplicatePaths ( const CSphConfig & hConf );
 
+/// set globals from the common config section
+void sphConfigureCommon ( const CSphConfig & hConf );
+
+/// detect chinese chars in a buffer
+bool sphDetectChinese ( const BYTE * szBuffer, int iLength );
+
 #endif // _sphinxutils_
 
 //
-// $Id: sphinxutils.h 4048 2013-07-31 15:31:59Z kevg $
+// $Id: sphinxutils.h 4117 2013-08-26 12:01:41Z klirichek $
 //

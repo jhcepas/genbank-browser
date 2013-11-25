@@ -12,7 +12,6 @@ indexer
 searchd
 {
 	<searchd_settings/>
-compat_sphinxql_magics = 1
 	workers = threads
 }
 
@@ -28,7 +27,8 @@ index test
 	source				= test
 	path				= <data_path/>/test
 	stopwords			= <this_test/>/stopwords.txt
-	wordforms			= <this_test/>/wordforms.txt	
+	wordforms			= <this_test/>/wordforms.txt
+	charset_type		= sbcs
 }
 
 source test2

@@ -1,7 +1,7 @@
 dnl Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.59)
-AC_INIT([sphinx], [2.1.3-dev], [shodan(at)sphinxsearch.com])
+AC_INIT([sphinx], [2.2.1], [shodan(at)sphinxsearch.com])
 
 dnl --------------------------------------------------------------------------
 
@@ -28,11 +28,11 @@ AC_ARG_WITH([debug],
 
 AC_MSG_CHECKING([whether to compile debug version])
 if test x$ac_cv_use_debug != xno; then
-	SPHINX_CFLAGS="-Wall -g -D_FILE_OFFSET_BITS=64"
+	SPHINX_CFLAGS="-fno-rtti -Wall -g -D_FILE_OFFSET_BITS=64"
 	SPHINX_INJECT_FLAGS="-D_FILE_OFFSET_BITS=64"
 	AC_MSG_RESULT([yes])
 else
-	SPHINX_CFLAGS="-Wall -g -D_FILE_OFFSET_BITS=64 -O3 -DNDEBUG"
+	SPHINX_CFLAGS="-fno-rtti -Wall -g -D_FILE_OFFSET_BITS=64 -O3 -DNDEBUG"
 	SPHINX_INJECT_FLAGS="-D_FILE_OFFSET_BITS=64 -DNDEBUG"
 	AC_MSG_RESULT([no])
 fi
@@ -354,7 +354,7 @@ MYSQL_CFLAGS=`echo $MYSQL_CFLAGS | sed -e 's/\-DNDEBUG//g'`
 dnl ---
 
 AC_MSG_CHECKING([whether to use 64-bit document/word IDs])
-sph_enable_id64=no
+sph_enable_id64=yes
 AC_ARG_ENABLE([id64],
 	[  --enable-id64           use 64-bit document and word IDs (default is no)],
 	[sph_enable_id64=$enableval])
@@ -415,8 +415,8 @@ AC_ARG_WITH([re2],
 AC_MSG_CHECKING([whether to compile with re2 library support])
 
 AC_ARG_WITH([re2-includes],
-        AC_HELP_STRING([--with-re2-includes], [path to re2 header files]),
-        [ac_cv_re2_includes=$withval], [ac_cv_re2_includes=no]
+	AC_HELP_STRING([--with-re2-includes], [path to re2 header files]),
+	[ac_cv_re2_includes=$withval], [ac_cv_re2_includes=no]
 )
 
 AC_ARG_WITH([re2-libs],
@@ -426,26 +426,48 @@ AC_ARG_WITH([re2-libs],
 
 # First check if user supplied --with-re2-libs and --with-re2-includes
 if test x$ac_cv_re2_libs != xno && test x$ac_cv_re2_includes != xno; then
-	ac_cv_use_re2=yes
+       ac_cv_use_re2=yes
 fi
+
 if test x$ac_cv_use_re2 != xno; then
-	AC_CHECK_RE2
-	AC_MSG_RESULT([yes, $LIBRE2_CFLAGS])
-	AC_DEFINE(USE_RE2, 1, [RE2 library support])
-	AC_SUBST([LIBRE2_LIBS])
-	AC_SUBST([LIBRE2_CFLAGS])
-	AC_SUBST([LIBRE2_PATH])
+       AC_CHECK_RE2
+       AC_MSG_RESULT([yes, $LIBRE2_CFLAGS])
+       AC_DEFINE(USE_RE2, 1, [RE2 library support])
+       AC_SUBST([LIBRE2_LIBS])
+       AC_SUBST([LIBRE2_CFLAGS])
+       AC_SUBST([LIBRE2_PATH])
 else
 	AC_MSG_RESULT([no])
-	AC_DEFINE(USE_RE2, 0, [RE2 library support])
+	AC_DEFINE(USE_RE2, 0, [re2 library support])
 fi
 AM_CONDITIONAL(USE_RE2, test x$ac_cv_use_re2 != xno)
-
 
 dnl ---
 
 # we can now set preprocessor flags for both C and C++ compilers
 CPPFLAGS="$CPPFLAGS $MYSQL_CFLAGS $PGSQL_CFLAGS $LIBRE2_CFLAGS"
+
+AC_ARG_WITH([rlp],
+	AC_HELP_STRING([--with-rlp], [compile with RLP library support (default is disabled)]),
+	[ac_cv_use_rlp=$withval], [ac_cv_use_rlp=no]
+)
+
+AC_MSG_CHECKING([whether to compile with RLP library support])
+if test x$ac_cv_use_rlp != xno; then
+	if test -d rlp && test -f rlp/rlp/include/bt_rlp_c.h; then
+		AC_MSG_RESULT([yes])
+		AC_DEFINE(USE_RLP, 1, [RLP library support])
+	else
+		AC_MSG_ERROR([missing RLP sources from librlp])
+	fi
+else
+	AC_MSG_RESULT([no])
+	AC_DEFINE(USE_RLP, 0, [RLP library support])
+fi
+AM_CONDITIONAL(USE_RLP, test x$ac_cv_use_rlp != xno)
+
+
+dnl ---
 
 got_expat=0
 AC_MSG_CHECKING([for libexpat])

@@ -12,7 +12,6 @@ indexer
 searchd
 {
 	<searchd_settings/>
-	compat_sphinxql_magics	= 0
 	workers = threads
 	binlog_path = #
 }
@@ -188,17 +187,21 @@ INSERT INTO test_table VALUES
 <sphinxql>select *, weight() as w1, FLOOR( bm25f(1.2, 0.8)*1000 ) as w2 from test where match('( the | missed1 | seven ) !missed2 ') ORDER by id ASC option ranker=expr('bm25f(1.2,0.8) * 1000')</sphinxql>
 
 <!-- regression duplicates at query vs expression ranker -->
-<sphinxql>select *, packedfactors() from dup where match(' "the I the"~1 ') ORDER by id ASC option ranker=expr('1'),  idf='plain'</sphinxql>
-<sphinxql>select *, packedfactors() from dup where match(' "the I the"~100 ') ORDER by id ASC option ranker=expr('1'),  idf='plain'</sphinxql>
-<sphinxql>select *, packedfactors() from dup where match(' "the I"~100 ') ORDER by id ASC option ranker=expr('1'),  idf='plain'</sphinxql>
-<sphinxql>select *, packedfactors() from dup where match(' "the I the"~1 the ') ORDER by id ASC option ranker=expr('1'),  idf='plain'</sphinxql>
-<sphinxql>select *, packedfactors() from dup where match(' "the I the"~100 the ') ORDER by id ASC option ranker=expr('1'),  idf='plain'</sphinxql>
-<sphinxql>select *, packedfactors() from dup where match(' the "the I the"~1 ') ORDER by id ASC option ranker=expr('1'),  idf='plain'</sphinxql>
-<sphinxql>select *, packedfactors() from dup where match(' the "the I the"~100 ') ORDER by id ASC option ranker=expr('1'),  idf='plain'</sphinxql>
-<sphinxql>select *, packedfactors() from dup where match(' (the who) | (the foo) ') ORDER by id ASC option ranker=expr('1'),  idf='plain'</sphinxql>
-<sphinxql>select *, packedfactors() from dup where match(' what | foo | what ') ORDER by id ASC option ranker=expr('1'),  idf='plain'</sphinxql>
-<sphinxql>select *, packedfactors() from dup where match(' that | was | that ') ORDER by id ASC option ranker=expr('1'),  idf='plain'</sphinxql>
-<sphinxql>select *, packedfactors() from dup where match(' "that was that"~10 ') ORDER by id ASC option ranker=expr('1'),  idf='plain'</sphinxql>
+<sphinxql>select *, packedfactors() from dup where match(' "the I the"~1 ') ORDER by id ASC option ranker=expr('1'),  idf='plain,tfidf_unnormalized'</sphinxql>
+<sphinxql>select *, packedfactors() from dup where match(' "the I the"~100 ') ORDER by id ASC option ranker=expr('1'),  idf='plain,tfidf_unnormalized'</sphinxql>
+<sphinxql>select *, packedfactors() from dup where match(' "the I"~100 ') ORDER by id ASC option ranker=expr('1'),  idf='plain,tfidf_unnormalized'</sphinxql>
+<sphinxql>select *, packedfactors() from dup where match(' "the I the"~1 the ') ORDER by id ASC option ranker=expr('1'),  idf='plain,tfidf_unnormalized'</sphinxql>
+<sphinxql>select *, packedfactors() from dup where match(' "the I the"~100 the ') ORDER by id ASC option ranker=expr('1'),  idf='plain,tfidf_unnormalized'</sphinxql>
+<sphinxql>select *, packedfactors() from dup where match(' the "the I the"~1 ') ORDER by id ASC option ranker=expr('1'),  idf='plain,tfidf_unnormalized'</sphinxql>
+<sphinxql>select *, packedfactors() from dup where match(' the "the I the"~100 ') ORDER by id ASC option ranker=expr('1'),  idf='plain,tfidf_unnormalized'</sphinxql>
+<sphinxql>select *, packedfactors() from dup where match(' (the who) | (the foo) ') ORDER by id ASC option ranker=expr('1'),  idf='plain,tfidf_unnormalized'</sphinxql>
+<sphinxql>select *, packedfactors() from dup where match(' what | foo | what ') ORDER by id ASC option ranker=expr('1'),  idf='plain,tfidf_unnormalized'</sphinxql>
+<sphinxql>select *, packedfactors() from dup where match(' that | was | that ') ORDER by id ASC option ranker=expr('1'),  idf='plain,tfidf_unnormalized'</sphinxql>
+<sphinxql>select *, packedfactors() from dup where match(' "that was that"~10 ') ORDER by id ASC option ranker=expr('1'),  idf='plain,tfidf_unnormalized'</sphinxql>
+
+<!-- regression proximity, phrase, NEAR vs expression ranker -->
+<sphinxql>select *, packedfactors() from dup where match(' "maybe I" | "I m" ') ORDER by id ASC option ranker=expr('1'),  idf='plain,tfidf_unnormalized'</sphinxql>
+<sphinxql>select *, packedfactors() from dup where match(' ( I NEAR/10 work) | (I NEAR/20 there) ') ORDER by id ASC option ranker=expr('1'),  idf='plain,tfidf_unnormalized'</sphinxql>
 
 <!-- hits from over 32 field  -->
 <sphinxql>select *, weight() as w, packedfactors() from fields where match(' test ') option ranker=expr('sum(lcs)')</sphinxql>

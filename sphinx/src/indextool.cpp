@@ -1,5 +1,5 @@
 //
-// $Id: indextool.cpp 4236 2013-10-08 11:41:24Z tomat $
+// $Id: indextool.cpp 4238 2013-10-08 12:49:23Z tomat $
 //
 
 //
@@ -20,8 +20,12 @@
 #include <time.h>
 
 #if USE_WINDOWS
-#include <io.h> // for setmode and open on windows
+#include <io.h> // for setmode(). open() on windows
+#define sphSeek		_lseeki64
+#else
+#define sphSeek		lseek
 #endif
+
 
 void StripStdin ( const char * sIndexAttrs, const char * sRemoveElements )
 {
@@ -127,8 +131,8 @@ void CharsetFold ( CSphIndex * pIndex, FILE * fp )
 					break;
 
 
-		BYTE * pIn = sBuf1.Begin();
-		BYTE * pInMax = pIn + iBuf1 + iGot;
+		const BYTE * pIn = sBuf1.Begin();
+		const BYTE * pInMax = pIn + iBuf1 + iGot;
 
 		if ( pIn==pInMax && feof(fp) )
 			break;
@@ -176,12 +180,6 @@ void CharsetFold ( CSphIndex * pIndex, FILE * fp )
 }
 
 //////////////////////////////////////////////////////////////////////////
-
-#if USE_WINDOWS
-#define sphSeek		_lseeki64
-#else
-#define sphSeek		lseek
-#endif
 
 bool FixupFiles ( const CSphVector<CSphString> & dFiles, CSphString & sError )
 {
@@ -819,6 +817,7 @@ int main ( int argc, char ** argv )
 	bool bSkipUnique = false;
 	CSphString sDumpDict;
 	bool bQuiet = false;
+	bool bRotate = false;
 
 	enum
 	{
@@ -855,6 +854,7 @@ int main ( int argc, char ** argv )
 		OPT1 ( "--dumpconfig" )		{ eCommand = CMD_DUMPCONFIG; sDumpHeader = argv[++i]; }
 		OPT1 ( "--dumpdocids" )		{ eCommand = CMD_DUMPDOCIDS; sIndex = argv[++i]; }
 		OPT1 ( "--check" )			{ eCommand = CMD_CHECK; sIndex = argv[++i]; sphSetDebugCheck(); }
+		OPT1 ( "--rotate" )			{ bRotate = true; }
 		OPT1 ( "--htmlstrip" )		{ eCommand = CMD_STRIP; sIndex = argv[++i]; }
 		OPT1 ( "--build-infixes" )	{ eCommand = CMD_BUILDINFIXES; sIndex = argv[++i]; }
 		OPT1 ( "--build-skips" )	{ eCommand = CMD_BUILDSKIPS; sIndex = argv[++i]; }
@@ -1023,6 +1023,8 @@ int main ( int argc, char ** argv )
 		}
 	}
 
+	// configure common settings (as of time of this writing, AOT and RLP setup)
+	sphConfigureCommon ( hConf );
 
 	// common part for several commands, check and preload index
 	CSphIndex * pIndex = NULL;
@@ -1056,7 +1058,14 @@ int main ( int argc, char ** argv )
 				pIndex = sphCreateIndexRT ( tSchema, sIndex.cstr(), 32*1024*1024, hConf["index"][sIndex]["path"].cstr(), bDictKeywords );
 		} else
 		{
-			pIndex = sphCreateIndexPhrase ( sIndex.cstr(), hConf["index"][sIndex]["path"].cstr() );
+			const char * sPath = hConf["index"][sIndex]["path"].cstr();
+			CSphStringBuilder tPath;
+			if ( bRotate )
+			{
+				tPath.Appendf ( "%s.tmp", sPath );
+				sPath = tPath.cstr();
+			}
+			pIndex = sphCreateIndexPhrase ( sIndex.cstr(), sPath );
 		}
 
 		if ( !pIndex )
@@ -1095,6 +1104,9 @@ int main ( int argc, char ** argv )
 
 		break;
 	}
+
+	int iCheckErrno = 0;
+	CSphString sNewIndex;
 
 	// do the dew
 	switch ( eCommand )
@@ -1165,7 +1177,16 @@ int main ( int argc, char ** argv )
 
 		case CMD_CHECK:
 			fprintf ( stdout, "checking index '%s'...\n", sIndex.cstr() );
-			return pIndex->DebugCheck ( stdout );
+			iCheckErrno = pIndex->DebugCheck ( stdout );
+			if ( iCheckErrno )
+				return iCheckErrno;
+			if ( bRotate )
+			{
+				sNewIndex.SetSprintf ( "%s.new", hConf["index"][sIndex]["path"].cstr() );
+				if ( !pIndex->Rename ( sNewIndex.cstr() ) )
+					sphDie ( "index '%s': rotate failed: %s\n", sIndex.cstr(), pIndex->GetLastError().cstr() );
+			}
+			return 0;
 
 		case CMD_STRIP:
 			{
@@ -1247,5 +1268,5 @@ int main ( int argc, char ** argv )
 }
 
 //
-// $Id: indextool.cpp 4236 2013-10-08 11:41:24Z tomat $
+// $Id: indextool.cpp 4238 2013-10-08 12:49:23Z tomat $
 //

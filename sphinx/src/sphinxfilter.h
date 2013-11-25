@@ -1,5 +1,5 @@
 //
-// $Id: sphinxfilter.h 3701 2013-02-20 18:10:18Z deogar $
+// $Id: sphinxfilter.h 4267 2013-10-18 08:14:50Z tomat $
 //
 
 //
@@ -51,16 +51,16 @@ struct ISphFilter
 
 	ISphFilter() : m_bUsesAttrs ( true ) {}
 
-protected :
-
+protected:
 	bool m_bUsesAttrs;
 };
 
-ISphFilter * sphCreateFilter ( const CSphFilterSettings & tSettings, const CSphSchema & tSchema, const DWORD * pMvaPool, const BYTE * pStrings, CSphString & sError );
+ISphFilter * sphCreateFilter ( const CSphFilterSettings & tSettings, const ISphSchema & tSchema, const DWORD * pMvaPool, const BYTE * pStrings, CSphString & sError );
+ISphFilter * sphCreateAggrFilter ( const CSphFilterSettings * pSettings, const CSphString & sAttrName, const ISphSchema & tSchema, CSphString & sError );
 ISphFilter * sphJoinFilters ( ISphFilter *, ISphFilter * );
 
 #endif // _sphinxfilter_
 
 //
-// $Id: sphinxfilter.h 3701 2013-02-20 18:10:18Z deogar $
+// $Id: sphinxfilter.h 4267 2013-10-18 08:14:50Z tomat $
 //

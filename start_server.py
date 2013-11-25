@@ -1,21 +1,49 @@
+import sys
+import os
 import time
 from collections import defaultdict
 from string import strip
 import cPickle
-    
+import argparse
+import re
+
 from Bio import SeqIO
 from Bio.SeqFeature import CompoundLocation
 from bottle import Bottle, run, get, post, request, route, response    
 
+BASEPATH = os.path.split(os.path.realpath(__file__))[0]
+sys.path.insert(0, os.path.join(BASEPATH, "sphinx/api/"))
+try:
+    import sphinxapi as sphinx
+except ImportError:
+    print "Sphinx API could not be imported. Searches will be disabled!"
+
+
+FASTA_FILES = [os.path.join(BASEPATH, "data/v1/C_thermophilum.scaffolds.v1.fa"),
+               os.path.join(BASEPATH, "data/v1/C_thermophilum.mitochondrial.v1.fa"),
+               os.path.join(BASEPATH, "data/v1/C_thermophilum.rrn.v1.fa")]
+GBF_FILE = os.path.join(BASEPATH, "data/v1/C_thermophilum.annotation.v1.gbf")
+EXPR_FILE = os.path.join(BASEPATH, "data/v1/C_thermophilum.expressed.proteins.v1.txt")
+DESC_FILE = os.path.join(BASEPATH, "data/v1/C_thermophilum.additional.descr.v1.txt")
+DBFILE = os.path.join(BASEPATH, "genome.db.pkl")
+WEBSERVICE_PORT = 9000 # needs to be externally open or bypassed with apache proxy
+
+# Sphinx config
+SPHINX_PORT = 9001
+SPHINX_CONFIG_FILE = os.path.join(BASEPATH,"ct.sphinx.conf")
+SPHINX_ANNOTATION_FILE = os.path.join(BASEPATH,"ct_annotations.tab")
+SEARCHD = os.path.join(BASEPATH, "sphinx/src/searchd")
+INDEXER = os.path.join(BASEPATH, "sphinx/src/indexer")
+SEARCHER = os.path.join(BASEPATH, "sphinx/src/search")
+
+# The following data from the gbf file is not retrieved by web-services
 AVOIDED_QUALIFIERS = set(["translation"])
 
-FASTA_FILES = ["data/v1/C_thermophilum.scaffolds.v1.fa",
-               "data/v1/C_thermophilum.mitochondrial.v1.fa",
-               "data/v1/C_thermophilum.rrn.v1.fa"]
-GBF_FILE = "data/v1/C_thermophilum.annotation.v1.gbf"
-EXPR_FILE = "data/v1/C_thermophilum.expressed.proteins.v1.txt"
-DESC_FILE = "data/v1/C_thermophilum.additional.descr.v1.txt"
+def system(cmd):
+    print cmd
+    return os.system(cmd)
 
+# indexing functions
 def genome_pos(f, scaffolds):
     start = f.location.start + f.parent.scaffold_start
     end = f.location.end + f.parent.scaffold_start
@@ -144,6 +172,8 @@ def read_and_index_genome():
             
     return gbrecords, features, scaffolds, scaffold_genes
 
+# Web services
+    
 @get('/all')
 def all():
     response.set_header("Access-Control-Allow-Origin","*")
@@ -261,61 +291,57 @@ def gene():
     print "**Returning GENE json in", time.time() -t1        
     return as_json(by_region)
 
+@route('/search/<q>')
+def search(q=None):
+    if not q:
+        return
+    cl = sphinx.SphinxClient()
+    cl.SetServer ("localhost", SPHINX_PORT)
+    cl.SetMatchMode(sphinx.SPH_MATCH_ALL)
+    cl.SetLimits (0, 100, 100)
+    res = cl.Query("*%s*" %q, '*')
+    if not res:
+        print 'query failed: %s' % cl.GetLastError()
+        return
 
-#@get('/gene2')
-#def gene2():
-#    t1 = time.time()
-#    print t1
-#    response.set_header("Access-Control-Allow-Origin","*")
-#    response.content_type = "application/json"
-#    
-# 
-#    region = request.GET["region"]
-#    genetype = map(strip, request.GET.get("histogram", "CDS").split(","))
-#    histogram = request.GET.get("histogram", None)
-#    interval = int(request.GET.get("interval", 1000))
-#    
-#    min_start = None
-#    max_end = 0
-#    by_region =      
-#    for reg in region.split(","):
-#        ch, start, end = parse_region(region)
-#        min_start = start if min_start is None or min_start<mins_start else min_start
-#        max_end = max_end if end>max_end else max_end
-#        all_regions.append(ch, start, end)
-#        by_region.append([{"id":[ch, start, end}, "result":[]}])
-#    by_region.sort()
-#    all_genes = get_exons(ch, min_start, max_end, genetype)
-#        
-#    if histogram:
-#        for reg in region.split(","):
-#            ch, start, end = parse_region(reg)
-#            all_genes = get_exons(reg, "CDS")
-#            reg_intervals = []
-#            for i in xrange(start, end, interval):
-#                features = 0 
-#                for g in all_genes:
-#                    if g["start"] >= i and g["end"] <= i+interval:
-#                        features += 1
-#                    elif g["start"] > i+interval:
-#                        break
-#                reg_intervals.append({"chromosome":ch,
-#                                      "start":i,
-#                                      "end":i+interval-1,
-#                                      "strand":"+",
-#                                      "features_count": features})
-# 
-#                   
-#            by_region.append({"id":reg, "resultType": "frequencies", "result": reg_intervals})
-#    else:
-#        for genedict in all_genes:
-#            
-#            by_region.append({"id":reg, "result":get_exons(reg, "CDS")})
-# 
-#    print "**Returning GENE json in", time.time() -t1        
-#    return as_json(by_region)
+    
+    if cl.GetLastWarning():
+        print 'WARNING: %s\n' % cl.GetLastWarning()
 
+    print 'Query \'%s\' retrieved %d of %d matches in %s sec' % (q, res['total'], res['total_found'], res['time'])
+    print 'Query stats:'
 
+    result = {}
+    result["words"] = []
+    if res.has_key('words'):
+        for info in res['words']:
+            txt = '"%s" found %d times in %d entries' % (info['word'], info['hits'], info['docs'])
+            result["words"].append(txt)
+            print txt
+            
+    result["matches"] = []
+    MATCHER = re.compile("(%s)"%q, re.IGNORECASE)
+    if res.has_key('matches'):
+        n = 1
+        for match in res['matches']:
+                attrsdump = ''
+                for attr in res['attrs']:
+                        attrname = attr[0]
+                        attrtype = attr[1]
+                        value = match['attrs'][attrname]
+                        if attrtype==sphinx.SPH_ATTR_TIMESTAMP:
+                                value = time.strftime ( '%Y-%m-%d %H:%M:%S', time.localtime(value) )
+                        attrsdump = '%s, %s=%s' % ( attrsdump, attrname, value )
+
+                #print '%d. doc_id=%s, weight=%d%s' % (n, match['id'], match['weight'], attrsdump, INDEX2REGION.get(int(match['id']), ""))
+                #print '%d. doc_id=%s, weight=%d%s' % (n, match['id'], match['weight'], attrsdump)
+                locus, biotype, region = INDEX2REGION[int(match['id'])]
+                desc = ', '.join(INDEX2DESC[int(match['id'])])
+                desc = re.sub(MATCHER, "<b>\\1</b>", desc)
+                result["matches"].append([region, locus, biotype, desc])
+                n += 1
+    return as_json(result)
+    
 def as_json(obj):
     return {"response":obj}
 
@@ -437,7 +463,6 @@ def iter_exons(f):
         subend = f.location.end + f.parent.scaffold_start
         seq =  SCAFFOLDS[f.parent.scaffold][substart:subend]
         yield substart, subend, f.location.strand, seq
-
  
 def between(pos, start, end):
     pos, start, end = map(int, [pos, start, end])
@@ -454,28 +479,100 @@ def parse_region(region):
     ch, pos = map(strip, region.split(":"))
     start, end = map(int, pos.split("-"))
     return ch, start, end
+    
+# Command line options
+    
+def refresh_db():
+    gbrecords, features, scaffolds, scaffold_genes = read_and_index_genome()
+    gene2expr, gene2desc = read_and_index_extra_info()
+    return gbrecords, features, scaffolds, scaffold_genes, gene2expr, gene2desc
 
+def refresh_sphinx():
+    index = []
+    id2region = {}
+    id2desc = {}
+    i = 1
+    for ftype in ['gene', 'CDS', 'tRNA', 'rRNA', 'misc_RNA']:
+        for fch, fstart, fend, f in FEATURES[ftype]:
+            gname = f.qualifiers.get("locus_tag", ["NoName"])[0]
+            txt = []
+            for key, value in f.qualifiers.iteritems():
+                if key in AVOIDED_QUALIFIERS: continue
+                if isinstance(value, list) and len(value) == 1:
+                    txt.append(value[0])
+                else:
+                    txt.append('; '.join(map(str, value)))
+            index.append([i, gname, ', '.join(txt)])
+            id2region[i] = [gname, ftype, "%s:%d-%d" %(fch, fstart, fend)]
+            id2desc[i] = txt
+            i += 1
+            
+    open(SPHINX_ANNOTATION_FILE, "w").write('\n'.join(map(lambda x: "%s\t%s\t%s" %(x[0], x[1], x[2]), index))+"\n")
+    
+    stop_sphinx()
+    print 'Updating sphinx index... '
+    system('cd %s && %s --config %s annotations' %(BASEPATH, INDEXER, SPHINX_CONFIG_FILE))
+   
+    return id2region, id2desc
+        
+def start_sphinx():
+    stop_sphinx()
+    print 'Starting sphinx sever... '
+    system('cd %s && %s --config %s' %(BASEPATH, SEARCHD, SPHINX_CONFIG_FILE))
+
+def stop_sphinx():
+    print 'Stopping sphinx sever... '
+    system('cd %s && %s --config %s --stop' %(BASEPATH, SEARCHD, SPHINX_CONFIG_FILE))
     
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
     
-    try:
-        HOST = open("HOST").readline().strip()
-    except Exception:
-        HOST = "localhost"
-    try:
-        GBRECORDS, FEATURES, SCAFFOLDS, SCAFFOLD_GENES, GENE2EXPR, GENE2DESC = cPickle.load(open("genomedb.cache.pkl"))
-    except Exception:
-        GBRECORDS, FEATURES, SCAFFOLDS, SCAFFOLD_GENES = read_and_index_genome()
-        GENE2EXPR, GENE2DESC = read_and_index_extra_info()
-        cPickle.dump([GBRECORDS, FEATURES, SCAFFOLDS, SCAFFOLD_GENES, GENE2EXPR, GENE2DESC], open("genomedb.cache.pkl", "wb"))
+    parser.add_argument('--refresh', dest='refresh', action='store_true',
+                        help='upgrades all databases and start the daemon')
+    parser.add_argument('--host', dest='host', type=str,
+                        help='upgrades all databases and start the daemon')
 
+    parser.add_argument('-s', dest='search', type=str,
+                        help='test a query search')
+
+    parser.add_argument('--refresh_sphinx', dest='sphinx', action="store_true",
+                        help='refresh sphinx database')
+   
+
+    args = parser.parse_args()
+    if args.refresh:
+        GBRECORDS, FEATURES, SCAFFOLDS, SCAFFOLD_GENES, GENE2EXPR, GENE2DESC = refresh_db()
+        INDEX2REGION, INDEX2DESC = refresh_sphinx()
+        cPickle.dump([GBRECORDS, FEATURES, SCAFFOLDS, SCAFFOLD_GENES, GENE2EXPR, GENE2DESC, INDEX2REGION, INDEX2DESC], open(DBFILE, "wb"))
+        
+    else:
+        try:
+            GBRECORDS, FEATURES, SCAFFOLDS, SCAFFOLD_GENES, GENE2EXPR, GENE2DESC, INDEX2REGION, INDEX2DESC = cPickle.load(open(DBFILE))
+        except Exception:
+            print "Unable to load cached data"
+            sys.exit(1)
+
+
+    if args.search:
+        search(args.search)
+        sys.exit(0)
+    
+            
     print GENE2EXPR.values()[0]
     print GENE2DESC.values()[0]
     sorted_sca = sorted(SCAFFOLDS.keys(), lambda a,b: cmp(len(SCAFFOLD_GENES[a]), len(SCAFFOLD_GENES[b])), reverse=True)
     print "Serving sequences and annotations for the following scaffolds:\n", '\n'.join(map(lambda x: '"%s with %d genes"'%(x, len(SCAFFOLD_GENES[x])), sorted_sca))
     print "The following annotations were found:\n", '\n'.join(map(lambda x: "  %s %d" %(x[0], len(x[1])), FEATURES.items()))
-    run(host=HOST, port=9000)    
-
-
-
     
+    # starts 
+    try:
+        HOST = open("HOST").readline().strip()
+    except Exception:
+        HOST = "localhost"
+    if args.host:
+        HOST = args.host
+        
+    start_sphinx()
+    run(host=HOST, port=WEBSERVICE_PORT)
+    stop_sphinx()
+   

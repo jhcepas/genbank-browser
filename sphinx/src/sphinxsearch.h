@@ -1,5 +1,5 @@
 //
-// $Id: sphinxsearch.h 3738 2013-03-15 06:07:17Z tomat $
+// $Id: sphinxsearch.h 4111 2013-08-24 08:44:44Z kevg $
 //
 
 //
@@ -64,7 +64,7 @@ public:
 	CSphVector<SkiplistEntry_t>		m_dSkiplist;	///< skiplist for quicker document list seeks
 
 	// iterator state
-	CSphSmallBitvec m_dQwordFields;	///< current match fields
+	FieldMask_t m_dQwordFields;	///< current match fields
 	DWORD			m_uMatchHits;	///< current match hits count
 	SphOffset_t		m_iHitlistPos;	///< current position in hitlist, from doclist
 
@@ -85,7 +85,7 @@ public:
 		, m_iHitlistPos ( 0 )
 		, m_bAllFieldsKnown ( false )
 	{
-		m_dQwordFields.Unset();
+		m_dQwordFields.UnsetAll();
 	}
 	virtual ~ISphQword () {}
 
@@ -99,7 +99,7 @@ public:
 	{
 		m_iDocs = 0;
 		m_iHits = 0;
-		m_dQwordFields.Unset();
+		m_dQwordFields.UnsetAll();
 		m_bAllFieldsKnown = false;
 		m_uMatchHits = 0;
 		m_iHitlistPos = 0;
@@ -127,6 +127,7 @@ public:
 	CSphQueryNodeCache *	m_pNodeCache;
 	mutable ISphZoneCheck *	m_pZoneChecker;
 	CSphQueryStats *		m_pStats;
+	mutable bool			m_bSetQposMask;
 
 	ISphQwordSetup ()
 		: m_pDict ( NULL )
@@ -142,6 +143,7 @@ public:
 		, m_pNodeCache ( NULL )
 		, m_pZoneChecker ( NULL )
 		, m_pStats ( NULL )
+		, m_bSetQposMask ( false )
 	{}
 	virtual ~ISphQwordSetup () {}
 
@@ -212,5 +214,5 @@ public:
 #endif // _sphinxsearch_
 
 //
-// $Id: sphinxsearch.h 3738 2013-03-15 06:07:17Z tomat $
+// $Id: sphinxsearch.h 4111 2013-08-24 08:44:44Z kevg $
 //

@@ -277,6 +277,9 @@
 /* RE2 library support */
 #undef USE_RE2
 
+/* RLP library support */
+#undef USE_RLP
+
 /* define to use POSIX Syslog for logging */
 #undef USE_SYSLOG
 

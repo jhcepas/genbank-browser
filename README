@@ -15,6 +15,9 @@ The framework has three components:
   passed. This will produce a full scan of the files and an upgrade of all
   databases and data sources (search engine and blast DB included). 
 
+  IMPORTANT! This server MUST be started form ct_browser directory!
+     [ct_browser/]$ ./start_server.py --refresh 
+
 - sphinx/: search engine providing searching functionality to the genome
   browser. It uses the sphinx system to index all information, and it requires
   the searchd deamon to be running. However, this should be transparent, as the

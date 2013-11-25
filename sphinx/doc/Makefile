@@ -78,13 +78,13 @@ AUTOMAKE = ${SHELL} /g/bork/huerta/ct_browser/sphinx/config/missing --run automa
 AWK = mawk
 CC = gcc
 CCDEPMODE = depmode=gcc3
-CFLAGS = -Wall -g -D_FILE_OFFSET_BITS=64 -O3 -DNDEBUG
+CFLAGS = -fno-rtti -Wall -g -D_FILE_OFFSET_BITS=64 -O3 -DNDEBUG
 CONFDIR = /var
 CPP = gcc -E
 CPPFLAGS =  -I/usr/local/include -pthread      
 CXX = g++
 CXXDEPMODE = depmode=gcc3
-CXXFLAGS = -Wall -g -D_FILE_OFFSET_BITS=64 -O3 -DNDEBUG
+CXXFLAGS = -fno-rtti -Wall -g -D_FILE_OFFSET_BITS=64 -O3 -DNDEBUG
 CYGPATH_W = echo
 DEFS = -DHAVE_CONFIG_H
 DEPDIR = .deps
@@ -118,10 +118,10 @@ OBJEXT = o
 PACKAGE = sphinx
 PACKAGE_BUGREPORT = shodan(at)sphinxsearch.com
 PACKAGE_NAME = sphinx
-PACKAGE_STRING = sphinx 2.1.3-dev
+PACKAGE_STRING = sphinx 2.2.1-beta
 PACKAGE_TARNAME = sphinx
 PACKAGE_URL = 
-PACKAGE_VERSION = 2.1.3-dev
+PACKAGE_VERSION = 2.2.1-beta
 PATH_SEPARATOR = :
 PGSQL_CFLAGS = 
 PGSQL_LIBS = 
@@ -129,7 +129,7 @@ RANLIB = ranlib
 SET_MAKE = 
 SHELL = /bin/bash
 STRIP = 
-VERSION = 2.1.3-dev
+VERSION = 2.2.1-beta
 abs_builddir = /g/bork/huerta/ct_browser/sphinx/doc
 abs_srcdir = /g/bork/huerta/ct_browser/sphinx/doc
 abs_top_builddir = /g/bork/huerta/ct_browser/sphinx

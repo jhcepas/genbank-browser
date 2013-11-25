@@ -1,5 +1,5 @@
 //
-// $Id: sphinxrt.h 3737 2013-03-14 14:09:23Z klirichek $
+// $Id: sphinxrt.h 3887 2013-05-24 13:38:41Z tomat $
 //
 
 //
@@ -24,7 +24,7 @@
 class ISphRtIndex : public CSphIndex
 {
 public:
-	explicit ISphRtIndex ( const char * sIndexName, const char * sName ) : CSphIndex ( sIndexName, sName ) {}
+	explicit ISphRtIndex ( const char * sIndexName, const char * sFileName ) : CSphIndex ( sIndexName, sFileName ) {}
 
 	/// get internal schema (to use for Add calls)
 	virtual const CSphSchema & GetInternalSchema () const { return m_tSchema; }
@@ -95,5 +95,5 @@ void sphReplayBinlog ( const SmallStringHash_T<CSphIndex*> & hIndexes, DWORD uRe
 #endif // _sphinxrt_
 
 //
-// $Id: sphinxrt.h 3737 2013-03-14 14:09:23Z klirichek $
+// $Id: sphinxrt.h 3887 2013-05-24 13:38:41Z tomat $
 //

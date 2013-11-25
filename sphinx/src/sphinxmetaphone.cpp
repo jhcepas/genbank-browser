@@ -1,5 +1,5 @@
 //
-// $Id: sphinxmetaphone.cpp 3701 2013-02-20 18:10:18Z deogar $
+// $Id: sphinxmetaphone.cpp 3785 2013-04-07 15:14:48Z shodan $
 //
 
 //
@@ -626,8 +626,8 @@ void stem_dmetaphone ( BYTE * pWord, bool bUTF8 )
 		iAdvance = 1;
 	}
 
-	BYTE * pPtr = sOriginal;
-	BYTE * pLastPtr = sOriginal;
+	const BYTE * pPtr = sOriginal;
+	const BYTE * pLastPtr = sOriginal;
 	int iCode = -1;
 
 	if ( bUTF8 )
@@ -670,5 +670,5 @@ void stem_dmetaphone ( BYTE * pWord, bool bUTF8 )
 }
 
 //
-// $Id: sphinxmetaphone.cpp 3701 2013-02-20 18:10:18Z deogar $
+// $Id: sphinxmetaphone.cpp 3785 2013-04-07 15:14:48Z shodan $
 //

@@ -1,5 +1,5 @@
 //
-// $Id: sphinxfilter.cpp 4278 2013-10-25 15:24:45Z glook $
+// $Id: sphinxfilter.cpp 4300 2013-11-05 14:23:25Z klirichek $
 //
 
 //
@@ -102,22 +102,16 @@ bool IFilter_Values::EvalBlockValues ( SphAttr_t uBlockMin, SphAttr_t uBlockMax 
 	return false;
 }
 
-#if USE_WINDOWS
-#pragma warning(disable:4127) // conditional expr is const for MSVC
-#endif
 
 template<bool HAS_EQUAL>
 bool EvalRange ( SphAttr_t uValue, SphAttr_t iMin, SphAttr_t iMax )
 {
-	if ( HAS_EQUAL )
+	if_const ( HAS_EQUAL )
 		return uValue>=iMin && uValue<=iMax;
 	else
 		return uValue>iMin && uValue<iMax;
 }
 
-#if USE_WINDOWS
-#pragma warning(default:4127) // conditional expr is const for MSVC
-#endif
 
 /// range
 struct IFilter_Range: virtual ISphFilter
@@ -235,9 +229,6 @@ struct Filter_SingleValueStatic32 : public Filter_SingleValue
 	}
 };
 
-#if USE_WINDOWS
-#pragma warning(disable:4127) // conditional expr is const for MSVC
-#endif
 
 template < bool HAS_EQUAL >
 struct Filter_Range: public IFilter_Attr, IFilter_Range
@@ -255,7 +246,7 @@ struct Filter_Range: public IFilter_Attr, IFilter_Range
 		SphAttr_t uBlockMin = sphGetRowAttr ( DOCINFO2ATTRS ( pMinDocinfo ), m_tLocator );
 		SphAttr_t uBlockMax = sphGetRowAttr ( DOCINFO2ATTRS ( pMaxDocinfo ), m_tLocator );
 		// not-reject
-		if ( HAS_EQUAL )
+		if_const ( HAS_EQUAL )
 			return ( m_iMaxValue>=uBlockMin && m_iMinValue<=uBlockMax );
 		else
 			return ( m_iMaxValue>uBlockMin && m_iMinValue<uBlockMax );
@@ -279,7 +270,7 @@ struct Filter_FloatRange : public IFilter_Attr
 	virtual bool Eval ( const CSphMatch & tMatch ) const
 	{
 		const float & fValue = tMatch.GetAttrFloat ( m_tLocator );
-		if ( HAS_EQUAL )
+		if_const ( HAS_EQUAL )
 			return fValue>=m_fMinValue && fValue<=m_fMaxValue;
 		else
 			return fValue>m_fMinValue && fValue<m_fMaxValue;
@@ -293,7 +284,7 @@ struct Filter_FloatRange : public IFilter_Attr
 		float fBlockMin = sphDW2F ( (DWORD)sphGetRowAttr ( DOCINFO2ATTRS ( pMinDocinfo ), m_tLocator ) );
 		float fBlockMax = sphDW2F ( (DWORD)sphGetRowAttr ( DOCINFO2ATTRS ( pMaxDocinfo ), m_tLocator ) );
 		// not-reject
-		if ( HAS_EQUAL )
+		if_const ( HAS_EQUAL )
 			return ( m_fMaxValue>=fBlockMin && m_fMinValue<=fBlockMax );
 		else
 			return ( m_fMaxValue>fBlockMin && m_fMinValue<fBlockMax );
@@ -337,14 +328,14 @@ struct Filter_IdRange: public IFilter_Range
 {
 	virtual void SetRange ( SphAttr_t tMin, SphAttr_t tMax )
 	{
-		m_iMinValue = (SphDocID_t)Max ( 0, (SphDocID_t)tMin );
+		m_iMinValue = (SphDocID_t)Max ( (SphDocID_t)tMin, 0u );
 		m_iMaxValue = tMax;
 	}
 
 	virtual bool Eval ( const CSphMatch & tMatch ) const
 	{
 		const SphDocID_t uID = tMatch.m_iDocID;
-		if ( HAS_EQUAL )
+		if_const ( HAS_EQUAL )
 			return uID>=(SphDocID_t)m_iMinValue && uID<=(SphDocID_t)m_iMaxValue;
 		else
 			return uID>(SphDocID_t)m_iMinValue && uID<(SphDocID_t)m_iMaxValue;
@@ -355,7 +346,7 @@ struct Filter_IdRange: public IFilter_Range
 		const SphDocID_t uBlockMin = DOCINFO2ID ( pMinDocinfo );
 		const SphDocID_t uBlockMax = DOCINFO2ID ( pMaxDocinfo );
 		// not-reject
-		if ( HAS_EQUAL )
+		if_const ( HAS_EQUAL )
 			return ( (SphDocID_t)m_iMaxValue>=uBlockMin && (SphDocID_t)m_iMinValue<=uBlockMax );
 		else
 			return ( (SphDocID_t)m_iMaxValue>uBlockMin && (SphDocID_t)m_iMinValue<uBlockMax );
@@ -366,12 +357,6 @@ struct Filter_IdRange: public IFilter_Range
 		m_bUsesAttrs = false;
 	}
 };
-
-#if USE_WINDOWS
-#pragma warning(default:4127) // conditional expr is const for MSVC
-#endif
-
-// weight
 
 struct Filter_WeightValues: public IFilter_Values
 {
@@ -482,10 +467,6 @@ static int64_t GetMvaValue ( const int64_t * pVal )
 	return MVA_UPSIZE ( (const DWORD *)pVal );
 }
 
-#if USE_WINDOWS
-#pragma warning(disable:4127) // conditional expr is const for MSVC
-#endif
-
 template < typename T, bool HAS_EQUAL >
 struct Filter_MVARange: public IFilter_MVA, IFilter_Range
 {
@@ -520,18 +501,12 @@ struct Filter_MVARange: public IFilter_MVA, IFilter_Range
 			return false;
 
 		T iMvaL = GetMvaValue ( L );
-		if ( HAS_EQUAL )
+		if_const ( HAS_EQUAL )
 			return iMvaL<=m_iMaxValue;
 		else
 			return iMvaL<m_iMaxValue;
 	}
 };
-
-#if USE_WINDOWS
-#pragma warning(default:4127) // conditional expr is const for MSVC
-#endif
-
-// and
 
 struct Filter_And2 : public ISphFilter
 {
@@ -812,6 +787,7 @@ static inline ISphFilter * ReportError ( CSphString & sError, const char * sMess
 		case SPH_FILTER_RANGE:			sFilterName = "intrange"; break;
 		case SPH_FILTER_FLOATRANGE:		sFilterName = "floatrange"; break;
 		case SPH_FILTER_STRING:			sFilterName = "string"; break;
+		case SPH_FILTER_NULL:			sFilterName = "null"; break;
 		default:						sFilterName.SetSprintf ( "(filter-type-%d)", eFilterType ); break;
 	}
 
@@ -901,33 +877,34 @@ template<typename BASE>
 class JsonFilter_c : public BASE
 {
 protected:
-	CSphAttrLocator		m_tLoc;
-	const BYTE *		m_pStrings;
-	JsonKey_t			m_tKey;
+	const BYTE *				m_pStrings;
+	CSphRefcountedPtr<ISphExpr>	m_pExpr;	// OPTIMIZE? make a quicker version for simple static accesses like json.key?
 
 public:
-	JsonFilter_c ( const CSphAttrLocator & tLoc, const char * pInCol )
-		: m_tLoc ( tLoc )
-		, m_pStrings ( NULL )
-		, m_tKey ( pInCol )
+	explicit JsonFilter_c ( ISphExpr * pExpr )
+		: m_pStrings ( NULL )
+		, m_pExpr ( pExpr )
 	{}
 
 	virtual void SetStringStorage ( const BYTE * pStrings )
 	{
 		m_pStrings = pStrings;
+		if ( m_pExpr.Ptr() )
+			m_pExpr->Command ( SPH_EXPR_SET_STRING_POOL, (void*)pStrings );
 	}
 
 	ESphJsonType GetKey ( const BYTE ** ppKey, const CSphMatch & tMatch ) const
 	{
 		assert ( ppKey );
-		if ( !m_pStrings )
+		if ( !m_pExpr )
 			return JSON_EOF;
-		SphAttr_t uOff = tMatch.GetAttr ( m_tLoc );
-		if ( !uOff )
-			return JSON_EOF;
-		const BYTE * pData = m_pStrings + uOff;
-		sphUnpackStr ( pData, &pData ); // FIXME! maybe use the returned length for an extra check
-		return sphJsonFindKey ( ppKey, pData, m_tKey );
+		uint64_t uValue = m_pExpr->Int64Eval ( tMatch );
+		if ( uValue==0 ) // either no data or invalid path
+			return JSON_NULL;
+		const BYTE * pValue = m_pStrings + ( uValue & 0xffffffff );
+		ESphJsonType eRes = (ESphJsonType)( uValue >> 32 );
+		*ppKey = pValue;
+		return eRes;
 	}
 };
 
@@ -935,39 +912,32 @@ public:
 class JsonFilterValues_c : public JsonFilter_c<IFilter_Values>
 {
 public:
-	JsonFilterValues_c ( const CSphAttrLocator & tLoc, const char * pInCol )
-		: JsonFilter_c<IFilter_Values> ( tLoc, pInCol )
+	explicit JsonFilterValues_c ( ISphExpr * pExpr )
+		: JsonFilter_c<IFilter_Values> ( pExpr )
 	{}
 
 	virtual bool Eval ( const CSphMatch & tMatch ) const
 	{
-		const BYTE * pValue;
-		ESphJsonType eRes = GetKey ( &pValue, tMatch );
-		switch ( eRes )
+		assert ( this->m_pExpr.Ptr()!=NULL );
+
+		uint64_t uValue = m_pExpr->Int64Eval ( tMatch );
+		const BYTE * pValue = m_pStrings + ( uValue & 0xffffffff );
+		switch ( uValue>>32 ) // so that 0 from Eval() gets handled as eof
 		{
-			case JSON_INT32:
-				return EvalValues ( (DWORD)sphJsonLoadInt ( &pValue ) );
-			case JSON_INT64:
-				return EvalValues ( sphJsonLoadBigint ( &pValue ) );
-			case JSON_DOUBLE:
-				return EvalValues ( (SphAttr_t)sphQW2D ( sphJsonLoadBigint ( &pValue ) ) );
-			default:
-				return false;
+			case JSON_INT32:	return EvalValues ( sphGetDword ( pValue ) );
+			case JSON_INT64:	return EvalValues ( sphJsonLoadBigint ( &pValue ) );
+			case JSON_DOUBLE:	return EvalValues ( (SphAttr_t)sphQW2D ( sphJsonLoadBigint ( &pValue ) ) );
+			default:			return false;
 		}
 	}
 };
-
-
-#if USE_WINDOWS
-#pragma warning(disable:4127) // conditional expr is const for MSVC
-#endif
 
 template < bool HAS_EQUALS >
 class JsonFilterRange_c : public JsonFilter_c<IFilter_Range>
 {
 public:
-	JsonFilterRange_c ( const CSphAttrLocator & tLoc, const char * pInCol )
-		: JsonFilter_c<IFilter_Range> ( tLoc, pInCol )
+	explicit JsonFilterRange_c ( ISphExpr * pExpr )
+		: JsonFilter_c<IFilter_Range> ( pExpr )
 	{}
 
 	virtual bool Eval ( const CSphMatch & tMatch ) const
@@ -983,7 +953,7 @@ public:
 			case JSON_DOUBLE:
 			{
 				double fValue = sphQW2D ( sphJsonLoadBigint ( &pValue ) );
-				if ( HAS_EQUALS )
+				if_const ( HAS_EQUALS )
 					return fValue>=m_iMinValue && fValue<=m_iMaxValue;
 				else
 					return fValue>m_iMinValue && fValue<m_iMaxValue;
@@ -999,8 +969,8 @@ template < bool HAS_EQUALS >
 class JsonFilterFloatRange_c : public JsonFilter_c<IFilter_Range>
 {
 public:
-	JsonFilterFloatRange_c ( const CSphAttrLocator & tLoc, const char * pInCol )
-		: JsonFilter_c<IFilter_Range> ( tLoc, pInCol )
+	explicit JsonFilterFloatRange_c ( ISphExpr * pExpr )
+		: JsonFilter_c<IFilter_Range> ( pExpr )
 	{}
 
 	float m_fMinValue;
@@ -1031,7 +1001,7 @@ public:
 			default:
 				return false;
 		}
-		if ( HAS_EQUALS )
+		if_const ( HAS_EQUALS )
 			return fValue>=m_fMinValue && fValue<=m_fMaxValue;
 		else
 			return fValue>m_fMinValue && fValue<m_fMaxValue;
@@ -1046,8 +1016,8 @@ protected:
 	int			m_iRef;
 
 public:
-	JsonFilterString_c ( const CSphAttrLocator & tLoc, const char * pInCol )
-		: JsonFilter_c<ISphFilter> ( tLoc, pInCol )
+	explicit JsonFilterString_c ( ISphExpr * pExpr )
+		: JsonFilter_c<ISphFilter> ( pExpr )
 	{}
 
 	virtual void SetRefString ( const CSphString & sRef )
@@ -1064,7 +1034,6 @@ public:
 		{
 			case JSON_STRING:
 			{
-				// !COMMIT support collations
 				int iLen = sphJsonUnpackInt ( &pValue );
 				return iLen==m_iRef && iLen && memcmp ( pValue, m_sRef.cstr(), iLen )==0;
 			}
@@ -1075,27 +1044,66 @@ public:
 };
 
 
-static ISphFilter * CreateFilterJson ( const CSphColumnInfo * pAttr, ESphFilter eType, const char * pInCol, bool bRangeEq, CSphString & sError )
+class JsonFilterNull_c : public JsonFilter_c<ISphFilter>
+{
+protected:
+	bool m_bEquals;
+	CSphAttrLocator m_tLoc;
+
+public:
+	JsonFilterNull_c ( ISphExpr * pExpr, bool bEquals )
+		: JsonFilter_c<ISphFilter> ( pExpr )
+		, m_bEquals ( bEquals )
+	{}
+
+	virtual void SetLocator ( const CSphAttrLocator & tLocator )
+	{
+		m_tLoc = tLocator;
+	}
+
+	virtual bool Eval ( const CSphMatch & tMatch ) const
+	{
+		assert ( m_pStrings );
+
+		if ( !m_pExpr ) // regular attribute? check blob size
+		{
+			const BYTE * pStr = NULL;
+			DWORD uOffset = (DWORD) tMatch.GetAttr ( m_tLoc );
+			if ( uOffset )
+				sphUnpackStr ( m_pStrings+uOffset, &pStr );
+			return m_bEquals ^ ( pStr!=NULL );
+		}
+
+		const BYTE * pValue;
+		ESphJsonType eRes = GetKey ( &pValue, tMatch );
+		return m_bEquals ^ ( eRes!=JSON_NULL );
+	}
+};
+
+
+static ISphFilter * CreateFilterJson ( const CSphColumnInfo * DEBUGARG(pAttr), ISphExpr * pExpr,
+	ESphFilter eType, bool bRangeEq, CSphString & sError )
 {
 	assert ( pAttr );
-	assert ( pAttr->m_eAttrType==SPH_ATTR_JSON );
 
 	switch ( eType )
 	{
 		case SPH_FILTER_VALUES:
-			return new JsonFilterValues_c ( pAttr->m_tLocator, pInCol );
+			return new JsonFilterValues_c ( pExpr );
 		case SPH_FILTER_FLOATRANGE:
 			if ( bRangeEq )
-				return new JsonFilterFloatRange_c<true> ( pAttr->m_tLocator, pInCol );
+				return new JsonFilterFloatRange_c<true> ( pExpr );
 			else
-				return new JsonFilterFloatRange_c<false> ( pAttr->m_tLocator, pInCol );
+				return new JsonFilterFloatRange_c<false> ( pExpr );
 		case SPH_FILTER_RANGE:
 			if ( bRangeEq )
-				return new JsonFilterRange_c<true> ( pAttr->m_tLocator, pInCol );
+				return new JsonFilterRange_c<true> ( pExpr );
 			else
-				return new JsonFilterRange_c<false> ( pAttr->m_tLocator, pInCol );
+				return new JsonFilterRange_c<false> ( pExpr );
 		case SPH_FILTER_STRING:
-			return new JsonFilterString_c ( pAttr->m_tLocator, pInCol );
+			return new JsonFilterString_c ( pExpr );
+		case SPH_FILTER_NULL:
+			return new JsonFilterNull_c ( pExpr, bRangeEq );
 		default:
 			sError = "this filter type on JSON subfields is not implemented yet";
 			return NULL;
@@ -1106,21 +1114,20 @@ static ISphFilter * CreateFilterJson ( const CSphColumnInfo * pAttr, ESphFilter 
 // PUBLIC FACING INTERFACE
 //////////////////////////////////////////////////////////////////////////
 
-ISphFilter * sphCreateFilter ( const CSphFilterSettings & tSettings, const CSphSchema & tSchema, const DWORD * pMvaPool, const BYTE * pStrings, CSphString & sError )
+static ISphFilter * CreateFilter ( const CSphFilterSettings & tSettings, const CSphString & sAttrName, const ISphSchema & tSchema, const DWORD * pMvaPool, const BYTE * pStrings, CSphString & sError, bool bHaving )
 {
 	ISphFilter * pFilter = 0;
 	const CSphColumnInfo * pAttr = NULL;
 
 	// try to create a filter on a special attribute
-	const CSphString & sAttrName = tSettings.m_sAttrName;
+	if ( sAttrName.Begins("@") && !bHaving && ( sAttrName=="@groupby" || sAttrName=="@count" || sAttrName=="@distinct" ) )
+	{
+		sError.SetSprintf ( "unsupported filter column '%s'", sAttrName.cstr() );
+		return NULL;
+	}
+
 	if ( sAttrName.Begins("@") )
 	{
-		// HAVING is not implemented yet
-		if ( sAttrName=="@groupby" || sAttrName=="@count" || sAttrName=="@distinct" )
-		{
-			sError.SetSprintf ( "unsupported filter column '%s'", sAttrName.cstr() );
-			return NULL;
-		}
 		pFilter = CreateSpecialFilter ( sAttrName, tSettings.m_eType, tSettings.m_bHasEqual );
 	}
 
@@ -1141,7 +1148,11 @@ ISphFilter * sphCreateFilter ( const CSphFilterSettings & tSettings, const CSphS
 			return NULL;
 		}
 
-		pFilter = CreateFilterJson ( pAttr, tSettings.m_eType, sJsonKey.cstr(), tSettings.m_bHasEqual, sError );
+		// fastpath for simple cases like j.key1 is handled in the expression
+		// combined access/filter nodes are only marginally faster (eg 17.4 msec vs 18.5 msec on 457K rows)
+		ISphExpr * pExpr = sphExprParse ( sAttrName.cstr(), tSchema, NULL, NULL, sError, NULL );
+		pFilter = CreateFilterJson ( pAttr, pExpr, tSettings.m_eType, tSettings.m_bHasEqual, sError );
+
 		if ( !pFilter )
 			return NULL;
 	}
@@ -1157,13 +1168,19 @@ ISphFilter * sphCreateFilter ( const CSphFilterSettings & tSettings, const CSphS
 		} else
 		{
 			pAttr = &tSchema.GetAttr(iAttr);
-			if ( pAttr->m_eAggrFunc!=SPH_AGGR_NONE )
+			if ( !bHaving && pAttr->m_eAggrFunc!=SPH_AGGR_NONE )
 			{
-				// HAVING is not implemented yet
 				sError.SetSprintf ( "unsupported filter '%s' on aggregate column", sAttrName.cstr() );
 				return NULL;
 			}
-			pFilter = CreateFilter ( pAttr->m_eAttrType, tSettings.m_eType, tSettings.GetNumValues(), pAttr->m_tLocator, sError, tSettings.m_bHasEqual );
+
+			if ( pAttr->m_eAttrType==SPH_ATTR_JSON || pAttr->m_eAttrType==SPH_ATTR_JSON_FIELD )
+			{
+				if ( pAttr->m_pExpr.Ptr() )
+					pAttr->m_pExpr->AddRef(); // CreateFilterJson() uses a refcounted pointer, but does not AddRef() itself, so help it
+				pFilter = CreateFilterJson ( pAttr, pAttr->m_pExpr.Ptr(), tSettings.m_eType, tSettings.m_bHasEqual, sError );
+			} else
+				pFilter = CreateFilter ( pAttr->m_eAttrType, tSettings.m_eType, tSettings.GetNumValues(), pAttr->m_tLocator, sError, tSettings.m_bHasEqual );
 		}
 	}
 
@@ -1203,6 +1220,19 @@ ISphFilter * sphCreateFilter ( const CSphFilterSettings & tSettings, const CSphS
 }
 
 
+ISphFilter * sphCreateFilter ( const CSphFilterSettings & tSettings, const ISphSchema & tSchema, const DWORD * pMvaPool, const BYTE * pStrings, CSphString & sError )
+{
+	return CreateFilter ( tSettings, tSettings.m_sAttrName, tSchema, pMvaPool, pStrings, sError, false );
+}
+
+
+ISphFilter * sphCreateAggrFilter ( const CSphFilterSettings * pSettings, const CSphString & sAttrName, const ISphSchema & tSchema, CSphString & sError )
+{
+	assert ( pSettings );
+	return CreateFilter ( *pSettings, sAttrName, tSchema, NULL, NULL, sError, true );
+}
+
+
 ISphFilter * sphJoinFilters ( ISphFilter * pA, ISphFilter * pB )
 {
 	if ( pA )
@@ -1211,5 +1241,5 @@ ISphFilter * sphJoinFilters ( ISphFilter * pA, ISphFilter * pB )
 }
 
 //
-// $Id: sphinxfilter.cpp 4278 2013-10-25 15:24:45Z glook $
+// $Id: sphinxfilter.cpp 4300 2013-11-05 14:23:25Z klirichek $
 //

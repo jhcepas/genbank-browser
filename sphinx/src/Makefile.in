@@ -71,7 +71,7 @@ indexer_LDADD = $(LDADD)
 am__DEPENDENCIES_1 =
 am__DEPENDENCIES_2 = libsphinx.a $(am__DEPENDENCIES_1) \
 	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1) \
-	$(am__DEPENDENCIES_1)
+	$(am__DEPENDENCIES_1) $(am__DEPENDENCIES_1)
 indexer_DEPENDENCIES = $(am__DEPENDENCIES_2)
 am_indextool_OBJECTS = indextool.$(OBJEXT)
 indextool_OBJECTS = $(am_indextool_OBJECTS)
@@ -238,8 +238,12 @@ indextool_SOURCES = indextool.cpp
 tests_SOURCES = tests.cpp
 wordbreaker_SOURCES = wordbreaker.cpp
 BUILT_SOURCES = extract-version
-AM_CPPFLAGS = $(LIBRE2_CFLAGS) -DSYSCONFDIR="\"$(sysconfdir)\"" -DDATADIR="\"$(localstatedir)/data\""
-COMMON_LIBS = libsphinx.a $(LIBSTEMMER_LIBS) $(MYSQL_LIBS) $(PGSQL_LIBS) $(LIBRE2_LIBS)
+@USE_RLP_FALSE@RLP_LIBS = 
+@USE_RLP_TRUE@RLP_LIBS = -L$(top_srcdir)/rlp/lib/amd64-glibc25-gcc42 -lbtrlpc -lbtrlpcore -lbtutils
+@USE_RLP_FALSE@RLP_INC = 
+@USE_RLP_TRUE@RLP_INC = -I$(top_srcdir)/rlp/rlp/include -I$(top_srcdir)/rlp/utilities/include -D_REENTRANT
+AM_CPPFLAGS = $(LIBRE2_CFLAGS) $(RLP_INC) -DSYSCONFDIR="\"$(sysconfdir)\"" -DDATADIR="\"$(localstatedir)/data\""
+COMMON_LIBS = libsphinx.a $(LIBSTEMMER_LIBS) $(MYSQL_LIBS) $(PGSQL_LIBS) $(LIBRE2_LIBS) $(RLP_LIBS)
 LDADD = $(COMMON_LIBS)
 all: $(BUILT_SOURCES)
 	$(MAKE) $(AM_MAKEFLAGS) all-am

@@ -1,5 +1,5 @@
 //
-// $Id: sphinxsoundex.cpp 3701 2013-02-20 18:10:18Z deogar $
+// $Id: sphinxsoundex.cpp 3711 2013-02-26 05:43:37Z klirichek $
 //
 
 //
@@ -44,5 +44,5 @@ void stem_soundex ( BYTE * pWord )
 }
 
 //
-// $Id: sphinxsoundex.cpp 3701 2013-02-20 18:10:18Z deogar $
+// $Id: sphinxsoundex.cpp 3711 2013-02-26 05:43:37Z klirichek $
 //

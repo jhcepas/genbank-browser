@@ -1,5 +1,5 @@
 //
-// $Id: search.cpp 3890 2013-05-25 10:48:43Z kevg $
+// $Id: search.cpp 4267 2013-10-18 08:14:50Z tomat $
 //
 
 //
@@ -318,15 +318,17 @@ int main ( int argc, char ** argv )
 			}
 
 			// do querying
-			ISphMatchSorter * pTop = sphCreateQueue ( &tQuery, pIndex->GetMatchSchema(), sError, NULL );
+			SphQueueSettings_t tQueueSettings ( tQuery, pIndex->GetMatchSchema(), sError, NULL );
+			ISphMatchSorter * pTop = sphCreateQueue ( tQueueSettings );
 			if ( !pTop )
 			{
 				sError.SetSprintf ( "failed to create sorting queue: %s", sError.cstr() );
 				break;
 			}
 
+			CSphMultiQueryArgs tArgs ( NULL, 1 );
 			pResult = new CSphQueryResult();
-			if ( !pIndex->MultiQuery ( &tQuery, pResult, 1, &pTop, NULL ) )
+			if ( !pIndex->MultiQuery ( &tQuery, pResult, 1, &pTop, tArgs ) )
 			{
 				// failure; pull that error message
 				sError = pResult->m_sError;
@@ -487,5 +489,5 @@ int main ( int argc, char ** argv )
 }
 
 //
-// $Id: search.cpp 3890 2013-05-25 10:48:43Z kevg $
+// $Id: search.cpp 4267 2013-10-18 08:14:50Z tomat $
 //

@@ -1,5 +1,5 @@
 //
-// $Id: sphinxquery.cpp 4043 2013-07-31 07:00:01Z kevg $
+// $Id: sphinxquery.cpp 4111 2013-08-24 08:44:44Z kevg $
 //
 
 //
@@ -42,8 +42,8 @@ public:
 	bool			Error ( const char * sTemplate, ... ) __attribute__ ( ( format ( printf, 2, 3 ) ) );
 	void			Warning ( const char * sTemplate, ... ) __attribute__ ( ( format ( printf, 2, 3 ) ) );
 
-	bool			AddField ( CSphSmallBitvec & dFields, const char * szField, int iLen );
-	bool			ParseFields ( CSphSmallBitvec & uFields, int & iMaxFieldPos, bool & bIgnore );
+	bool			AddField ( FieldMask_t & dFields, const char * szField, int iLen );
+	bool			ParseFields ( FieldMask_t & uFields, int & iMaxFieldPos, bool & bIgnore );
 	int				ParseZone ( const char * pZone );
 
 	bool			IsSpecial ( char c );
@@ -57,9 +57,10 @@ public:
 	void			Cleanup ();
 	XQNode_t *		SweepNulls ( XQNode_t * pNode );
 	bool			FixupNots ( XQNode_t * pNode );
+	void			FixupNulls ( XQNode_t * pNode );
 	void			DeleteNodesWOFields ( XQNode_t * pNode );
 
-	inline void SetFieldSpec ( const CSphSmallBitvec& uMask, int iMaxPos )
+	inline void SetFieldSpec ( const FieldMask_t& uMask, int iMaxPos )
 	{
 		FixRefSpec();
 		m_dStateSpec.Last()->SetFieldSpec ( uMask, iMaxPos );
@@ -143,7 +144,7 @@ void yyerror ( XQParser_t * pParser, const char * sMessage )
 
 //////////////////////////////////////////////////////////////////////////
 
-void XQLimitSpec_t::SetFieldSpec ( const CSphSmallBitvec& uMask, int iMaxPos )
+void XQLimitSpec_t::SetFieldSpec ( const FieldMask_t& uMask, int iMaxPos )
 {
 	m_bFieldSpec = true;
 	m_dFieldMask = uMask;
@@ -182,7 +183,7 @@ XQNode_t::~XQNode_t ()
 }
 
 
-void XQNode_t::SetFieldSpec ( const CSphSmallBitvec& uMask, int iMaxPos )
+void XQNode_t::SetFieldSpec ( const FieldMask_t& uMask, int iMaxPos )
 {
 	// set it, if we do not yet have one
 	if ( !m_dSpec.m_bFieldSpec )
@@ -227,7 +228,7 @@ void XQNode_t::CopySpecs ( const XQNode_t * pSpecs )
 
 void XQNode_t::ClearFieldMask ()
 {
-	m_dSpec.m_dFieldMask.Set();
+	m_dSpec.m_dFieldMask.SetAll();
 
 	ARRAY_FOREACH ( i, m_dChildren )
 		m_dChildren[i]->ClearFieldMask();
@@ -460,7 +461,7 @@ bool XQParser_t::IsSpecial ( char c )
 
 
 /// lookup field and add it into mask
-bool XQParser_t::AddField ( CSphSmallBitvec & dFields, const char * szField, int iLen )
+bool XQParser_t::AddField ( FieldMask_t & dFields, const char * szField, int iLen )
 {
 	CSphString sField;
 	sField.SetBinary ( szField, iLen );
@@ -485,9 +486,9 @@ bool XQParser_t::AddField ( CSphSmallBitvec & dFields, const char * szField, int
 
 
 /// parse fields block
-bool XQParser_t::ParseFields ( CSphSmallBitvec & dFields, int & iMaxFieldPos, bool & bIgnore )
+bool XQParser_t::ParseFields ( FieldMask_t & dFields, int & iMaxFieldPos, bool & bIgnore )
 {
-	dFields.Unset();
+	dFields.UnsetAll();
 	iMaxFieldPos = 0;
 	bIgnore = false;
 
@@ -510,7 +511,7 @@ bool XQParser_t::ParseFields ( CSphSmallBitvec & dFields, int & iMaxFieldPos, bo
 	} else if ( *pPtr=='*' )
 	{
 		// handle @*
-		dFields.Set();
+		dFields.SetAll();
 		m_pTokenizer->SetBufferPtr ( pPtr+1 );
 		return true;
 
@@ -899,9 +900,6 @@ int XQParser_t::GetToken ( YYSTYPE * lvalp )
 				if ( bIgnore )
 					continue;
 
-				if ( m_pSchema->m_dFields.GetLength()!=SPH_MAX_FIELDS )
-					m_tPendingToken.tFieldLimit.dMask.LimitBits ( m_pSchema->m_dFields.GetLength() );
-
 				m_iPendingType = TOK_FIELDLIMIT;
 				break;
 
@@ -1106,7 +1104,11 @@ XQNode_t * XQParser_t::SweepNulls ( XQNode_t * pNode )
 	{
 		pNode->m_dChildren[i] = SweepNulls ( pNode->m_dChildren[i] );
 		if ( pNode->m_dChildren[i]==NULL )
+		{
 			pNode->m_dChildren.Remove ( i-- );
+			// use non-null iOpArg as a flag indicating that the sweeping happened.
+			++pNode->m_iOpArg;
+		}
 	}
 
 	if ( pNode->m_dChildren.GetLength()==0 )
@@ -1122,6 +1124,18 @@ XQNode_t * XQParser_t::SweepNulls ( XQNode_t * pNode )
 		XQNode_t * pRet = pNode->m_dChildren[0];
 		pNode->m_dChildren.Reset ();
 		pRet->m_pParent = pNode->m_pParent;
+		// expressions like 'la !word' (having min_word_len>len(la)) became a 'null' node.
+		if ( pNode->m_iOpArg && pRet->GetOp()==SPH_QUERY_NOT )
+		{
+			pRet->SetOp ( SPH_QUERY_NULL );
+			ARRAY_FOREACH ( i, pRet->m_dChildren )
+			{
+				m_dSpawned.RemoveValue ( pRet->m_dChildren[i] );
+				SafeDelete ( pRet->m_dChildren[i] )
+			}
+			pRet->m_dChildren.Reset();
+		}
+		pRet->m_iOpArg = pNode->m_iOpArg;
 
 		m_dSpawned.RemoveValue ( pNode ); // OPTIMIZE!
 		SafeDelete ( pNode );
@@ -1132,6 +1146,47 @@ XQNode_t * XQParser_t::SweepNulls ( XQNode_t * pNode )
 	return pNode;
 }
 
+void XQParser_t::FixupNulls ( XQNode_t * pNode )
+{
+	if ( !pNode )
+		return;
+
+	ARRAY_FOREACH ( i, pNode->m_dChildren )
+		FixupNulls ( pNode->m_dChildren[i] );
+
+	// smth OR null == smth.
+	if ( pNode->GetOp()==SPH_QUERY_OR )
+	{
+		CSphVector<XQNode_t*> dNotNulls;
+		ARRAY_FOREACH ( i, pNode->m_dChildren )
+		{
+			XQNode_t* pChild = pNode->m_dChildren[i];
+			if ( pChild->GetOp()!=SPH_QUERY_NULL )
+				dNotNulls.Add ( pChild );
+			else
+			{
+				m_dSpawned.RemoveValue ( pChild );
+				SafeDelete ( pChild );
+			}
+		}
+		pNode->m_dChildren.SwapData ( dNotNulls );
+		dNotNulls.Reset();
+	// smth AND null = null.
+	} else if ( pNode->GetOp()==SPH_QUERY_AND )
+	{
+		bool bHasNull = ARRAY_ANY ( bHasNull, pNode->m_dChildren, pNode->m_dChildren[_any]->GetOp()==SPH_QUERY_NULL );
+		if ( bHasNull )
+		{
+			pNode->SetOp ( SPH_QUERY_NULL );
+			ARRAY_FOREACH ( i, pNode->m_dChildren )
+			{
+				m_dSpawned.RemoveValue ( pNode->m_dChildren[i] );
+				SafeDelete ( pNode->m_dChildren[i] )
+			}
+			pNode->m_dChildren.Reset();
+		}
+	}
+}
 
 bool XQParser_t::FixupNots ( XQNode_t * pNode )
 {
@@ -1250,12 +1305,7 @@ static bool CheckQuorumProximity ( XQNode_t * pNode, CSphString * pError )
 		return false;
 	}
 
-	bool bValid = true;
-	ARRAY_FOREACH_COND ( i, pNode->m_dChildren, bValid )
-	{
-		bValid &= CheckQuorumProximity ( pNode->m_dChildren[i], pError );
-	}
-
+	bool bValid = ARRAY_ALL ( bValid, pNode->m_dChildren, CheckQuorumProximity ( pNode->m_dChildren[_all], pError ) );
 	return bValid;
 }
 
@@ -1325,6 +1375,7 @@ bool XQParser_t::Parse ( XQQuery_t & tParsed, const char * sQuery, const ISphTok
 	DeleteNodesWOFields ( m_pRoot );
 	m_pRoot = SweepNulls ( m_pRoot );
 	FixupDegenerates ( m_pRoot );
+	FixupNulls ( m_pRoot );
 
 	if ( !FixupNots ( m_pRoot ) )
 	{
@@ -1338,15 +1389,24 @@ bool XQParser_t::Parse ( XQQuery_t & tParsed, const char * sQuery, const ISphTok
 		return false;
 	}
 
-	if ( m_pRoot && m_pRoot->GetOp()==SPH_QUERY_NOT )
+	if ( m_pRoot && m_pRoot->GetOp()==SPH_QUERY_NOT && !m_pRoot->m_iOpArg )
 	{
 		Cleanup ();
 		m_pParsed->m_sParseError.SetSprintf ( "query is non-computable (single NOT operator)" );
 		return false;
 	}
 
+	pDict->SetApplyMorph ( m_pTokenizer->GetMorphFlag() );
+
 	// all ok; might want to create a dummy node to indicate that
 	m_dSpawned.Reset();
+
+	if ( m_pRoot && m_pRoot->GetOp()==SPH_QUERY_NULL )
+	{
+		delete m_pRoot;
+		m_pRoot = NULL;
+	}
+
 	tParsed.m_pRoot = m_pRoot ? m_pRoot : new XQNode_t ( *m_dStateSpec.Last() );
 	return true;
 }
@@ -1440,7 +1500,7 @@ CSphString sphReconstructNode ( const XQNode_t * pNode, const CSphSchema * pSche
 		if ( !pNode->m_dSpec.m_dFieldMask.TestAll(true) )
 		{
 			CSphString sFields ( "" );
-			for ( int i=0; i<CSphSmallBitvec::iTOTALBITS; i++ )
+			for ( int i=0; i<SPH_MAX_FIELDS; i++ )
 			{
 				if ( !pNode->m_dSpec.m_dFieldMask.Test(i) )
 					continue;
@@ -2269,8 +2329,7 @@ void CSphTransformation::SetCosts ( XQNode_t * pNode, const CSphVector<XQNode_t 
 	// get keywords info from index dictionary
 	if ( dKeywords.GetLength() )
 	{
-		CSphString sError;
-		m_pKeywords->FillKeywords ( dKeywords, sError );
+		m_pKeywords->FillKeywords ( dKeywords );
 		ARRAY_FOREACH ( i, dKeywords )
 		{
 			const CSphKeywordInfo & tKeyword = dKeywords[i];
@@ -3879,5 +3938,5 @@ void sphSetupQueryTokenizer ( ISphTokenizer * pTokenizer )
 
 
 //
-// $Id: sphinxquery.cpp 4043 2013-07-31 07:00:01Z kevg $
+// $Id: sphinxquery.cpp 4111 2013-08-24 08:44:44Z kevg $
 //
