@@ -18,33 +18,46 @@ try:
 except ImportError:
     print "Sphinx API could not be imported. Searches will be disabled!"
 
-
+# Blast DB will be based/upgraded based on these fasta files
 FASTA_FILES = [os.path.join(BASEPATH, "data/v1/C_thermophilum.scaffolds.v1.fa"),
                os.path.join(BASEPATH, "data/v1/C_thermophilum.mitochondrial.v1.fa"),
                os.path.join(BASEPATH, "data/v1/C_thermophilum.rrn.v1.fa")]
+
+# Annotations CDS, rRNA, tRNA and misc_RNA are extracted from the GBF file
 GBF_FILE = os.path.join(BASEPATH, "data/v1/C_thermophilum.annotation.v1.gbf")
+
+# Additional annotations by locus tag are loaded from here
 EXPR_FILE = os.path.join(BASEPATH, "data/v1/C_thermophilum.expressed.proteins.v1.txt")
 DESC_FILE = os.path.join(BASEPATH, "data/v1/C_thermophilum.additional.descr.v1.txt")
-DBFILE = os.path.join(BASEPATH, "genome.db.pkl")
-WEBSERVICE_PORT = 9000 # needs to be externally open or bypassed with apache proxy
 
-# Sphinx config
-SPHINX_PORT = 9001
-SPHINX_CONFIG_FILE = os.path.join(BASEPATH,"ct.sphinx.conf")
-SPHINX_ANNOTATION_FILE = os.path.join(BASEPATH,"ct_annotations.tab")
+# Where all parsed information is sotored
+DBFILE = os.path.join(BASEPATH, "cache/genome.db.pkl")
+BLAST_DB_PATH = os.path.join(BASEPATH, "blastDB/")
+WEBSERVICE_PORT = 9000 # needs to be externally open or bypassed with apache
+                       # proxy. Currently bound to ctbrowser.embl.de.
+PID_FILE=os.path.join(BASEPATH, "ct_daemon.pid")
+
+# Sphinx configuration (used to index and fast search in annotations and names)
 SEARCHD = os.path.join(BASEPATH, "sphinx/src/searchd")
 INDEXER = os.path.join(BASEPATH, "sphinx/src/indexer")
 SEARCHER = os.path.join(BASEPATH, "sphinx/src/search")
+SPHINX_PORT = 9001
+# this file has all de words indexed for each locus
+SPHINX_ANNOTATION_FILE = os.path.join(BASEPATH,"cache/ct_annotations.tab")
+# Define how to index all the words
+SPHINX_CONFIG_FILE = os.path.join(BASEPATH,"ct.sphinx.conf")
 
-# The following data from the gbf file is not retrieved by web-services
+# The following data (parsed as GBF entry qualifiers) are not retrieved by
+# web-services 
 AVOIDED_QUALIFIERS = set(["translation"])
 
 def system(cmd):
-    print cmd
+    print color(cmd, "blue")
     return os.system(cmd)
 
-# indexing functions
+# INDEXING FUNCTIONS (CALLED ONLY WHEN DATABASE NEEDS TO BE UPGRADED)
 def genome_pos(f, scaffolds):
+    ''' Checks and returns the genomic coordinates of a feature'''
     start = f.location.start + f.parent.scaffold_start
     end = f.location.end + f.parent.scaffold_start
 
@@ -76,6 +89,7 @@ def genome_pos(f, scaffolds):
     return start, end
 
 def read_and_index_extra_info():
+    ''' Read custom files including info about eggnog mappings and expression experiments'''
     gene2expr = defaultdict(dict)
     for line in open(EXPR_FILE, "rU"):
         if not line.strip() or line.startswith("#"):
@@ -120,33 +134,42 @@ def read_and_index_extra_info():
 
         else:
             gene2eggnog[locus] = {
-                "EggNOG name": eggname,
-                "short description": gtype,
-                "Additional description": desc,
+                "eggNOG": eggname,
+                "eggNOG description": gtype,
+                #"GO terms": desc, # A long list of GO terms
             }
     return gene2expr, gene2eggnog
              
 def read_and_index_genome():
+    '''
+    Uses BioPython to parse the GBF and FASTA files, extract all their genes and
+    features and store them in memory. Note that GBF includes many entries, for
+    which gene are in local coordinates. Also, FASTA files provide the final
+    genome assembly, so every GBF entrie is required to be mapped to each
+    scaffold in the FASTA files, and positions converted to the global genomic
+    coordinate system. '''
+    
     gbrecords = {}
     features = defaultdict(list)
     scaffolds = {}
     scaffold_genes = defaultdict(set)
-    #Reads genome
+    # Reads genome assembly (Scaffolds) 
     for fasta_file in FASTA_FILES:
-        print "Reading assembly sequences from", fasta_file
+        print color("Reading assembly sequences from", "green"), fasta_file
         for sca in SeqIO.parse(open(fasta_file, "rU"), "fasta"):
             if sca.name in scaffolds:
                 raise ValueError("Duplicated scaffold %s" %sca.name)
             scaffolds[sca.name] = sca.seq
     print len(scaffolds), "total scaffolds"
     
-    #Map genebank regions and features into the genome assembly
-    print "Reading annotations from ", GBF_FILE
+    # Map genebank regions and features into the genome assembly. Every GBF
+    # entry should find a match in a scaffold.
+    print color("Reading annotations from ", "green"), GBF_FILE
     for e in SeqIO.parse(open(GBF_FILE, "rU"), "genbank"):
         gbrecords[e.id] = e
         startpos = None
         
-        # Find position in scaffolds
+        # Find position of this region in scaffolds
         for sca, seq in scaffolds.iteritems():
             try:
                 startpos = str(seq).index(str(e.seq))
@@ -154,7 +177,9 @@ def read_and_index_genome():
                 pass
             else:
                 target_sca = sca
-                
+
+        # Orphan GBF region! If this occurs, manual intervention may be
+        # necessary
         if startpos == None:
             print "Skipping GBF region without a match in FASTA files", e.id
             continue
@@ -162,7 +187,7 @@ def read_and_index_genome():
         e.scaffold_start = startpos
         e.scaffold = target_sca
         
-        # Index features by type and global genome position
+        # Index the global position of every feature in this GBF entry.
         for f in e.features:
             f.parent = e
             genome_start, genome_end =  genome_pos(f, scaffolds)
@@ -172,32 +197,7 @@ def read_and_index_genome():
             
     return gbrecords, features, scaffolds, scaffold_genes
 
-# Web services
-    
-@get('/all')
-def all():
-    response.set_header("Access-Control-Allow-Origin","*")
-    response.content_type = "application/json"
-    chrdict = {"species":"CT","chromosomes":[]}
-    for sca in SCAFFOLDS:
-        chr_info = {"cytobands":[],
-                    "numberGenes":0,"name":sca,"isCircular":0,"size":len(SCAFFOLDS[sca]),"end":len(SCAFFOLDS[sca]),"start":1}
-        chrdict["chromosomes"].append(chr_info)
-
-    return {"result":chrdict}
-
-@get('/info')
-def info():
-    response.set_header("Access-Control-Allow-Origin","*")
-    response.content_type = "application/json"
-    chrdict = {"species":"CT","chromosomes":[]}
-    for sca in SCAFFOLDS:
-        chr_info = {"cytobands":[],
-                    "numberGenes":0,"name":sca,"isCircular":0,"size":len(SCAFFOLDS[sca]),"end":len(SCAFFOLDS[sca]),"start":1}
-        
-        chrdict["chromosomes"].append(chr_info)
-        
-    return {"result":chrdict}
+# THESE ARE WEB SERVICES PROVIDING JSON DATA TO THE GENOME VIEWER APPLICATION
     
 @get('/sequence')
 def sequence():
@@ -234,7 +234,6 @@ def gc_content():
             seq = str(SCAFFOLDS[ch][start:end+1]).upper()
             reg_intervals = []
             for i in xrange(0, len(seq), interval):
-                #gc_content = sum([1 for nt in seq[i:i+interval] if nt == "G" or nt == "C"]) / float(interval)
                 gc_content =  (seq[i:i+interval].count("C") + seq[i:i+interval].count("G")) / float(interval)
                 reg_intervals.append({"chromosome":ch,
                                       "start":start+i,
@@ -341,29 +340,11 @@ def search(q=None):
                 result["matches"].append([region, locus, biotype, desc])
                 n += 1
     return as_json(result)
-    
-def as_json(obj):
-    return {"response":obj}
 
-def expr_data(locus_name):
-    html = ""
-    if locus_name in GENE2EXPR:
-        html += "<div><ul>"
-        for key, value in GENE2EXPR[locus_name].iteritems():
-            html += "<li>%s: %s</li>" %(key, value)
-        html += "</div></ul>"
-    return html
 
-def additional_description(locus_name):
-    html = ""
-    if locus_name in GENE2DESC:
-        html += "<div><ul>"
-        for key, value in GENE2DESC[locus_name].iteritems():
-            html += "<li>%s: %s</li>" %(key, value)
-        html += "</div></ul>"
-    return html
-    
+
 def get_exons(region, biotypes, exclude_transcripts=False):
+    ''' Returns all genes, transcripts and exons within a genomic region '''
     t1 = time.time()
     ch, start, end = parse_region(region)
     genes = {}
@@ -385,8 +366,8 @@ def get_exons(region, biotypes, exclude_transcripts=False):
                         "end":fend,
                         "strand":gstrand,
                         "source":"",
-                        "description": additional_description(gname),
-                        "expression": expr_data(gname),
+                        "annotations": additional_description(gname),
+                        "expression": expr_info(gname),
                         "transcripts":[]}
             genes[gname] = genedict
 
@@ -463,6 +444,23 @@ def iter_exons(f):
         subend = f.location.end + f.parent.scaffold_start
         seq =  SCAFFOLDS[f.parent.scaffold][substart:subend]
         yield substart, subend, f.location.strand, seq
+
+
+def as_json(obj):
+    return {"response":obj}
+
+def expr_info(locus_name):
+    an = {}
+    if locus_name in GENE2EXPR:
+        for key, value in GENE2EXPR[locus_name].iteritems():
+            an[key] = value
+
+def additional_description(locus_name):
+    an = {}
+    if locus_name in GENE2DESC:
+        for key, value in GENE2DESC[locus_name].iteritems():
+            an[key] = value
+    return an
  
 def between(pos, start, end):
     pos, start, end = map(int, [pos, start, end])
@@ -480,9 +478,9 @@ def parse_region(region):
     start, end = map(int, pos.split("-"))
     return ch, start, end
     
-# Command line options
+# COMMAND LINE RELATED OPTIONS
     
-def refresh_db():
+def refresh_all_dbs():
     gbrecords, features, scaffolds, scaffold_genes = read_and_index_genome()
     gene2expr, gene2desc = read_and_index_extra_info()
     return gbrecords, features, scaffolds, scaffold_genes, gene2expr, gene2desc
@@ -523,47 +521,86 @@ def start_sphinx():
 def stop_sphinx():
     print 'Stopping sphinx sever... '
     system('cd %s && %s --config %s --stop' %(BASEPATH, SEARCHD, SPHINX_CONFIG_FILE))
+
+def start_webservices():
+    # This starts the web service on the host and port specified. Currently it
+    # should listen in "ct.bork.embl.de" and use the port 9000.
+    run(host=HOST, port=WEBSERVICE_PORT)
+
+
+    
+# Utils 
+SHELL_COLORS = {
+    "wr": '\033[1;37;41m', # white on red
+    "wo": '\033[1;37;43m', # white on orange
+    "wm": '\033[1;37;45m', # white on magenta
+    "wb": '\033[1;37;46m', # white on blue
+    "bw": '\033[1;37;40m', # black on white
+    "lblue": '\033[1;34m', # light blue
+    "lred": '\033[1;31m', # light red
+    "lgreen": '\033[1;32m', # light green
+    "yellow": '\033[1;33m', # yellow
+    "cyan": '\033[36m', # cyan
+    "blue": '\033[34m', # blue
+    "green": '\033[32m', # green
+    "orange": '\033[33m', # orange
+    "red": '\033[31m', # red
+    "magenta": "\033[35m", # magenta
+    "white": "\033[0m", # white
+    None: "\033[0m", # end
+}
+def color(string, color):
+    return "%s%s%s" %(SHELL_COLORS[color], string, SHELL_COLORS[None])
     
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    
-    parser.add_argument('--refresh', dest='refresh', action='store_true',
-                        help='upgrades all databases and start the daemon')
-    parser.add_argument('--host', dest='host', type=str,
-                        help='upgrades all databases and start the daemon')
 
-    parser.add_argument('-s', dest='search', type=str,
+    parser.add_argument('action', metavar='start|stop|status', type=str, nargs=1, choices=["start", "stop", "status"],
+                        help='')
+
+    parser.add_argument('--refresh', dest='refresh', action='store_true',
+                        help=('Refreshes all databases to account for changes in'
+                        ' FASTA or GBF files, and start the daemon. This option will'
+                        ' cause blast DB, search sphinx DB, and GBF annotation index'
+                        ' to be updated.'))
+    
+    parser.add_argument('--host', dest='host', type=str,
+                        help=('This option overwrites the HOST file information and'
+                              ' starts the daemon listening in a different address.'))
+
+    parser.add_argument('--search', dest='search', type=str,
                         help='test a query search')
 
-    parser.add_argument('--refresh_sphinx', dest='sphinx', action="store_true",
-                        help='refresh sphinx database')
-   
+    parser.add_argument('--daemon', dest='daemon', action = "store_true",
+                        help='Start the service as a daemon')
 
+
+    
     args = parser.parse_args()
     if args.refresh:
-        GBRECORDS, FEATURES, SCAFFOLDS, SCAFFOLD_GENES, GENE2EXPR, GENE2DESC = refresh_db()
+        (GBRECORDS, FEATURES, SCAFFOLDS, SCAFFOLD_GENES, GENE2EXPR,
+         GENE2DESC) = refresh_all_dbs()
+        
         INDEX2REGION, INDEX2DESC = refresh_sphinx()
-        cPickle.dump([GBRECORDS, FEATURES, SCAFFOLDS, SCAFFOLD_GENES, GENE2EXPR, GENE2DESC, INDEX2REGION, INDEX2DESC], open(DBFILE, "wb"))
+
+        # Saves the database for faster loading in the fugture
+        cPickle.dump([GBRECORDS, FEATURES, SCAFFOLDS, SCAFFOLD_GENES, GENE2EXPR,
+                      GENE2DESC, INDEX2REGION, INDEX2DESC],
+                     open(DBFILE, "wb"))
         
     else:
         try:
-            GBRECORDS, FEATURES, SCAFFOLDS, SCAFFOLD_GENES, GENE2EXPR, GENE2DESC, INDEX2REGION, INDEX2DESC = cPickle.load(open(DBFILE))
+            (GBRECORDS, FEATURES, SCAFFOLDS, SCAFFOLD_GENES, GENE2EXPR, GENE2DESC,
+             INDEX2REGION, INDEX2DESC) = cPickle.load(open(DBFILE))
         except Exception:
-            print "Unable to load cached data"
+            print "Unable to load cached data. Try with --refresh"
             sys.exit(1)
-
 
     if args.search:
         search(args.search)
         sys.exit(0)
-    
-            
-    print GENE2EXPR.values()[0]
-    print GENE2DESC.values()[0]
-    sorted_sca = sorted(SCAFFOLDS.keys(), lambda a,b: cmp(len(SCAFFOLD_GENES[a]), len(SCAFFOLD_GENES[b])), reverse=True)
-    print "Serving sequences and annotations for the following scaffolds:\n", '\n'.join(map(lambda x: '"%s with %d genes"'%(x, len(SCAFFOLD_GENES[x])), sorted_sca))
-    print "The following annotations were found:\n", '\n'.join(map(lambda x: "  %s %d" %(x[0], len(x[1])), FEATURES.items()))
-    
+               
+   
     # starts 
     try:
         HOST = open("HOST").readline().strip()
@@ -571,8 +608,57 @@ if __name__ == '__main__':
         HOST = "localhost"
     if args.host:
         HOST = args.host
+
+    action = args.action[0]
+    if action == "stop":
+        if os.path.exists(PID_FILE):
+            pid = strip(open(PID_FILE).readline())
+            system("kill %s" %pid)
+        stop_sphinx()
+                
+    elif action == "start":
+        print GENE2EXPR.values()[0]
+        print GENE2DESC.values()[0]
         
-    start_sphinx()
-    run(host=HOST, port=WEBSERVICE_PORT)
-    stop_sphinx()
-   
+        sorted_sca = sorted(SCAFFOLDS.keys(),
+                            lambda a,b: cmp(len(SCAFFOLD_GENES[a]), len(SCAFFOLD_GENES[b])),
+                            reverse=True)
+        print "Serving sequences and annotations for the following scaffolds:\n", '\n'.join(map(lambda x: '"%s with %d genes"'%(x, len(SCAFFOLD_GENES[x])), sorted_sca))
+        print "The following annotations were found:\n", '\n'.join(map(lambda x: "  %s %d" %(x[0], len(x[1])), FEATURES.items()))
+
+        # Sphinx will not start if another instance is running in the same
+        # port. This call will try to stop any other running instance, but it might
+        # fail if the service was started from a different user or directory. Just
+        # 'pkill searchd' to kill any running process.
+        start_sphinx()
+       
+        if args.daemon:
+            from daemonize import Daemonize
+            daemon = Daemonize(app="ct_daemon",
+                               pid=PID_FILE,
+                               action=start_webservices,
+                               keep_fds=None)
+            daemon.start()
+        else:
+            print color("\n*** Running in debug mode. If you want to start the service in a production system, please use the --daemon flag.", "red")
+            start_webservices()
+            stop_sphinx()
+
+    elif action == "status":
+        if os.path.exists(PID_FILE):
+            pid = strip(open(PID_FILE).readline())
+            print "CT Browser daemon seems to be UP with PID %s" %pid
+        else:
+            print "CT Browser daemon seems to be DOWN"
+            
+        try:
+            pid = strip(open(os.path.join(BASE_PATH, "searchd.pid")).readline())
+        except Exception:
+            print "CT Sphinx daemon seems to be DOWN"
+        else:
+            print "CT Sphinx daemon seems to be UP with PID %s" %pid
+        
+            
+    
+    
+    

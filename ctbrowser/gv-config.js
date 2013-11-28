@@ -245,12 +245,16 @@ FEATURE_TYPES = {
         },
         tooltipText: function (f) {
             var color = GENE_BIOTYPE_COLORS[f.biotype];
-            return    'id:&nbsp;<span class="ssel">' + f.id + '</span><br>' +
+            var html = 'id:&nbsp;<span class="ssel">' + f.id + '</span><br>' +
                 'biotype:&nbsp;<span class="emph" style="color:' + color + ';">' + f.biotype + '</span><br>' +
-                FEATURE_TYPES.getTipCommons(f) +
-                'source:&nbsp;<span class="ssel">' + f.source + '</span><br><br>' +
-                'expression data:&nbsp;<span class="ssel">' + f.expression + '</span><br><br>' +
-                'description:&nbsp;<span class="emph">' + f.description + '</span><br>';
+                FEATURE_TYPES.getTipCommons(f);
+            for (var key in f.annotations) {
+                html += "<b>" + key+ "</b>:&nbsp;" + f.annotations[key] + "<br>";}
+            for (var key in f.expression) {
+                html += "<b>" + key+ "</b>:&nbsp;" + f.annotations[key] + "<br>";}
+
+
+            return html;
         },
         color: function (f) {
             return GENE_BIOTYPE_COLORS[f.biotype];
