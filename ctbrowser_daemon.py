@@ -31,22 +31,36 @@ try:
 except ImportError:
     print "Sphinx API could not be imported. Searches will be disabled!"
 
-# Blast DB will be based/upgraded based on these fasta files
-FASTA_FILES = [os.path.join(BASEPATH, "data/v1/C_thermophilum.scaffolds.v1.fa"),
-               os.path.join(BASEPATH, "data/v1/C_thermophilum.mitochondrial.v1.fa"),
-               os.path.join(BASEPATH, "data/v1/C_thermophilum.rrn.v1.fa")]
+AN_VERSION = 2
+    
+if AN_VERSION == 1:
+    # Blast DB will be based/upgraded based on these fasta files
+    FASTA_FILES = [os.path.join(BASEPATH, "data/v1/C_thermophilum.scaffolds.v1.fa"),
+                   os.path.join(BASEPATH, "data/v1/C_thermophilum.mitochondrial.v1.fa"),
+                   os.path.join(BASEPATH, "data/v1/C_thermophilum.rrn.v1.fa")]
 
-# Annotations CDS, rRNA, tRNA and misc_RNA are extracted from the GBF file
-GBF_FILE = os.path.join(BASEPATH, "data/v1/C_thermophilum.annotation.v1.gbf")
+    # Annotations CDS, rRNA, tRNA and misc_RNA are extracted from the GBF file
+    GBF_FILE = os.path.join(BASEPATH, "data/v1/C_thermophilum.annotation.v1.gbf")
 
-# Additional annotations by locus tag are loaded from here
-EXPR_FILE = os.path.join(BASEPATH, "data/v1/C_thermophilum.expressed.proteins.v1.txt")
-DESC_FILE = os.path.join(BASEPATH, "data/v1/C_thermophilum.additional.descr.v1.txt")
+    # Additional annotations by locus tag are loaded from here
+    EXPR_FILE = os.path.join(BASEPATH, "data/v1/C_thermophilum.expressed.proteins.v1.txt")
+    DESC_FILE = os.path.join(BASEPATH, "data/v1/C_thermophilum.additional.descr.v1.txt")
+elif AN_VERSION == 2:
+    # Blast DB will be based/upgraded based on these fasta files
+    FASTA_FILES = [os.path.join(BASEPATH, "data/v2/C_thermophilum.scaffolds.v2.fa")]
 
+    # Annotations CDS, rRNA, tRNA and misc_RNA are extracted from the GBF file
+    GBF_FILE = os.path.join(BASEPATH, "data/v2/C_thermophilum.annotation.v2.gbf")
+
+    # Additional annotations by locus tag are loaded from here
+    EXPR_FILE = os.path.join(BASEPATH, "data/v2/C_thermophilum.expressed.proteins.v1.txt")
+    DESC_FILE = os.path.join(BASEPATH, "data/v2/C_thermophilum.additional.descr.v1.txt")
+    
+    
 # Where all parsed information is sotored
 DBFILE = os.path.join(BASEPATH, "cache/genome.db.pkl")
 BLAST_DB_PATH = os.path.join(BASEPATH, "blastDB/")
-WEBSERVICE_PORT = 9000 # needs to be externally open or bypassed with apache
+WEBSERVICE_PORT = 9005 # needs to be externally open or bypassed with apache
                        # proxy. Currently bound to ctbrowser.embl.de.
 PID_FILE=os.path.join(BASEPATH, "ct_daemon.pid")
 
@@ -54,7 +68,7 @@ PID_FILE=os.path.join(BASEPATH, "ct_daemon.pid")
 SEARCHD = os.path.join(BASEPATH, "sphinx/src/searchd")
 INDEXER = os.path.join(BASEPATH, "sphinx/src/indexer")
 SEARCHER = os.path.join(BASEPATH, "sphinx/src/search")
-SPHINX_PORT = 9001
+SPHINX_PORT = 9005
 # this file has all de words indexed for each locus
 SPHINX_ANNOTATION_FILE = os.path.join(BASEPATH,"cache/ct_annotations.tab")
 # Define how to index all the words
