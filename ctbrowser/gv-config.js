@@ -1,5 +1,3 @@
-GENE_LABEL_ZOOM = 0;
-
 FEATURE_CONFIG = {
     gene: {
         filters: [
@@ -224,19 +222,15 @@ FEATURE_TYPES = {
     },
     gene: {
         label: function (f, zoom) {
-            if (zoom>GENE_LABEL_ZOOM)
-                {
-                    var name = (f.name != null) ? f.name : f.id;
-                    var str = "";
-                    str += (f.strand < 0 || f.strand == '-') ? "<" : "";
-                    str += " " + name + " ";
-                    str += (f.strand > 0 || f.strand == '+') ? ">" : "";
-                    //if (f.biotype != null && f.biotype != '' && f.biotype != 'gene' && zoom > 25) {
-                    //    str += " [" + f.biotype + "]";
+            var name = (f.name != null) ? f.name : f.id;
+            var str = "";
+            str += (f.strand < 0 || f.strand == '-') ? "<" : "";
+            str += " " + name + " ";
+            str += (f.strand > 0 || f.strand == '+') ? ">" : "";
+            //if (f.biotype != null && f.biotype != '' && f.biotype != 'gene' && zoom > 25) {
+            //    str += " [" + f.biotype + "]";
                     //}
-                    return str;}
-            else{
-                return "";}
+            return str;
         },
         tooltipTitle: function (f) {
             var name = (f.name != null) ? f.name : f.id;
@@ -272,19 +266,15 @@ FEATURE_TYPES = {
 
     transcript: {
         label: function (f, zoom) {
-            if (zoom>GENE_LABEL_ZOOM)
-                {
-                    var name = (f.name != null) ? f.name : f.id;
-                    var str = "";
-                    str += (f.strand < 0) ? "<" : "";
-                    str += " " + name + " ";
-                    str += (f.strand > 0) ? ">" : "";
-                    if (f.biotype != null && f.biotype != '') {
-                        str += " [" + f.biotype + "]";
-                    }
-                    return str;}
-            else{
-                return "";}
+            var name = (f.name != null) ? f.name : f.id;
+            var str = "";
+            str += (f.strand < 0) ? "<" : "";
+            str += " " + name + " ";
+            str += (f.strand > 0) ? ">" : "";
+            if (f.biotype != null && f.biotype != '') {
+                str += " [" + f.biotype + "]";
+            }
+            return str;
         },
         tooltipTitle: function (f) {
             var name = (f.name != null) ? f.name : f.id;

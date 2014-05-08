@@ -27,12 +27,12 @@
         <!-- JS from Genome Viewer -->
         <!-- Genome-viewer -->
         <script type="text/javascript" src="gv-config.js"></script>
-        <script type="text/javascript" src="genome-viewer-1.0.2.js"></script>
+        <script type="text/javascript" src="genome-viewer-1.0.3.js"></script>
 
         <!-- ctbrowser custom-->
         <script type="text/javascript" src="ct-js/ct-sequence-adapter.js"></script>
         <script type="text/javascript" src="ct-js/embl-adapter.js"></script>
-        <!-- 
+        <!--
         "scf7180000011816 with 1873 genes"
         "scf7180000011820 with 911 genes"
         "scf7180000011822 with 830 genes"
@@ -54,22 +54,36 @@
         "scf7180000011809 with 0 genes"
         "scf7180000011807 with 0 genes"
         "mito with 0 genes"
-        "scf7180000011810 with 0 genes" 
+        "scf7180000011810 with 0 genes"
         -->
         <script type="text/javascript">
             CELLBASE_HOST = ""
             CT_HOST = "http://ctbrowser.embl.de";
 
-            var genomeViewer = null;
-            var run = function() {
+         var url = $.url();
+         var qregion = url.param('r');
+         var genomeViewer = null;
+         var run = function() {
                 /* region and species configuration */
-                var region = new Region({
-                    chromosome: "scf7180000011816",
-                    start: 379031,
-                    end: 404027, 
-                });
-                var availableSpecies= {
-                    "text": "Species",
+           if (qregion){
+             var coords = qregion.split(",");
+             console.log(coords.length);
+
+             var region = new Region({
+               chromosome: coords[0],
+               start: parseInt(coords[1]),
+               end: parseInt(coords[2]),
+             });
+           } else {
+             var region = new Region({
+               chromosome: "scf7180000011816",
+               start: 379031,
+               end: 404027,
+             });
+           }
+           console.log(region);
+           var availableSpecies= {
+             "text": "Species",
                             "items": [{
                         "text": "Chaetomium",
                         "items": [{
@@ -102,13 +116,30 @@
                                             "scf7180000011807",
                                             "scf7180000011810",
                                             "mito"],
-                            "url": "ct.bork.embl.de"
-                        }
-                        ]
-                    }
-                    ]
-                }
-                var species = availableSpecies.items[0].items[0];
+
+                 "url": "ct.bork.embl.de"
+               }
+               ]
+             }
+             ]
+           }
+           var species = availableSpecies.items[0].items[0];
+
+				/*** Quick search config ***/
+				var quickSearchResultFn = function (queryStr) {
+					var results;
+					$.ajax({
+						type:'GET',
+						url:CT_HOST+'/search/'+queryStr, //tRNA
+						dataType: 'json',
+						async:false,
+						success:function(data){
+							results = data.response.matches;
+						}
+					});
+					return results;
+				 };
+				 /*****/
 
                 genomeViewer = new GenomeViewer({
                         targetId: 'application',
@@ -128,8 +159,219 @@
                         chromosomePanelConfig: {
                             collapsed: false,
                             collapsible: true
-                        }
-                    }); //the div must exist
+                        },
+                        /*** Quick search config ***/
+						quickSearchResultFn: quickSearchResultFn,
+						quickSearchDisplayKey: '1',
+						handlers:{
+							'quickSearch:select': function (event) {
+								console.log(event.item);
+							}
+						},
+
+             chromosomeList: [
+               {
+                 end: 8133,
+                 name: "rrn",
+                 cytobands: [ ],
+                 start: 1,
+                 numberGenes: 0,
+                 isCircular: 0,
+                 size: 8133
+               },
+               {
+                 end: 1603,
+                 name: "scf7180000011824",
+                 cytobands: [ ],
+                 start: 1,
+                 numberGenes: 0,
+                 isCircular: 0,
+                 size: 1603
+               },
+               {
+                 end: 1013,
+                 name: "scf7180000011808",
+                 cytobands: [ ],
+                 start: 1,
+                 numberGenes: 0,
+                 isCircular: 0,
+                 size: 1013
+               },
+               {
+                 end: 1150,
+                 name: "scf7180000011809",
+                 cytobands: [ ],
+                 start: 1,
+                 numberGenes: 0,
+                 isCircular: 0,
+                 size: 1150
+               },
+               {
+                 end: 3461039,
+                 name: "scf7180000011820",
+                 cytobands: [ ],
+                 start: 1,
+                 numberGenes: 0,
+                 isCircular: 0,
+                 size: 3461039
+               },
+               {
+                 end: 1965831,
+                 name: "scf7180000011821",
+                 cytobands: [ ],
+                 start: 1,
+                 numberGenes: 0,
+                 isCircular: 0,
+                 size: 1965831
+               },
+               {
+                 end: 3123527,
+                 name: "scf7180000011822",
+                 cytobands: [ ],
+                 start: 1,
+                 numberGenes: 0,
+                 isCircular: 0,
+                 size: 3123527
+               },
+               {
+                 end: 745067,
+                 name: "scf7180000011823",
+                 cytobands: [ ],
+                 start: 1,
+                 numberGenes: 0,
+                 isCircular: 0,
+                 size: 745067
+               },
+               {
+                 end: 13765,
+                 name: "scf7180000011802",
+                 cytobands: [ ],
+                 start: 1,
+                 numberGenes: 0,
+                 isCircular: 0,
+                 size: 13765
+               },
+               {
+                 end: 192410,
+                 name: "scf7180000011801",
+                 cytobands: [ ],
+                 start: 1,
+                 numberGenes: 0,
+                 isCircular: 0,
+                 size: 192410
+               },
+               {
+                 end: 2849635,
+                 name: "scf7180000011806",
+                 cytobands: [ ],
+                 start: 1,
+                 numberGenes: 0,
+                 isCircular: 0,
+                 size: 2849635
+               },
+               {
+                 end: 11746,
+                 name: "scf7180000011807",
+                 cytobands: [ ],
+                 start: 1,
+                 numberGenes: 0,
+                 isCircular: 0,
+                 size: 11746
+               },
+               {
+                 end: 127206,
+                 name: "mito",
+                 cytobands: [ ],
+                 start: 1,
+                 numberGenes: 0,
+                 isCircular: 0,
+                 size: 127206
+               },
+               {
+                 end: 1047547,
+                 name: "scf7180000011819",
+                 cytobands: [ ],
+                 start: 1,
+                 numberGenes: 0,
+                 isCircular: 0,
+                 size: 1047547
+               },
+               {
+                 end: 2847644,
+                 name: "scf7180000011818",
+                 cytobands: [ ],
+                 start: 1,
+                 numberGenes: 0,
+                 isCircular: 0,
+                 size: 2847644
+               },
+               {
+                 end: 1853679,
+                 name: "scf7180000011815",
+                 cytobands: [ ],
+                 start: 1,
+                 numberGenes: 0,
+                 isCircular: 0,
+                 size: 1853679
+               },
+               {
+                 end: 2150193,
+                 name: "scf7180000011814",
+                 cytobands: [ ],
+                 start: 1,
+                 numberGenes: 0,
+                 isCircular: 0,
+                 size: 2150193
+               },
+               {
+                 end: 153753,
+                 name: "scf7180000011817",
+                 cytobands: [ ],
+                 start: 1,
+                 numberGenes: 0,
+                 isCircular: 0,
+                 size: 153753
+               },
+               {
+                 end: 6909506,
+                 name: "scf7180000011816",
+                 cytobands: [ ],
+                 start: 1,
+                 numberGenes: 0,
+                 isCircular: 0,
+                 size: 6909506
+               },
+               {
+                 end: 1124,
+                 name: "scf7180000011810",
+                 cytobands: [ ],
+                 start: 1,
+                 numberGenes: 0,
+                 isCircular: 0,
+                 size: 1124
+               },
+               {
+                 end: 10547,
+                 name: "scf7180000011813",
+                 cytobands: [ ],
+                 start: 1,
+                 numberGenes: 0,
+                 isCircular: 0,
+                 size: 10547
+               },
+               {
+                 end: 973894,
+                 name: "scf7180000011812",
+                 cytobands: [ ],
+                 start: 1,
+                 numberGenes: 0,
+                 isCircular: 0,
+                 size: 973894
+               }
+             ],
+
+			 /*****/
+           }); //the div must exist
 
                 genomeViewer.draw();
 
@@ -139,16 +381,13 @@
                     targetId: null,
                     id: 3,
                     title: 'GC content',
-                    histogramZoom: 100,
+                    /***/
+                    minHistogramRegionSize: 0,//nts
+					maxLabelRegionSize: 10000000,//nts
+					visibleRegionSize:30000000000,//nts
+					/***/
                     histogramMaxFreqValue: 1,
-                    transcriptZoom: 0,
-                    height: 100,
-                    visibleRange: {
-                        start: 0,
-                        end: 94,
-                    },
-                    featureTypes: FEATURE_TYPES,
-
+                    height: 50,
                     renderer: new GeneRenderer(),
 
                     dataAdapter: new EmblAdapter({
@@ -160,9 +399,7 @@
                         species: genomeViewer.species,
                         cacheConfig: {
                             chunkSize: 500000
-                        },
-                        filters: {},
-                        options: {},
+                        }
                     })
                 });
 
@@ -174,14 +411,8 @@
                     targetId: null,
                     id: 1,
                     //title: 'Sequence',
-                    histogramZoom: 0,
-                    transcriptZoom: 0,
                     height: 20,
-                    visibleRange: {
-                        start: 94,
-                        end: 100
-                    },
-                    featureTypes: FEATURE_TYPES,
+                    visibleRegionSize:300,//nts
 
                     renderer: new SequenceRenderer(),
 
@@ -203,17 +434,12 @@
                     targetId: null,
                     id: 2,
                     title: 'Genes (CDS, tRNA, rRNA, misc_RNA)',
-                    histogramZoom: 0,
-                    transcriptZoom: 40,
+					maxLabelRegionSize: 2000000000,
+					minTranscriptRegionSize: 100000,
                     histogramMaxFreqValue: 1,
                     height: 400,
-                    visibleRange: {
-                        start: 1,
-                        end: 100
-                    },
-                    featureTypes: FEATURE_TYPES,
 
-                    renderer: new GeneRenderer(),
+                    renderer: new GeneRenderer(FEATURE_CONFIG.tRNA),
 
                     dataAdapter: new EmblAdapter({
                         host: CT_HOST,
@@ -225,34 +451,32 @@
                         species: genomeViewer.species,
                         cacheConfig: {
                             chunkSize: 500000
-                        },
-                        filters: {},
-                        options: {},
-                        featureConfig: FEATURE_CONFIG.tRNA
+                        }
                     })
                 });
-
-                tracks.push(this.gene);
+           this.gene.renderer.on({
+             'feature:click': function(event) {
+               console.log(event, "click in transcript");
+             }
+           });
+           tracks.push(this.gene);
 
                 var renderer = new FeatureRenderer('gene');
                 renderer.on({
                     'feature:click': function(event) {
-                        console.log(event)
-                        new GeneInfoWidget(null, genomeViewer.species).draw(event);
+                        console.log(event, "click in gene");
                     }
                 });
                 var geneOver = new FeatureTrack({
                     targetId: null,
                     id: 4,
                     //title: 'Region overview',
-                    histogramZoom: 0,
+                    maxLabelRegionSize: 200000000,
+					minTranscriptRegionSize: 100000,
+                    //histogramZoom: 0,
                     histogramMaxFreqValue: 1,
-                    labelZoom: 40,
+                    //labelZoom: 40,
                     height: 150,
-                    visibleRange: {
-                        start: 0,
-                        end: 100
-                    },
                     titleVisibility: 'hidden',
                     featureTypes: FEATURE_TYPES,
 
@@ -274,6 +498,54 @@
 
                 genomeViewer.addTrack(tracks);
 
+
+				/*custom search*/
+				var customSearchButton = $('#customSearchButton')[0];
+				var customSearchField = $('#customSearchField')[0];
+				var getCustomSearchResults = function(queryStr){
+					var html = '<div id="customSearchDiv">';
+					var results = [];
+					$.ajax({
+						type:'GET',
+						url:CT_HOST+'/search/'+queryStr, //tRNA
+						dataType: 'json',
+						async:false,
+						success:function(data){
+							results = data.response.matches;
+						}
+					});
+             html += "<table>";
+					for(var i = 0;i<results.length;i++){
+						var result = results[i];
+               
+ 						html+='<tr><td><div class="customSearchItem" style="over" id="' + result[1] + '" region="'+result[0] + 
+                              '" >' +result[1] + '</div></td>' + '<td>'+ result[3] + '</td>';
+					}
+					html += '</table></div>';
+					return html;
+				};
+
+				$(customSearchButton).click(function(){
+					var queryStr = $(customSearchField).val();
+					if(queryStr!==''){
+						$(customSearchButton).popover('destroy');
+						var html = getCustomSearchResults(queryStr);
+						$(customSearchButton).popover({
+							title:'Search results:',
+							html:true,
+							content:html,
+							placement:'bottom',
+							trigger:'manual'
+						});
+						$(customSearchButton).popover('show');
+						$('#customSearchDiv').click(function(event){
+							var regionStr = $(event.target).attr('region');
+							var region = new Region(regionStr);
+							genomeViewer.setRegionDirect(region);
+						});
+					}
+				});
+				
             };
 
             $(document).ready(run);
@@ -294,11 +566,33 @@
            /*overflow-x: hidden;*/
            padding: 10px;
             }
+            #customSearch {
+                width: 80%;
+                /*overflow-y: auto;*/
+                /*overflow-x: hidden;*/
+                height:20px;
+            }
+            .customSearchItem {
+				padding:5px;
+			}
+            .customSearchItem:hover {color:#3276B1;}
         </style>
     </head>
 
     <body>
-        <div style=""></div>
+        <div id="customSearch" class="bootstrap">
+			
+         <div class="btn-toolbar" role="toolbar">
+			<div class="btn-group btn-group-xs" style="margin:0px 0px 0px 10px;">
+            <div class="pull-left" style="height:22px;line-height: 22px;font-size:14px;">Search:&nbsp;&nbsp;&nbsp;</div>
+            <input id="customSearchField" type="text" class="form-control pull-left" placeholder="trna" style="padding:0px 4px;height:22px;width:200px">
+            </div>
+            <div class="btn-group btn-group-xs" style="margin:0px 0px 0px 10px;">
+            <button id="customSearchButton" class="btn btn-default btn-xs" type="button">Search!</button>
+            </div>
+		</div>
+		
+        </div>
         <div id="application"></div>
         <div style=""></div>
     </body>

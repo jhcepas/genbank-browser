@@ -6,13 +6,26 @@ from string import strip
 import cPickle
 import argparse
 import re
+import logging
+from StringIO import StringIO
 
 from Bio import SeqIO
 from Bio.SeqFeature import CompoundLocation
 from bottle import Bottle, run, get, post, request, route, response    
+from daemonize import Daemonize
 
 BASEPATH = os.path.split(os.path.realpath(__file__))[0]
 sys.path.insert(0, os.path.join(BASEPATH, "sphinx/api/"))
+os.chdir(BASEPATH)
+
+class WhitespaceRemovingFormatter(logging.Formatter):
+    def format(self, record):
+        record.msg = record.msg.strip()
+        return super(WhitespaceRemovingFormatter, self).format(record)
+    
+LOG = logging.getLogger('ctbrowser')
+LOG.setLevel(logging.DEBUG)
+
 try:
     import sphinxapi as sphinx
 except ImportError:
@@ -290,8 +303,39 @@ def gene():
     print "**Returning GENE json in", time.time() -t1        
     return as_json(by_region)
 
+@get('/all')
+def all():
+    response.set_header("Access-Control-Allow-Origin","*")
+    response.content_type = "application/json"
+    chrdict = {"species":"CT","chromosomes":[]}
+    for sca in SCAFFOLDS:
+        chr_info = {"cytobands":[],
+                    "numberGenes":0, "name":sca,"isCircular":0,
+                    "size":len(SCAFFOLDS[sca]),
+                    "end":len(SCAFFOLDS[sca]),
+                    "start":1}
+        chrdict["chromosomes"].append(chr_info)
+    return {"result":chrdict}
+
+@get('/info')
+def info():
+    response.set_header("Access-Control-Allow-Origin","*")
+    response.content_type = "application/json"
+    chrdict = {"species":"CT","chromosomes":[]}
+    for sca in SCAFFOLDS:
+        chr_info = {"cytobands":[],
+                    "numberGenes":0,"name":sca,"isCircular":0,"size":len(SCAFFOLDS[sca]),"end":len(SCAFFOLDS[sca]),"start":1}
+        chrdict["chromosomes"].append(chr_info)
+        
+    return {"result":chrdict}
+
+
+
 @route('/search/<q>')
 def search(q=None):
+    response.set_header("Access-Control-Allow-Origin","*")
+    response.content_type = "application/json"
+    
     if not q:
         return
     cl = sphinx.SphinxClient()
@@ -322,7 +366,7 @@ def search(q=None):
     MATCHER = re.compile("(%s)"%q, re.IGNORECASE)
     if res.has_key('matches'):
         n = 1
-        for match in res['matches']:
+        for match in res['matches'][:10]:
                 attrsdump = ''
                 for attr in res['attrs']:
                         attrname = attr[0]
@@ -516,18 +560,25 @@ def refresh_sphinx():
 def start_sphinx():
     stop_sphinx()
     print 'Starting sphinx sever... '
-    system('cd %s && %s --config %s' %(BASEPATH, SEARCHD, SPHINX_CONFIG_FILE))
+    s = system('cd %s && %s --config %s' %(BASEPATH, SEARCHD, SPHINX_CONFIG_FILE))
+    if s:
+        print color("Sphinx Start action Failed!", "red")
+    else:
+        print color("Sphinx Start action OK!", "green")
 
 def stop_sphinx():
     print 'Stopping sphinx sever... '
-    system('cd %s && %s --config %s --stop' %(BASEPATH, SEARCHD, SPHINX_CONFIG_FILE))
+    s = system('cd %s && %s --config %s --stop' %(BASEPATH, SEARCHD, SPHINX_CONFIG_FILE))
+    if s:
+        print color("Sphinx Stop action Failed!", "red")
+    else:
+        print color("Sphinx Stop action OK!", "green")
 
+    
 def start_webservices():
     # This starts the web service on the host and port specified. Currently it
     # should listen in "ct.bork.embl.de" and use the port 9000.
     run(host=HOST, port=WEBSERVICE_PORT)
-
-
     
 # Utils 
 SHELL_COLORS = {
@@ -551,7 +602,11 @@ SHELL_COLORS = {
 }
 def color(string, color):
     return "%s%s%s" %(SHELL_COLORS[color], string, SHELL_COLORS[None])
-    
+
+class LogStdout(StringIO):
+    def write(self, s):
+        LOG.info(s.rstrip("\n"))
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
 
@@ -577,24 +632,6 @@ if __name__ == '__main__':
 
     
     args = parser.parse_args()
-    if args.refresh:
-        (GBRECORDS, FEATURES, SCAFFOLDS, SCAFFOLD_GENES, GENE2EXPR,
-         GENE2DESC) = refresh_all_dbs()
-        
-        INDEX2REGION, INDEX2DESC = refresh_sphinx()
-
-        # Saves the database for faster loading in the fugture
-        cPickle.dump([GBRECORDS, FEATURES, SCAFFOLDS, SCAFFOLD_GENES, GENE2EXPR,
-                      GENE2DESC, INDEX2REGION, INDEX2DESC],
-                     open(DBFILE, "wb"))
-        
-    else:
-        try:
-            (GBRECORDS, FEATURES, SCAFFOLDS, SCAFFOLD_GENES, GENE2EXPR, GENE2DESC,
-             INDEX2REGION, INDEX2DESC) = cPickle.load(open(DBFILE))
-        except Exception:
-            print "Unable to load cached data. Try with --refresh"
-            sys.exit(1)
 
     if args.search:
         search(args.search)
@@ -617,6 +654,30 @@ if __name__ == '__main__':
         stop_sphinx()
                 
     elif action == "start":
+        if os.path.exists(PID_FILE):
+            pid = strip(open(PID_FILE).readline())
+            system("kill %s" %pid)
+        stop_sphinx()
+        
+        if args.refresh:
+            (GBRECORDS, FEATURES, SCAFFOLDS, SCAFFOLD_GENES, GENE2EXPR,
+             GENE2DESC) = refresh_all_dbs()
+
+            INDEX2REGION, INDEX2DESC = refresh_sphinx()
+
+            # Saves the database for faster loading in the fugture
+            cPickle.dump([GBRECORDS, FEATURES, SCAFFOLDS, SCAFFOLD_GENES, GENE2EXPR,
+                          GENE2DESC, INDEX2REGION, INDEX2DESC],
+                         open(DBFILE, "wb"))
+
+        else:
+            try:
+                (GBRECORDS, FEATURES, SCAFFOLDS, SCAFFOLD_GENES, GENE2EXPR, GENE2DESC,
+                 INDEX2REGION, INDEX2DESC) = cPickle.load(open(DBFILE))
+            except Exception:
+                print "Unable to load cached data. Try with --refresh"
+                sys.exit(1)
+        
         print GENE2EXPR.values()[0]
         print GENE2DESC.values()[0]
         
@@ -633,17 +694,24 @@ if __name__ == '__main__':
         start_sphinx()
        
         if args.daemon:
-            from daemonize import Daemonize
-            daemon = Daemonize(app="ct_daemon",
+            # create logger with 'spam_application'
+            fh = logging.FileHandler('log/ctbrowser_daemon.log')
+            LOG.addHandler(fh)
+            fh.setFormatter(WhitespaceRemovingFormatter())
+            daemon = Daemonize(app="ctbrowser",
                                pid=PID_FILE,
                                action=start_webservices,
-                               keep_fds=None)
+                               keep_fds=[3])
+            sys.stdout = LogStdout()
+            sys.stderr = LogStdout()
+            print "Start!"
+            
             daemon.start()
         else:
             print color("\n*** Running in debug mode. If you want to start the service in a production system, please use the --daemon flag.", "red")
             start_webservices()
             stop_sphinx()
-
+            
     elif action == "status":
         if os.path.exists(PID_FILE):
             pid = strip(open(PID_FILE).readline())
