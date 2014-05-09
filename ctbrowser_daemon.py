@@ -8,6 +8,9 @@ import argparse
 import re
 import logging
 from StringIO import StringIO
+import gzip
+import json
+
 
 from Bio import SeqIO
 from Bio.SeqFeature import CompoundLocation
@@ -56,11 +59,14 @@ elif AN_VERSION == 2:
     EXPR_FILE = os.path.join(BASEPATH, "data/v2/C_thermophilum.expressed.proteins.v1.txt")
     DESC_FILE = os.path.join(BASEPATH, "data/v2/C_thermophilum.additional.descr.v1.txt")
     
+
+
     
 # Where all parsed information is sotored
 DBFILE = os.path.join(BASEPATH, "cache/genome.db.pkl")
+JS_VARS_FILE = os.path.join(BASEPATH, "ctbrowser/ct_genome_info.js") # init vars for the js browsers
 BLAST_DB_PATH = os.path.join(BASEPATH, "blastDB/")
-WEBSERVICE_PORT = 9005 # needs to be externally open or bypassed with apache
+WEBSERVICE_PORT = 9000 # needs to be externally open or bypassed with apache
                        # proxy. Currently bound to ctbrowser.embl.de.
 PID_FILE=os.path.join(BASEPATH, "ct_daemon.pid")
 
@@ -68,7 +74,7 @@ PID_FILE=os.path.join(BASEPATH, "ct_daemon.pid")
 SEARCHD = os.path.join(BASEPATH, "sphinx/src/searchd")
 INDEXER = os.path.join(BASEPATH, "sphinx/src/indexer")
 SEARCHER = os.path.join(BASEPATH, "sphinx/src/search")
-SPHINX_PORT = 9005
+SPHINX_PORT = 9001
 # this file has all de words indexed for each locus
 SPHINX_ANNOTATION_FILE = os.path.join(BASEPATH,"cache/ct_annotations.tab")
 # Define how to index all the words
@@ -78,9 +84,24 @@ SPHINX_CONFIG_FILE = os.path.join(BASEPATH,"ct.sphinx.conf")
 # web-services 
 AVOIDED_QUALIFIERS = set(["translation"])
 
+COMPRESS_DATA = True
+
 def system(cmd):
     print color(cmd, "blue")
     return os.system(cmd)
+
+def web_return(html, response, min_len=1000):
+    if COMPRESS_DATA and len(html)>=min_len:
+        chtmlF = StringIO()
+        z = gzip.GzipFile(fileobj=chtmlF, mode='w')
+        z.write(html)
+        z.close()
+        chtmlF.seek(0)
+        html = chtmlF.read()
+        response.set_header( 'Content-encoding', 'gzip')
+        response.set_header( 'Content-length', len(html))
+    return html
+
 
 # INDEXING FUNCTIONS (CALLED ONLY WHEN DATABASE NEEDS TO BE UPGRADED)
 def genome_pos(f, scaffolds):
@@ -237,13 +258,22 @@ def sequence():
 
     for reg in region.split(","):
         ch, start, end = parse_region(reg)
+        start -= 1
+        correction = 0 
+        if start <= 0:
+            if end == 1:
+                end = 0
+            correction = abs(start)
+            start = 0
+        seq = 'X'*correction + str(SCAFFOLDS[ch][start:end]).upper()
+        print seq, start, end
         by_region.append({"id":reg, "result": {"chromosome":ch,
                                                "start":start,
                                                "end":end,
                                                "strand":"+",
-                                               "sequence": str(SCAFFOLDS[ch][start:end+1])}})
+                                               "sequence": seq}})
     print "**Returning SEQ json in", time.time() -t1
-    return as_json(by_region)
+    return web_return(as_json(by_region), response)
 
 
 @get('/gc_content')
@@ -258,14 +288,19 @@ def gc_content():
     if histogram:
         for reg in region.split(","):
             ch, start, end = parse_region(reg)
-            seq = str(SCAFFOLDS[ch][start:end+1]).upper()
+            start -= 1
+            if start < 0:
+                start = 0
+            
+            seq = str(SCAFFOLDS[ch][start:end]).upper()
+
             reg_intervals = []
             for i in xrange(0, len(seq), interval):
                 gc_content =  (seq[i:i+interval].count("C") + seq[i:i+interval].count("G")) / float(interval)
                 reg_intervals.append({"chromosome":ch,
-                                      "start":start+i,
+                                      "start":start+i+1,
                                       "length":interval,
-                                       "end":start+i+interval-1,
+                                       "end":start+i+interval,
                                        "strand":"+",
                                        "features_count": gc_content})
             by_region.append({"id":reg,
@@ -273,7 +308,7 @@ def gc_content():
                               "result": reg_intervals})
             
     print "**Returning GC-content json in", time.time() -t1
-    return as_json(by_region)
+    return web_return(as_json(by_region), response)
     
 @get('/gene')
 def gene():
@@ -315,52 +350,49 @@ def gene():
             by_region.append({"id":reg, "result":get_exons(reg, biotypes, exclude_transcripts)})
 
     print "**Returning GENE json in", time.time() -t1        
-    return as_json(by_region)
+    return web_return(as_json(by_region), response)
 
-@get('/all')
-def all():
-    response.set_header("Access-Control-Allow-Origin","*")
-    response.content_type = "application/json"
-    chrdict = {"species":"CT","chromosomes":[]}
-    for sca in SCAFFOLDS:
-        chr_info = {"cytobands":[],
-                    "numberGenes":0, "name":sca,"isCircular":0,
-                    "size":len(SCAFFOLDS[sca]),
-                    "end":len(SCAFFOLDS[sca]),
-                    "start":1}
-        chrdict["chromosomes"].append(chr_info)
-    return {"result":chrdict}
+# @get('/all')
+# def all():
+#     response.set_header("Access-Control-Allow-Origin","*")
+#     response.content_type = "application/json"
+#     chrdict = {"species":"CT","chromosomes":[]}
+#     for sca in SCAFFOLDS:
+#         chr_info = {"cytobands":[],
+#                     "numberGenes":0, "name":sca,"isCircular":0,
+#                     "size":len(SCAFFOLDS[sca]),
+#                     "end":len(SCAFFOLDS[sca]),
+#                     "start":1}
+#         chrdict["chromosomes"].append(chr_info)
+#     return {"result":chrdict}
 
-@get('/info')
-def info():
-    response.set_header("Access-Control-Allow-Origin","*")
-    response.content_type = "application/json"
-    chrdict = {"species":"CT","chromosomes":[]}
-    for sca in SCAFFOLDS:
-        chr_info = {"cytobands":[],
-                    "numberGenes":0,"name":sca,"isCircular":0,"size":len(SCAFFOLDS[sca]),"end":len(SCAFFOLDS[sca]),"start":1}
-        chrdict["chromosomes"].append(chr_info)
+# @get('/info')
+# def info():
+#     response.set_header("Access-Control-Allow-Origin","*")
+#     response.content_type = "application/json"
+#     chrdict = {"species":"CT","chromosomes":[]}
+#     for sca in SCAFFOLDS:
+#         chr_info = {"cytobands":[],
+#                     "numberGenes":0,"name":sca,"isCircular":0,"size":len(SCAFFOLDS[sca]),"end":len(SCAFFOLDS[sca]),"start":1}
+#         chrdict["chromosomes"].append(chr_info)
         
-    return {"result":chrdict}
+#     return {"result":chrdict}
 
 
 
-@route('/search/<q>')
+@post('/search/')
 def search(q=None):
     response.set_header("Access-Control-Allow-Origin","*")
     response.content_type = "application/json"
-    
-    if not q:
-        return
+    seqid = request.POST.get('seqid', '')
     cl = sphinx.SphinxClient()
     cl.SetServer ("localhost", SPHINX_PORT)
     cl.SetMatchMode(sphinx.SPH_MATCH_ALL)
     cl.SetLimits (0, 100, 100)
-    res = cl.Query("*%s*" %q, '*')
+    res = cl.Query("%s*" %seqid)
     if not res:
         print 'query failed: %s' % cl.GetLastError()
-        return
-
+        return ''
     
     if cl.GetLastWarning():
         print 'WARNING: %s\n' % cl.GetLastWarning()
@@ -368,15 +400,15 @@ def search(q=None):
     print 'Query \'%s\' retrieved %d of %d matches in %s sec' % (q, res['total'], res['total_found'], res['time'])
     print 'Query stats:'
 
-    result = {}
-    result["words"] = []
-    if res.has_key('words'):
-        for info in res['words']:
-            txt = '"%s" found %d times in %d entries' % (info['word'], info['hits'], info['docs'])
-            result["words"].append(txt)
-            print txt
+    # result = {}
+    # result["words"] = []
+    # if res.has_key('words'):
+    #     for info in res['words']:
+    #         txt = '"%s" found %d times in %d entries' % (info['word'], info['hits'], info['docs'])
+    #         result["words"].append(txt)
+    #         print txt
             
-    result["matches"] = []
+    matches = {"results":[]}
     MATCHER = re.compile("(%s)"%q, re.IGNORECASE)
     if res.has_key('matches'):
         n = 1
@@ -395,11 +427,9 @@ def search(q=None):
                 locus, biotype, region = INDEX2REGION[int(match['id'])]
                 desc = ', '.join(INDEX2DESC[int(match['id'])])
                 desc = re.sub(MATCHER, "<b>\\1</b>", desc)
-                result["matches"].append([region, locus, biotype, desc])
+                matches['results'].append({"id":locus, "text":locus, "desc":desc, 'biotype':biotype, 'reg':region})
                 n += 1
-    return as_json(result)
-
-
+    return web_return(json.dumps(matches), response)
 
 def get_exons(region, biotypes, exclude_transcripts=False):
     ''' Returns all genes, transcripts and exons within a genomic region '''
@@ -418,6 +448,7 @@ def get_exons(region, biotypes, exclude_transcripts=False):
             genedict = {"id": gname,
                         "name": gname,
                         "biotype": "gene",
+                        "pep_img": "XXXXXX",
                         "featureType": "gene",
                         "chromosome":ch,
                         "start":fstart,
@@ -505,7 +536,7 @@ def iter_exons(f):
 
 
 def as_json(obj):
-    return {"response":obj}
+    return json.dumps({"response":obj})
 
 def expr_info(locus_name):
     an = {}
@@ -592,7 +623,7 @@ def stop_sphinx():
 def start_webservices():
     # This starts the web service on the host and port specified. Currently it
     # should listen in "ct.bork.embl.de" and use the port 9000.
-    run(host=HOST, port=WEBSERVICE_PORT)
+    run(host=HOST, port=WEBSERVICE_PORT, server='cherrypy')
     
 # Utils 
 SHELL_COLORS = {
@@ -678,7 +709,7 @@ if __name__ == '__main__':
              GENE2DESC) = refresh_all_dbs()
 
             INDEX2REGION, INDEX2DESC = refresh_sphinx()
-
+            
             # Saves the database for faster loading in the fugture
             cPickle.dump([GBRECORDS, FEATURES, SCAFFOLDS, SCAFFOLD_GENES, GENE2EXPR,
                           GENE2DESC, INDEX2REGION, INDEX2DESC],
@@ -688,25 +719,41 @@ if __name__ == '__main__':
             try:
                 (GBRECORDS, FEATURES, SCAFFOLDS, SCAFFOLD_GENES, GENE2EXPR, GENE2DESC,
                  INDEX2REGION, INDEX2DESC) = cPickle.load(open(DBFILE))
-            except Exception:
+
+            except Exception, e:
+                print e
                 print "Unable to load cached data. Try with --refresh"
                 sys.exit(1)
         
-        print GENE2EXPR.values()[0]
-        print GENE2DESC.values()[0]
         
         sorted_sca = sorted(SCAFFOLDS.keys(),
                             lambda a,b: cmp(len(SCAFFOLD_GENES[a]), len(SCAFFOLD_GENES[b])),
                             reverse=True)
-        print "Serving sequences and annotations for the following scaffolds:\n", '\n'.join(map(lambda x: '"%s with %d genes"'%(x, len(SCAFFOLD_GENES[x])), sorted_sca))
-        print "The following annotations were found:\n", '\n'.join(map(lambda x: "  %s %d" %(x[0], len(x[1])), FEATURES.items()))
+
 
         # Sphinx will not start if another instance is running in the same
         # port. This call will try to stop any other running instance, but it might
         # fail if the service was started from a different user or directory. Just
         # 'pkill searchd' to kill any running process.
         start_sphinx()
-       
+        
+        js = ['var scaffolds = [%s];\n' %(','.join(map(lambda x: '"%s"'%x, sorted_sca)))]
+        js.append('var scaffolds_data = [')
+        for sca_name in sorted_sca:
+            size = len(SCAFFOLDS[sca_name])
+            ngenes = len(SCAFFOLD_GENES[sca_name])
+            js.append('{name:"%s",  cytobands: [], isCircular: 0, start: 1, end: %d, size: %d, numberGenes: %d },' \
+                          %(sca_name, size, size, ngenes))
+        js.append('];')
+        open(JS_VARS_FILE, "w").write("/* Auto-generated file. Do not modify manually. */\n" + ' '.join(js))
+        print color("Serving sequences and annotations for the following scaffolds:", 'green')
+        print '\n'.join(map(lambda x: '  % 20s (%d sites, %d genes)'%(x, len(SCAFFOLDS[x]), len(SCAFFOLD_GENES[x])), sorted_sca))
+        print color("The following annotations were found:", 'green')
+        print '\n'.join(map(lambda x: "  % 20s %d" %(x[0], len(x[1])), sorted(FEATURES.items(), lambda a,b: cmp(len(a[1]), len(b[1])), reverse=True)))
+        print color("Additional annotations:", 'green')
+        print "  genes with expression data: ", len(GENE2EXPR)
+        print "  genes with description data:", len(GENE2DESC)
+        
         if args.daemon:
             # create logger with 'spam_application'
             fh = logging.FileHandler('log/ctbrowser_daemon.log')

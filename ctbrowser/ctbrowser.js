@@ -1,229 +1,4 @@
-CELLBASE_HOST = ""
 CT_HOST = "http://ctbrowser.embl.de";
-
-var scaffolds =   ["scf7180000011816",
-                   "scf7180000011820",
-                   "scf7180000011822",
-                   "scf7180000011806",
-                   "scf7180000011818",
-                   "scf7180000011814",
-                   "scf7180000011821",
-                   "scf7180000011815",
-                   "scf7180000011819",
-                   "scf7180000011812",
-                   "scf7180000011823",
-                   "scf7180000011801",
-                   "scf7180000011817",
-                   "rrn",
-                   "scf7180000011813",
-                   "scf7180000011802",
-                   "scf7180000011824",
-                   "scf7180000011808",
-                   "scf7180000011809",
-                   "scf7180000011807",
-                   "scf7180000011810",
-                   "mito"]; 
-
-var scaffolds_data = [
-    {
-        end: 8133,
-        name: "rrn",
-        cytobands: [ ],
-        start: 1,
-        numberGenes: 0,
-        isCircular: 0,
-        size: 8133
-    },
-    {
-        end: 1603,
-        name: "scf7180000011824",
-        cytobands: [ ],
-        start: 1,
-        numberGenes: 0,
-        isCircular: 0,
-        size: 1603
-    },
-    {
-        end: 1013,
-        name: "scf7180000011808",
-        cytobands: [ ],
-        start: 1,
-        numberGenes: 0,
-        isCircular: 0,
-        size: 1013
-    },
-    {
-        end: 1150,
-        name: "scf7180000011809",
-        cytobands: [ ],
-        start: 1,
-        numberGenes: 0,
-        isCircular: 0,
-        size: 1150
-    },
-    {
-        end: 3461039,
-        name: "scf7180000011820",
-        cytobands: [ ],
-        start: 1,
-        numberGenes: 0,
-        isCircular: 0,
-        size: 3461039
-    },
-    {
-        end: 1965831,
-        name: "scf7180000011821",
-        cytobands: [ ],
-        start: 1,
-        numberGenes: 0,
-        isCircular: 0,
-        size: 1965831
-    },
-    {
-        end: 3123527,
-        name: "scf7180000011822",
-        cytobands: [ ],
-        start: 1,
-        numberGenes: 0,
-        isCircular: 0,
-        size: 3123527
-    },
-    {
-        end: 745067,
-        name: "scf7180000011823",
-        cytobands: [ ],
-        start: 1,
-        numberGenes: 0,
-        isCircular: 0,
-        size: 745067
-    },
-    {
-        end: 13765,
-        name: "scf7180000011802",
-        cytobands: [ ],
-        start: 1,
-        numberGenes: 0,
-        isCircular: 0,
-        size: 13765
-    },
-    {
-        end: 192410,
-        name: "scf7180000011801",
-        cytobands: [ ],
-        start: 1,
-        numberGenes: 0,
-        isCircular: 0,
-        size: 192410
-    },
-    {
-        end: 2849635,
-        name: "scf7180000011806",
-        cytobands: [ ],
-        start: 1,
-        numberGenes: 0,
-        isCircular: 0,
-        size: 2849635
-    },
-    {
-        end: 11746,
-        name: "scf7180000011807",
-        cytobands: [ ],
-        start: 1,
-        numberGenes: 0,
-        isCircular: 0,
-        size: 11746
-    },
-    {
-        end: 127206,
-        name: "mito",
-        cytobands: [ ],
-        start: 1,
-        numberGenes: 0,
-        isCircular: 0,
-        size: 127206
-    },
-    {
-        end: 1047547,
-        name: "scf7180000011819",
-        cytobands: [ ],
-        start: 1,
-        numberGenes: 0,
-        isCircular: 0,
-        size: 1047547
-    },
-    {
-        end: 2847644,
-        name: "scf7180000011818",
-        cytobands: [ ],
-        start: 1,
-        numberGenes: 0,
-        isCircular: 0,
-        size: 2847644
-    },
-    {
-        end: 1853679,
-        name: "scf7180000011815",
-        cytobands: [ ],
-        start: 1,
-        numberGenes: 0,
-        isCircular: 0,
-        size: 1853679
-    },
-    {
-        end: 2150193,
-        name: "scf7180000011814",
-        cytobands: [ ],
-        start: 1,
-        numberGenes: 0,
-        isCircular: 0,
-        size: 2150193
-    },
-    {
-        end: 153753,
-        name: "scf7180000011817",
-        cytobands: [ ],
-        start: 1,
-        numberGenes: 0,
-        isCircular: 0,
-        size: 153753
-    },
-    {
-        end: 6909506,
-        name: "scf7180000011816",
-        cytobands: [ ],
-        start: 1,
-        numberGenes: 0,
-        isCircular: 0,
-        size: 6909506
-    },
-    {
-        end: 1124,
-        name: "scf7180000011810",
-        cytobands: [ ],
-        start: 1,
-        numberGenes: 0,
-        isCircular: 0,
-        size: 1124
-    },
-    {
-        end: 10547,
-        name: "scf7180000011813",
-        cytobands: [ ],
-        start: 1,
-        numberGenes: 0,
-        isCircular: 0,
-        size: 10547
-    },
-    {
-        end: 973894,
-        name: "scf7180000011812",
-        cytobands: [ ],
-        start: 1,
-        numberGenes: 0,
-        isCircular: 0,
-        size: 973894
-    }
-]
 
 var url = $.url();
 var qregion = url.param('r');
@@ -253,7 +28,7 @@ var run = function() {
             "text": "Chaetomium",
             "items": [{
                 "text": "Chaetomium thermophilum",
-                "assembly": "EMBL v1.0",
+                "assembly": "EMBL v2.0",
                 "region": {
                     "chromosome":"scf7180000011816",
                     "start": 379031,
@@ -261,7 +36,7 @@ var run = function() {
                 },
                 "chromosomes": scaffolds,
                 
-                "url": "ct.bork.embl.de"
+                "url": url, 
             }
                      ]
         }
@@ -401,8 +176,12 @@ var run = function() {
     });
     this.gene.renderer.on({
         'feature:click': function(event) {
-            console.log(event, "click in transcript");
-        }
+            console.log(event, "click in transcript"); },
+        'feature:click': function(event) {
+            console.log(event, "click in transcript"); }
+
+
+
     });
     tracks.push(this.gene);
     
@@ -509,4 +288,43 @@ var run = function() {
 	
 };
 
+jQuery(document).ready(function(){
+    jQuery("#seqid_search").select2(
+        {placeholder: "gene name",
+         multiple:false,
+         width:'50%',
+         allowClear:true,
+         dropdownAutoWidth:true, 
+         containerCss:{"border":"0px"},
+         containerCssClass:"search_field",
+         closeOnSelect: false,
+         openOnEnter: true,
+         minimumInputLength: 3,
+         formatSearching: 'Searching...',
+         formatNoMatches: 'Sorry, no matches found',
+         
+         ajax: { 
+             type: 'post',             
+             url: CT_HOST+'/search/',
+             data: function (term, page, context){ return {'seqid': term}; }, 
+             dataType: 'json',
+             results: function (data, page) { 
+                 console.log(data);
+                 return data;
+             },
+         },
+         formatResult: function(e, container, query) {
+             var regex = new RegExp( '(' + query.term + ')', 'gi' );
+             var high = e.text.replace(regex, '<b class="hi2">$1</b>');
+             return '<span>'+e.id+'</span>'+'<span> '+e.biotype+'</span>'+'<span>'+e.desc+'</span>'+'<span>'+e.reg+'</span>'
 
+
+         },
+         formatSelection: function(e) {
+                var sp_string = '<span class="selectable_sp" onClick="javascript:show_target_species(this, \''+e.id+'\');">'+e.species+'</span>';
+             return e.oid + " from " + sp_string;
+         },
+         escapeMarkup: function (m) { return m; },
+        });
+    
+});
