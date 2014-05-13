@@ -69,7 +69,6 @@ EmblAdapter.prototype = {
             if (adjustedRegions.length > 0) {
                 params['region'] =  adjustedRegions.toString(); 
                 url =  Utils.addQueryParamtersToUrl(params, url); 
-                console.log(url)
                 $.ajax({ type:'GET', url:url, success: function (data) {
                     _this._cellbaseHistogramSuccess(data, dataType, histogramId); }
                        });
@@ -110,7 +109,6 @@ EmblAdapter.prototype = {
                     };
                     _.extend(queryParams, this.params);
                     url = Utils.addQueryParamtersToUrl(queryParams, url);
-                    console.log(url)
                     $.ajax({
                         type:'GET',
                         url:url,
@@ -130,7 +128,6 @@ EmblAdapter.prototype = {
 
     _cellbaseSuccess: function (data, dataType) {
         var timeId = this.resource + " save " + Utils.randomString(4);
-        console.time(timeId);
         /** time log **/
 
         var chunkSize = this.cache[dataType].chunkSize;
@@ -144,10 +141,6 @@ EmblAdapter.prototype = {
             chunks.push(chunk);
         }
 
-        /** time log **/
-        console.timeEnd(timeId);
-
-
         if (chunks.length > 0) {
             this.trigger('data:ready', {items: chunks, dataType: dataType, chunkSize: chunkSize, sender: this});
         }
@@ -156,8 +149,6 @@ EmblAdapter.prototype = {
     },
     _cellbaseHistogramSuccess: function (data, dataType, histogramId) {
         var timeId = Utils.randomString(4);
-        console.time(this.resource + " save " + timeId);
-        /** time log **/
 
         var chunkSize = this.cache[histogramId].chunkSize;
 
@@ -174,8 +165,6 @@ EmblAdapter.prototype = {
 //        var chunksByRegion = this.cache[histogramId].getB(region);
 
         this.trigger('data:ready', {items: chunks, dataType: dataType, chunkSize: chunkSize, sender: this});
-        /** time log **/
-        console.timeEnd(this.resource + " get and save " + timeId);
     }
 };
 

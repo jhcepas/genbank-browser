@@ -58,9 +58,11 @@ elif AN_VERSION == 2:
     # Additional annotations by locus tag are loaded from here
     EXPR_FILE = os.path.join(BASEPATH, "data/v2/C_thermophilum.expressed.proteins.v1.txt")
     DESC_FILE = os.path.join(BASEPATH, "data/v2/C_thermophilum.additional.descr.v1.txt")
-    
+    UNIPROT_CONVERSION = os.path.join(BASEPATH, "data/v2/uniprot2geneid.tsv")
+    UNIPROT2GENE = dict([map(strip, line.split('\t')) for line in open(UNIPROT_CONVERSION) if line.strip()])
+    GENE2UNIPROT = dict([v, k] for k,v in UNIPROT2GENE.iteritems())
 
-
+PEP_IMGS_DIR = os.path.join(BASEPATH, "ctbrowser/pep_img/")
     
 # Where all parsed information is sotored
 DBFILE = os.path.join(BASEPATH, "cache/genome.db.pkl")
@@ -139,35 +141,69 @@ def genome_pos(f, scaffolds):
 def read_and_index_extra_info():
     ''' Read custom files including info about eggnog mappings and expression experiments'''
     gene2expr = defaultdict(dict)
-    for line in open(EXPR_FILE, "rU"):
-        if not line.strip() or line.startswith("#"):
-            continue
-        try:
-            #['CTHT_0043330', 'PH domain (AA 28-163)', 'SEC3', 'Saccharomyces cerevisiae',
-            # 'Ivana Vonkova',
-            # 'PH domain binding specificity',
-            # 'now expressed with N-terminal HisSUMO-tag and C-terminal sfGFP; could be cleaved out and re-cloned using BamHI/HindIII',
-            # 'Escherichia coli BL21 (DE3)',
-            # 'GGATCCGACGGTTCTGTGCCAGAAACCTACATCACTCACATCCGCATCACCGAATGGCAGAACTACCCGTCTTCCCCGCCACCACCGTCTGCACGTGCTCCGCAGTACGAAAAACCGCGTGTTATCATTGTAGCTGTGCGTAAAAGCGGTCGTCTGCGCGTTCACAAATCCAAAGAAAACGCGAACGGCACCTTCAGCATTGGCAAAACTTGGTGGCTGGACGATCTGCAGAGCATCGAATCTTTCACGTCTCCGTCTGCAAACCCAAACCTGCGCGAATGGGCTCGTGATGTCGGCTTTATTGTAACCCTCGGTAAACCGTACTATTGGGAGGCTCACTCCGACAAAGAGAAAAAATTCTTCATCGCGTCCCTGATCAAAATCTTCAACCGTTACACCGGTGGTCGTACTCCAAAGCTT',
-            # 'DGSVPETYITHIRITEWQNYPSSPPPPSARAPQYEKPRVIIVAVRKSGRLRVHKSKENANGTFSIGKTWWLDDLQSIESFTSPSANPNLREWARDVGFIVTLGKPYYWEAHSDKEKKFFIASLIKIFNRYTGGRTP\n']
-            #        
-            (locus, prj, qgene, qorg, researcher, variant,
-             functag, ex_system, ntseq, aaseq) = map(strip, line.split("\t"))
-        except ValueError:
-            print "Skipped line:", line
-            pass
-        else:
-            gene2expr[locus] = {
-                "Project":prj,
-                "Query gene":qgene,
-                "Query organism":qorg,
-                "Researcher":researcher,
-                "Variant":variant,
-                "Functional TAG":functag,
-                "Expressed system": ex_system,
-                "DNA seq": ntseq,
-                "Protein seq": aaseq,
-            }
+    if EXPR_FILE:
+        # for line in open(EXPR_FILE, "rU"):
+        #     if not line.strip() or line.startswith("#"):
+        #         continue
+        #     try:
+        #         #['CTHT_0043330', 'PH domain (AA 28-163)', 'SEC3', 'Saccharomyces cerevisiae',
+        #         # 'Ivana Vonkova',
+        #         # 'PH domain binding specificity',
+        #         # 'now expressed with N-terminal HisSUMO-tag and C-terminal sfGFP; could be cleaved out and re-cloned using BamHI/HindIII',
+        #         # 'Escherichia coli BL21 (DE3)',
+        #         # 'GGATCCGACGGTTCTGTGCCAGAAACCTACATCACTCACATCCGCATCACCGAATGGCAGAACTACCCGTCTTCCCCGCCACCACCGTCTGCACGTGCTCCGCAGTACGAAAAACCGCGTGTTATCATTGTAGCTGTGCGTAAAAGCGGTCGTCTGCGCGTTCACAAATCCAAAGAAAACGCGAACGGCACCTTCAGCATTGGCAAAACTTGGTGGCTGGACGATCTGCAGAGCATCGAATCTTTCACGTCTCCGTCTGCAAACCCAAACCTGCGCGAATGGGCTCGTGATGTCGGCTTTATTGTAACCCTCGGTAAACCGTACTATTGGGAGGCTCACTCCGACAAAGAGAAAAAATTCTTCATCGCGTCCCTGATCAAAATCTTCAACCGTTACACCGGTGGTCGTACTCCAAAGCTT',
+        #         # 'DGSVPETYITHIRITEWQNYPSSPPPPSARAPQYEKPRVIIVAVRKSGRLRVHKSKENANGTFSIGKTWWLDDLQSIESFTSPSANPNLREWARDVGFIVTLGKPYYWEAHSDKEKKFFIASLIKIFNRYTGGRTP\n']
+        #         #        
+        #         (locus, prj, qgene, qorg, researcher, variant,
+        #          functag, ex_system, ntseq, aaseq) = map(strip, line.split("\t"))
+        #     except ValueError:
+        #         print "Skipped line:", line
+        #         pass
+        #     else:
+        #         gene2expr[locus] = {
+        #             "Project":prj,
+        #             "Query gene":qgene,
+        #             "Query organism":qorg,
+        #             "Researcher":researcher,
+        #             "Variant":variant,
+        #             "Functional TAG":functag,
+        #             "Expressed system": ex_system,
+        #             "DNA seq": ntseq,
+        #             "Protein seq": aaseq,
+        #         }
+        for line in open(EXPR_FILE, "rU"):
+            if not line.strip() or line.startswith("#"):
+                continue
+            try:
+                # Gene_name	UniProt_ID	Domain type	e-value score (SMART)	Domain borders (AA)	Domain sequence (AA)	S
+                # ource of the sequence	Expression level in E.coli (1=lowest, 5=highest)	Solubility (1=poor, 3=very good)	 Interaction with PIP containing liposome
+                # CTHT_0049260
+                # G0SB85
+                # PH
+                # 1.05E-16
+                # 360-472
+                # NEVVKSGYLSKCGKRNPKYNRYWFRLKGVVLSYYRDPQDLYFPSGHIDLRYGISASITDKDKEGINFTIETHNRTYYFRADSAQSAKEWVKCIQRVIFRSHNDGDSVKISLPI
+                # synthetic gene
+                # 5
+                # 3
+                # Yes
+                (locus, uniprot, domtype, evalue, dom_coords, peptide, source,
+                 exp_level, solubility, inter_pip) = map(strip, line.split("\t"))
+            except ValueError:
+                print "Skipped line:", line
+                pass
+            else:
+                gene2expr[locus] = {
+                    "Gene Id":locus,
+                    "Domain type":domtype,
+                    "E-value (SMART)":evalue,
+                    "Domain position":dom_coords,
+                    "Domain sequence":peptide,
+                    "source": source,
+                    "Expression level in E.coli (1=lowest, 5=highest)":exp_level,
+                    "Solubility (1=lowest, 3=highest)": solubility,
+                    "Interaction with PIP containing liposome": inter_pip,
+                }
             
     gene2eggnog = {}
     for line in open(DESC_FILE, "rU"):
@@ -258,14 +294,14 @@ def sequence():
 
     for reg in region.split(","):
         ch, start, end = parse_region(reg)
+        #translate to string coordinates
+        if end < 1:
+            return as_json([])
+        if start < 1:
+            start = 1
         start -= 1
-        correction = 0 
-        if start <= 0:
-            if end == 1:
-                end = 0
-            correction = abs(start)
-            start = 0
-        seq = 'X'*correction + str(SCAFFOLDS[ch][start:end]).upper()
+        
+        seq = str(SCAFFOLDS[ch][start:end]).upper()
         print seq, start, end
         by_region.append({"id":reg, "result": {"chromosome":ch,
                                                "start":start,
@@ -288,9 +324,11 @@ def gc_content():
     if histogram:
         for reg in region.split(","):
             ch, start, end = parse_region(reg)
+            if end < 1:
+                return as_json([])
+            if start < 1:
+                start = 1
             start -= 1
-            if start < 0:
-                start = 0
             
             seq = str(SCAFFOLDS[ch][start:end]).upper()
 
@@ -352,6 +390,28 @@ def gene():
     print "**Returning GENE json in", time.time() -t1        
     return web_return(as_json(by_region), response)
 
+
+@get('/repeat_region')
+def repeat_regions():
+    t1 = time.time()
+    response.set_header("Access-Control-Allow-Origin","*")
+    response.content_type = "application/json"
+    
+    by_region = []
+    region = request.GET["region"]
+    histogram = request.GET.get("histogram", None)
+    interval = int(request.GET.get("interval", 1000))
+    exclude_transcripts = True
+    if histogram:
+        print 'Histogram requested, but not available for repeat_regions'
+    else:
+        for reg in region.split(","):
+            by_region.append({"id":reg, "result":get_repeats(reg)})
+
+    print "**Returning GENE json in", time.time() -t1        
+    return web_return(as_json(by_region), response)
+
+
 # @get('/all')
 # def all():
 #     response.set_header("Access-Control-Allow-Origin","*")
@@ -388,8 +448,11 @@ def search(q=None):
     cl = sphinx.SphinxClient()
     cl.SetServer ("localhost", SPHINX_PORT)
     cl.SetMatchMode(sphinx.SPH_MATCH_ALL)
+    cl.SetRankingMode(sphinx.SPH_RANK_SPH04)
+    cl.SetSortMode(sphinx.SPH_SORT_RELEVANCE)
+   
     cl.SetLimits (0, 100, 100)
-    res = cl.Query("%s*" %seqid)
+    res = cl.Query("*%s*" %seqid)
     if not res:
         print 'query failed: %s' % cl.GetLastError()
         return ''
@@ -427,9 +490,46 @@ def search(q=None):
                 locus, biotype, region = INDEX2REGION[int(match['id'])]
                 desc = ', '.join(INDEX2DESC[int(match['id'])])
                 desc = re.sub(MATCHER, "<b>\\1</b>", desc)
-                matches['results'].append({"id":locus, "text":locus, "desc":desc, 'biotype':biotype, 'reg':region})
+                chrom, _pos = region.split(':')
+                start, end = _pos.split('-')
+                matches['results'].append({"id":locus, "text":locus, "desc":desc, 'biotype':biotype,
+                                           'chr':chrom,
+                                           'start':start, 
+                                           'end':end,
+                                           'reg':region,
+                                           'uniprot':GENE2UNIPROT.get(locus, ''),
+                                           })
                 n += 1
     return web_return(json.dumps(matches), response)
+
+def get_repeats(region):
+    t1 = time.time()
+    ch, start, end = parse_region(region)
+    genes = {}
+    if start > len(SCAFFOLDS[ch]) or end < 0:
+        return []
+   
+    for fch, fstart, fend, gene in FEATURES.get('repeat_region', []):
+        if str(fch) == ch and (between(fstart, start, end) or between(fend, start, end)):
+            gstrand = parse_strand(gene.location.strand)
+            note= gene.qualifiers["note"][0]
+            m = re.match("RepeatMasker,\s+Target\s+'([^']+)'\s+(\d+)\s(\d+)", note)
+            if m:
+                gname = "%s (%s-%s)" %(m.groups()[0], m.groups()[1], m.groups()[2])
+            else:
+                gname = note
+            genedict = {"id": gname,
+                        "biotype": "repeat_region",
+                        "featureType": "repeat",
+                        "chromosome":ch,
+                        "start":fstart,
+                        "end":fend,
+                        "strand":gstrand,
+                        "transcripts":[]}
+            genes[gname] = genedict
+    
+    result = sorted(genes.values(), lambda a,b: cmp(a["start"], b["start"]))             
+    return result
 
 def get_exons(region, biotypes, exclude_transcripts=False):
     ''' Returns all genes, transcripts and exons within a genomic region '''
@@ -446,9 +546,9 @@ def get_exons(region, biotypes, exclude_transcripts=False):
             gstrand = parse_strand(gene.location.strand) 
             gname = gene.qualifiers["locus_tag"][0]
             genedict = {"id": gname,
-                        "name": gname,
+                        "uniprot": GENE2UNIPROT.get(gname, ''),
                         "biotype": "gene",
-                        "pep_img": "XXXXXX",
+                        "pep_img": int(os.path.exists(os.path.join(PEP_IMGS_DIR, "svg", gname+".svg"))),
                         "featureType": "gene",
                         "chromosome":ch,
                         "start":fstart,
@@ -459,18 +559,25 @@ def get_exons(region, biotypes, exclude_transcripts=False):
                         "expression": expr_info(gname),
                         "transcripts":[]}
             genes[gname] = genedict
-
-    print "   Number of candidate genes", len(genes)
+            
     if len(genes) == 0:
         return []
     
     # populate transcripts
+    exclude_biotypes = set(['repeat_region', 'misc_feature'])
     if not exclude_transcripts:
-        for ftype in biotypes: 
+        for ftype in biotypes:
+            if ftype in exclude_biotypes:
+                continue
             for fch, fstart, fend, prot in FEATURES[ftype]:
                 if str(fch) == ch and (between(fstart, start, end) or between(fend, start, end)):
                     pstrand = parse_strand(gene.location.strand)
-                    gname = prot.qualifiers["locus_tag"][0]
+                    try:
+                        gname = prot.qualifiers["locus_tag"][0]
+                    except KeyError:
+                        print ' not link to LOCUS_TAG for biotype', ftype
+                        continue
+                    
                     if gname not in genes:
                         print gname, "gname not found!!!"
                         continue
@@ -518,7 +625,7 @@ def get_exons(region, biotypes, exclude_transcripts=False):
                 del genes[g]
 
     result = sorted(genes.values(), lambda a,b: cmp(a["start"], b["start"]))             
-    print "   Number of final genes", len(genes), "completed in ", time.time() - t1, "secs"
+    #print "   Number of final genes", len(genes), "completed in ", time.time() - t1, "secs"
     return result
     
 def iter_exons(f):
@@ -579,7 +686,7 @@ def refresh_sphinx():
     id2region = {}
     id2desc = {}
     i = 1
-    for ftype in ['gene', 'CDS', 'tRNA', 'rRNA', 'misc_RNA']:
+    for ftype in ['gene', 'CDS', 'tRNA', 'rRNA', 'misc_RNA', 'repeat_region', 'misc_feature']:
         for fch, fstart, fend, f in FEATURES[ftype]:
             gname = f.qualifiers.get("locus_tag", ["NoName"])[0]
             txt = []
@@ -589,12 +696,13 @@ def refresh_sphinx():
                     txt.append(value[0])
                 else:
                     txt.append('; '.join(map(str, value)))
-            index.append([i, gname, ', '.join(txt)])
+            index.append([i, gname, GENE2UNIPROT.get(gname, ''), ', '.join(txt)])
             id2region[i] = [gname, ftype, "%s:%d-%d" %(fch, fstart, fend)]
             id2desc[i] = txt
             i += 1
             
-    open(SPHINX_ANNOTATION_FILE, "w").write('\n'.join(map(lambda x: "%s\t%s\t%s" %(x[0], x[1], x[2]), index))+"\n")
+    open(SPHINX_ANNOTATION_FILE, "w").write(
+        '\n'.join(map(lambda x: '\t'.join(map(str, x)), index))+"\n")
     
     stop_sphinx()
     print 'Updating sphinx index... '

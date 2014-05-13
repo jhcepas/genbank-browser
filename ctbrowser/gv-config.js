@@ -11,51 +11,6 @@ FEATURE_CONFIG = {
         //options:[
         //]
     },
-    snp: {
-        filters: [
-            {
-                name: "consequence_type",
-                text: "Consequence Type",
-                values: ["2KB_upstream_variant", "5KB_upstream_variant", "500B_downstream_variant", "5KB_downstream_variant", "3_prime_UTR_variant", "5_prime_UTR_variant", "coding_sequence_variant", "complex_change_in_transcript", "frameshift_variant", "incomplete_terminal_codon_variant", "inframe_codon_gain", "inframe_codon_loss", "initiator_codon_change", "non_synonymous_codon", "intergenic_variant", "intron_variant", "mature_miRNA_variant", "nc_transcript_variant", "splice_acceptor_variant", "splice_donor_variant", "splice_region_variant", "stop_gained", "stop_lost", "stop_retained_variant", "synonymous_codon"],
-                selection: "multi"
-            }
-        ]
-        //options:[
-        //]
-    },
-    bam: {
-        //filters:[{
-        //name:"view",
-        //text:"View",
-        //values:["view_as_pairs","show_soft-clipped_bases"],
-        //selection:"multi"
-        //}
-        //],
-        options: [
-            {
-                text: "View as pairs",
-                name: "view_as_pairs",
-                type: "checkbox",
-                fetch: true,
-                checked: false
-            },
-            {
-                text: "Show Soft-clipping",
-                name: "show_softclipping",
-                type: "checkbox",
-                fetch: true,
-                checked: false
-            },
-            {
-                text: "Insert size interval",
-                name: "insert_size_interval",
-                type: "doublenumberfield",
-                fetch: false,
-                minValue: 0,
-                maxValue: 0
-            }
-        ]
-    }
 
 };
 FEATURE_OPTIONS = {
@@ -86,12 +41,13 @@ FEATURE_OPTIONS = {
 };
 
 GENE_BIOTYPE_COLORS = {
-    "gene": "darkgreen",
-    "CDS": "green",
+    "gene": "seagreen",
+    "CDS": "seagreen",
     "tRNA": "red",
     "rRNA": "#8b668b",
     "misc_RNA": "YellowGreem",
     "hypothetical protein": "yellow",
+    "repeat_region": "steelblue",
     null: "black"
 };
 
@@ -233,9 +189,8 @@ FEATURE_TYPES = {
             return str;
         },
         tooltipTitle: function (f) {
-            var name = (f.name != null) ? f.name : f.id;
             return FEATURE_TYPES.formatTitle('Gene') +
-                ' - <span class="ok">' + name + '</span>';
+                ' - <span class="">' + f.id + ' ('+f.uniprot+')</span>';
         },
 
 
@@ -245,14 +200,15 @@ FEATURE_TYPES = {
                 'biotype:&nbsp;<span class="emph" style="color:' + color + ';">' + f.biotype + '</span><br>' +
                 FEATURE_TYPES.getTipCommons(f);
 
-
             for (var key in f.annotations) {
                 html += "<b>" + key+ "</b>:&nbsp;" + f.annotations[key] + "<br>";}
             for (var key in f.expression) {
                 html += "<b>" + key+ "</b>:&nbsp;" + f.annotations[key] + "<br>";}
 
-            html+= '<img height="200" src="pep_img/png/' + f.name+ '.png"><br>'; 
-
+            if (f.pep_img && f.pep_img == 1){
+                html+= '<img width="280px" src="pep_img/svg/' +f.id
+                    + '.svg" onerror="this.src=\'pep_img/png/'+f.id+'.png\';"><br>'; 
+            }
             return html+"</div>";
         },
         color: function (f) {
@@ -271,7 +227,7 @@ FEATURE_TYPES = {
 
     transcript: {
         label: function (f, zoom) {
-            var name = (f.name != null) ? f.name : f.id;
+            var name = f.id;
             var str = "";
             str += (f.strand < 0) ? "<" : "";
             str += " " + name + " ";
@@ -282,9 +238,8 @@ FEATURE_TYPES = {
             return str;
         },
         tooltipTitle: function (f) {
-            var name = (f.name != null) ? f.name : f.id;
             return FEATURE_TYPES.formatTitle('Transcript') +
-                ' - <span class="ok">' + name + '</span>';
+                ' - <span class="ok">' + f.id + ' ('+f.uniprot+')</span>';
         },
         tooltipText: function (f) {
             var color = GENE_BIOTYPE_COLORS[f.biotype];
@@ -301,7 +256,7 @@ FEATURE_TYPES = {
         height: 1,
         histogramColor: "lightblue"
     },
-    exon: {//not yet
+    exon: {
         label: function (f) {
             var name = (f.name != null) ? f.name : f.id;
             return name;
@@ -334,306 +289,6 @@ FEATURE_TYPES = {
         height: 4,
         histogramColor: "lightblue"
     },
-    snp: {
-        label: function (f) {
-            return ('name' in f) ? f.name : f.id;
-        },
-        tooltipTitle: function (f) {
-            var name = (f.name != null) ? f.name : f.id;
-            return /*f.featureType.toUpperCase() +*/ ' - <span class="ok">' + name + '</span>';
-        },
-        tooltipText: function (f) {
-            return 'alleles:&nbsp;<span class="ssel">' + f.alleleString + '</span><br>' +
-                FEATURE_TYPES.getTipCommons(f) +
-                'source:&nbsp;<span class="ssel">' + f.source + '</span><br>';
 
-        },
-        color: 'lightblue',
-        infoWidgetId: "id",
-        height: 8,
-        histogramColor: "orange",
-        handlers: {
-            'feature:mouseover': function (e) {
-                console.log(e)
-            },
-            'feature:click': function (event) {
-                new SnpInfoWidget(null, genomeViewer.species).draw(event);
-            }
-        }
-    },
-    file: {
-        getLabel: function (f) {
-            var str = "";
-            str += f.label;
-            return str;
-        },
-        getTipTitle: function (f) {
-            return FEATURE_TYPES.formatTitle(f.featureType);
-        },
-        getTipText: function (f) {
-            return FEATURE_TYPES.getTipCommons(f);
-        },
-        getColor: function (f) {
-            return "black";
-        },
-        height: 8,
-        histogramColor: "orange"
-    },
-    vcf: {
-        label: function (f) {
-            return f.id;
-            try {
-                var fields = f.sampleData.split("\t");
-            } catch (e) {
-                //Uncaught TypeError: Cannot call method 'split' of undefined
-                console.log(e)
-                debugger
-            }
-
-            if (fields.length > 10 || fields.length == 9)
-                return f.id + " " + f.ref + "/" + f.alt + "";
-            else {
-                var gt = fields[9].split(":")[0];
-                if (gt.indexOf(".") != -1 || gt.indexOf("-") != -1)
-                    return gt;
-                var label = "";
-                var alt = f.alt.split(",");
-                if (gt.charAt(0) == '0')
-                    label = f.ref;
-                else {
-                    var pos = gt.charAt(0) - 1
-                    label = alt[pos]
-                }
-                label += gt.charAt(1)
-                if (gt.charAt(2) == '0')
-                    label += f.ref;
-                else {
-                    var pos = gt.charAt(2) - 1
-                    label += alt[pos]
-                }
-
-                return label;
-            }
-        },
-        tooltipTitle: function (f) {
-            return 'VCF variant - <span class="ok">' + f.id + '</span>';
-        },
-        tooltipText: function (f) {
-            return 'alleles (ref/alt):&nbsp;<span class="emph">' + f.reference + "/" + f.alternate + '</span><br>' +
-                'quality:&nbsp;<span class="emph">' + f.quality + '</span><br>' +
-                'filter:&nbsp;<span class="emph">' + f.filter + '</span><br>' +
-                FEATURE_TYPES.getTipCommons(f);
-        },
-        getColor: function (f) {
-            return "black";
-        },
-        infoWidgetId: "id",
-        height: 8,
-        histogramColor: "gray"
-    },
-    gff2: {
-        getLabel: function (f) {
-            var str = "";
-            str += f.label;
-            return str;
-        },
-        getTipTitle: function (f) {
-            return f.featureType.toUpperCase() +
-                ' - <span class="ok">' + f.label + '</span>';
-        },
-        getTipText: function (f) {
-            return 'score:&nbsp;<span class="emph">' + f.score + '</span><br>' +
-                'frame:&nbsp;<span class="emph">' + f.frame + '</span><br>' +
-                FEATURE_TYPES.getTipCommons(f);
-        },
-        getColor: function (f) {
-            return "black";
-        },
-        height: 8,
-        histogramColor: "gray"
-    },
-    gff3: {
-        label: function (f) {
-            var str = "";
-            str += f.label;
-            return str;
-        },
-        tooltipTitle: function (f) {
-            return f.featureType.toUpperCase() +
-                ' - <span class="ok">' + f.label + '</span>';
-        },
-        tooltipText: function (f) {
-            return 'score:&nbsp;<span class="emph">' + f.score + '</span><br>' +
-                'frame:&nbsp;<span class="emph">' + f.frame + '</span><br>' +
-                FEATURE_TYPES.getTipCommons(f);
-        },
-        color: function (f) {
-            return "black";
-        },
-        height: 8,
-        histogramColor: "gray",
-        infoWidgetId: 'id',
-        handlers: {
-            'feature:mouseover': function (e) {
-                console.log(e)
-            },
-            'feature:click': function (e) {
-                console.log(e)
-            }
-        }
-    },
-    gtf: {
-        label: function (f) {
-            var str = "";
-            str += f.label;
-            return str;
-        },
-        tooltipTitle: function (f) {
-            return f.featureType.toUpperCase() +
-                ' - <span class="ok">' + f.label + '</span>';
-        },
-        tooltipText: function (f) {
-            return 'score:&nbsp;<span class="emph">' + f.score + '</span><br>' +
-                'frame:&nbsp;<span class="emph">' + f.frame + '</span><br>' +
-                FEATURE_TYPES.getTipCommons(f);
-        },
-        color: function (f) {
-            return "black";
-        },
-        height: 8,
-        histogramColor: "gray",
-        infoWidgetId: 'id',
-        handlers: {
-            'feature:mouseover': function (e) {
-                console.log(e)
-            },
-            'feature:click': function (e) {
-                console.log(e)
-            }
-        }
-    },
-    bed: {
-        label: function (f) {
-            var str = "";
-            str += f.label;
-            return str;
-        },
-        tooltipTitle: function (f) {
-            return FEATURE_TYPES.formatTitle(f.featureType);
-        },
-        tooltipText: function (f) {
-            return FEATURE_TYPES.getTipCommons(f);
-        },
-        color: function (f) {
-            //XXX convert RGB to Hex
-            var rgbColor = new Array();
-            rgbColor = f.itemRgb.split(",");
-            var hex = function (x) {
-                var hexDigits = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "a", "b", "c", "d", "e", "f"];
-                return isNaN(x) ? "00" : hexDigits[(x - x % 16) / 16] + hexDigits[x % 16];
-            };
-            var hexColor = hex(rgbColor[0]) + hex(rgbColor[1]) + hex(rgbColor[2]);
-            return "#" + hexColor;
-        },
-        height: 8,
-        histogramColor: "orange",
-        infoWidgetId: 'id',
-        handlers: {
-            'feature:mouseover': function (e) {
-                console.log(e)
-            },
-            'feature:click': function (e) {
-                console.log(e)
-            }
-        }
-    },
-    bam: {
-        explainFlags: function (flags) {
-            var summary = '<div style="background:#FFEF93;font-weight:bold;margin:0 15px 0 0;">flags : <span class="ssel">' + flags + '</span></div>';
-            for (var i = 0; i < SAM_FLAGS.length; i++) {
-                if (SAM_FLAGS[i][1] & flags) {
-                    summary += SAM_FLAGS[i][0] + "<br>";
-                }
-            }
-            return summary;
-        },
-        label: function (f) {
-            return  "bam  " + f.chromosome + ":" + f.start + "-" + f.end;
-        },
-        tooltipTitle: function (f) {
-            return FEATURE_TYPES.formatTitle(f.featureType) + ' - <span class="ok">' + f.name + '</span>';
-        },
-        tooltipText: function (f) {
-            f.strand = FEATURE_TYPES.bam.strand(f);
-            var one = 'cigar:&nbsp;<span class="ssel">' + f.cigar + '</span><br>' +
-                'insert size:&nbsp;<span class="ssel">' + f.inferredInsertSize + '</span><br>' +
-                FEATURE_TYPES.getTipCommons(f) + '<br>' +
-                this.explainFlags(f.flags);
-
-            var three = '<div style="background:#FFEF93;font-weight:bold;">attributes</div>';
-            delete f.attributes["BQ"];//for now because is too long
-            for (var key in f.attributes) {
-                three += key + ":" + f.attributes[key] + "<br>";
-            }
-            var style = "background:#FFEF93;font-weight:bold;";
-            return '<div style="float:left">' + one + '</div>' +
-                '<div style="float:right">' + three + '</div>';
-        },
-        color: function (f, chr) {
-            if (f.mateReferenceName != chr) {
-                return "lightgreen";
-            }
-            return (parseInt(f.flags) & (0x10)) == 0 ? "DarkGray" : "LightGray";
-            /**/
-        },
-        strokeColor: function (f) {
-            if (this.mateUnmappedFlag(f)) {
-                return "tomato"
-            }
-            return (parseInt(f.flags) & (0x10)) == 0 ? "LightGray" : "DarkGray";
-        },
-        strand: function (f) {
-            return (parseInt(f.flags) & (0x10)) == 0 ? "Forward" : "Reverse";
-        },
-        readPairedFlag: function (f) {
-            return (parseInt(f.flags) & (0x1)) == 0 ? false : true;
-        },
-        firstOfPairFlag: function (f) {
-            return (parseInt(f.flags) & (0x40)) == 0 ? false : true;
-        },
-        mateUnmappedFlag: function (f) {
-            return (parseInt(f.flags) & (0x8)) == 0 ? false : true;
-        },
-        infoWidgetId: "id",
-        height: 8,
-        histogramColor: "grey"
-    },
-    das: {
-        label: function (f) {
-            var str = "";
-            str += f.id;
-            return str;
-        },
-        tooltipTitle: function (f) {
-            return FEATURE_TYPES.formatTitle(f.featureType) + ('id' in f) ? f.id : '';
-        },
-        tooltipText: function (f) {
-            return FEATURE_TYPES.getTipCommons(f);
-        },
-        color: function (f) {
-            return "lightblue";
-        },
-        height: 8,
-        histogramColor: "orange",
-        infoWidgetId: 'id',
-        handlers: {
-            'feature:mouseover': function (e) {
-                console.log(e)
-            },
-            'feature:click': function (e) {
-                console.log(e)
-            }
-        }
-    }
 };
 

@@ -1,47 +1,35 @@
-
 <!DOCTYPE HTML>
 <html>
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-        <title>Genome Viewer Demo</title>
+        <title>Chaetomium thermophilum Genome Browser</title>
         <!-- CSS from vendors -->
         <link type="text/css" rel="stylesheet" href="vendor/jquery.qtip.min.css" />
-        <!-- <link type="text/css" rel="stylesheet" href="vendor/ChemDoodleWeb.css" /> -->
-        <link type="text/css" rel="stylesheet" href="vendor/bootstrap-scoped-dist/css/bootstrap.min.css" />
-        <link type="text/css" rel="stylesheet" href="vendor/typeahead.js-bootstrap.css" />
+        <link type="text/css" rel="stylesheet" href="bootstrap-3.1.1-dist/css/bootstrap.min.css" /> 
         <link type="text/css" rel="stylesheet" href="select2.css" />
-        <!-- CSS from Genome Viewer -->
         <link type="text/css" rel="stylesheet" href="styles/css/style.css" />
         <!-- JS from vendors -->
         <script type="text/javascript" src="vendor/underscore-min.js"></script>
         <script type="text/javascript" src="vendor/backbone-min.js"></script>
         <script type="text/javascript" src="vendor/rawdeflate.js"></script>
-
         <script type="text/javascript" src="vendor/jquery.min.js"></script>
-
-        <script type="text/javascript" src="vendor/bootstrap-scoped-dist/js/bootstrap.min.js"></script>
-        <script type="text/javascript" src="vendor/typeahead.min.js"></script>
+        <script type="text/javascript" src="bootstrap-3.1.1-dist/js/bootstrap.min.js"></script>
         <script type="text/javascript" src="vendor/jquery.qtip.min.js"></script>
-        <script type="text/javascript" src="vendor/jquery.cookie.js"></script>
+        <!-- <script type="text/javascript" src="vendor/jquery.cookie.js"></script> -->
         <script type="text/javascript" src="vendor/jquery.sha1.js"></script>
         <script type="text/javascript" src="vendor/purl.min.js"></script>
         <script type="text/javascript" src="vendor/jquery.mousewheel.min.js"></script>
         <script type="text/javascript" src="vendor/gl-matrix-min.js"></script>
-        <!-- <script type="text/javascript" src="vendor/ChemDoodleWeb.js"></script> -->
+        <script type="text/javascript" src="select2.min.js"></script>
         <!-- JS from Genome Viewer -->
         <!-- Genome-viewer -->
         <script type="text/javascript" src="gv-config.js"></script>
-        <script type="text/javascript" src="genome-viewer-1.0.3.js"></script>
+        <script type="text/javascript" src="genome-viewer.js"></script>
         <!-- ctbrowser custom-->
-        <script type="text/javascript" src="select2.min.js"></script>
-        <script type="text/javascript" src="ct-js/ct-sequence-adapter.js"></script>
-        <script type="text/javascript" src="ct-js/embl-adapter.js"></script>
+
         <script type="text/javascript" src="ct_genome_info.js"></script>
         <script type="text/javascript" src="ctbrowser.js"></script>
 
-        <script type="text/javascript">
-            $(document).ready(run);
-        </script>
         <style type="text/css">
             html, body {
                 /*height: 100%;*/
@@ -65,16 +53,6 @@
                 height:20px;
             }
 
-
-            /*
-            #customSearchDiv {
-                width: 90%;
-                line-height: 18px;font-size:15px;
-
-            overflow-y: auto;
-           overflow-x: auto; 
-
-            }*/
             .customSearchItem {
 				padding:2px;
 			}
@@ -94,6 +72,10 @@
            max-width:600px;
          }
 
+         .select2-results .select2-highlighted {
+           background-color: #A6BEC1;
+           color:#444;
+         }
 
          .ui-tooltip{
            width:500px;
@@ -102,16 +84,88 @@
          .ui-tooltip-shadow{
            }
 
+         .hi{
+           background-color:#FAFFCB;
+           }
+         .s_geneid{
+           font-size:90%;
+           color:black;
+           font-weight:bold;
+           font-family: Arial;
+           }
+         .s_uniprot{
+           font-size:90%;
+           color:black;
+           font-weight:normal;
+           font-family: Arial;
+           }
+         .s_biotype{
+           font-size:90%;  
+           color:steelblue;
+
+           }
+         .s_desc{
+           font-size:90%;
+           color:slategrey;
+           }
+         .s_region{
+           font-size:80%;
+           color:grey;
+           font-family: Courier;
+           }
+
+         #footer{
+           text-align:center;
+           font-size:80%;
+           }
+
+         #search_panel{
+           margin-top:15px;
+           margin-left:15px;
+           margin-bottom:10px;
+           }
+         #seqid_search{
+           height:70px;
+           }
+
+         #ph_genes{
+           margin-left:10px;
+           }
+
 
         </style>
+
+        <script>
+         (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+           (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+                           m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+                           })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+         ga('create', 'UA-783841-16', 'embl.de');
+         ga('send', 'pageview');
+        </script>
     </head>
 
     <body>
-        <div>
-          <input id="seqid_search">
+      <div class='container-fluid'>
+        <div class='row'>
+          <div id="search_panel">
+            <input id="seqid_search"> <span id='ph_genes' class='btn btn-default btn-sm' onclick='show_phdomains();'> Pleckstrin domain homologs</a></span>
+          </div>
+          <div id="application"></div>
+     
+          <div class='row' id="footer">
+          Powered by <a src=""> genome-viewer </a>
+            <br>
+           
+          web contact: huerta@embl.de
+          </div>
         </div>
-
-        <div id="application"></div>
+      </div>
     </body>
+
+    <script type="text/javascript">
+     $(document).ready(run);
+    </script>
+
 
 </html>
