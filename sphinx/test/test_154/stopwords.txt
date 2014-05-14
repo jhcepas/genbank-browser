@@ -1,4 +1,0 @@
-a
-dog
-cat
-eats
