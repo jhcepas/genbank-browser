@@ -48,6 +48,7 @@ GENE_BIOTYPE_COLORS = {
     "misc_RNA": "YellowGreem",
     "hypothetical protein": "yellow",
     "repeat_region": "steelblue",
+    "repeat_region2": "orange",
     null: "black"
 };
 

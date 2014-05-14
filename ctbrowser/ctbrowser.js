@@ -452,8 +452,6 @@ var run = function() {
     genomeViewer.draw();
     
     tracks = [];
- 
-
 
     this.gccont = new FeatureTrack({
         targetId: null,
@@ -487,8 +485,8 @@ var run = function() {
         targetId: null,
         id: 1,
         //title: 'Sequence',
-        height: 20,
-        visibleRegionSize:300,//nts
+        height: 23,
+        visibleRegionSize:200,//nts
         
         renderer: new SequenceRenderer(),
         

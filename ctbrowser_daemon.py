@@ -506,16 +506,18 @@ def get_repeats(region):
             gstrand = parse_strand(gene.location.strand)
             try:
                 note = gene.qualifiers["note"][0]
+                biotype = 'repeat_region'
             except KeyError:
                 note = gene.qualifiers["Target"][0]
-            
+                biotype = 'repeat_region2'
+                
             m = re.match("RepeatMasker,\s+Target\s+'([^']+)'\s+(\d+)\s(\d+)", note)
             if m:
                 gname = "%s (%s-%s)" %(m.groups()[0], m.groups()[1], m.groups()[2])
             else:
                 gname = note
             genedict = {"id": gname,
-                        "biotype": "repeat_region",
+                        "biotype": biotype,
                         "featureType": "repeat",
                         "chromosome":ch,
                         "start":fstart,
