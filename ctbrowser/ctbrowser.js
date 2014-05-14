@@ -670,16 +670,10 @@ jQuery(document).ready(function(){
     $('#seqid_search').on('change', function ( event ) { 
         var locus = $('#seqid_search').select2('data');
         genomeViewer.setRegion({chromosome:locus.chr,
-                                start:locus.start,
-                                end:locus.end}); });
+                                start:parseInt(locus.start)-2000,
+                                end:parseInt(locus.end)+2000}); });
 
     $('#seqid_search').select2('focus');
-    $('#test').popover('show');
-    var a = $('#test').popover({html:true,
-                        content:"hello!", 
-                        title:'<button type="button" id="close" class="close" onclick="close_popups();">&times;</button><span>',
-                        container: 'body', 
-                                placement:'bottom'});
-    console.log('hello there!', a);
+
 });
 

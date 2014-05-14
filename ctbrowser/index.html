@@ -131,6 +131,14 @@
          #ph_genes{
            margin-left:10px;
            }
+
+         #page_title{
+           font-size:160%;
+           font-weight:bold;
+           margin-right:10px;
+           }
+
+
         </style>
 
         <script>
@@ -144,19 +152,14 @@
     </head>
 
     <body>
-      <div class='container-fluid'>
-        <div class='row'>
-          <div id="search_panel">
-            <input id="seqid_search"> <span id='ph_genes' class='btn btn-default btn-sm' onclick='show_phdomains();'> Pleckstrin domain homologs</a></span>
-          </div>
-          <div id="application"></div>
-     
-          <div class='row' id="footer">
+      <div id="search_panel">
+        <span id='page_title'>C.thermophilum Genome Browser </span><input id="seqid_search"> <span id='ph_genes' class='btn btn-default btn-sm' onclick='alert("not loaded yet :(");'> Pleckstrin domain homologs</a></span>
+      </div>
+      <div id="application"></div>
+      <div class='row' id="footer">
           Powered by <a src=""> genome-viewer </a>
-            <br>
+        <br>
           web contact: huerta@embl.de
-          </div>
-        </div>
       </div>
     </body>
 

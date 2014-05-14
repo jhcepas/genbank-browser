@@ -22,22 +22,7 @@ FEATURE_OPTIONS = {
             selection: "multi"
         }
     ],
-    snp: [
-        {
-            name: "consequence_type",
-            text: "Consequence Type",
-            values: ["2KB_upstream_variant", "5KB_upstream_variant", "500B_downstream_variant", "5KB_downstream_variant", "3_prime_UTR_variant", "5_prime_UTR_variant", "coding_sequence_variant", "complex_change_in_transcript", "frameshift_variant", "incomplete_terminal_codon_variant", "inframe_codon_gain", "inframe_codon_loss", "initiator_codon_change", "non_synonymous_codon", "intergenic_variant", "intron_variant", "mature_miRNA_variant", "nc_transcript_variant", "splice_acceptor_variant", "splice_donor_variant", "splice_region_variant", "stop_gained", "stop_lost", "stop_retained_variant", "synonymous_codon"],
-            selection: "multi"
-        }
-    ],
-    bam: [
-        {
-            name: "view",
-            text: "View",
-            values: ["view_as_pairs", "show_soft-clipped_bases"],
-            selection: "multi"
-        }
-    ]
+
 };
 
 GENE_BIOTYPE_COLORS = {
@@ -52,88 +37,8 @@ GENE_BIOTYPE_COLORS = {
     null: "black"
 };
 
-// 
-//    "antisense": "SteelBlue",
-//    "disrupted_domain": "YellowGreen",
-//    "IG_C_gene": "#FF7F50",
-//    "IG_D_gene": "#FF7F50",
-//    "IG_J_gene": "#FF7F50",
-//    "IG_V_gene": "#FF7F50",
-//    "lincRNA": "#8b668b",
-//    "miRNA": "#8b668b",
-//    "misc_RNA": "#8b668b",
-//    "Mt_rRNA": "#8b668b",
-//    "Mt_tRNA": "#8b668b",
-//    "ncrna_host": "Fuchsia",
-//    "nonsense_mediated_decay": "seagreen",
-//    "non_coding": "orangered",
-//    "non_stop_decay": "aqua",
-//    "polymorphic_pseudogene": "#666666",
-//    "processed_pseudogene": "#666666",
-//    "processed_transcript": "#0000ff",
-//    "protein_coding": "#a00000",
-//    "pseudogene": "#666666",
-//    "retained_intron": "goldenrod",
-//    "retrotransposed": "lightsalmon",
-//    "rRNA": "indianred",
-//    "sense_intronic": "#20B2AA",
-//    "sense_overlapping": "#20B2AA",
-//    "snoRNA": "#8b668b",
-//    "snRNA": "#8b668b",
-//    "transcribed_processed_pseudogene": "#666666",
-//    "transcribed_unprocessed_pseudogene": "#666666",
-//    "unitary_pseudogene": "#666666",
-//    "unprocessed_pseudogene": "#666666",
-//    "": "orangered",
-//    "other": "#000000"
-//};
-
-
-SNP_BIOTYPE_COLORS = {
-    "2KB_upstream_variant": "#a2b5cd",
-    "5KB_upstream_variant": "#a2b5cd",
-    "500B_downstream_variant": "#a2b5cd",
-    "5KB_downstream_variant": "#a2b5cd",
-    "3_prime_UTR_variant": "#7ac5cd",
-    "5_prime_UTR_variant": "#7ac5cd",
-    "coding_sequence_variant": "#458b00",
-    "complex_change_in_transcript": "#00fa9a",
-    "frameshift_variant": "#ff69b4",
-    "incomplete_terminal_codon_variant": "#ff00ff",
-    "inframe_codon_gain": "#ffd700",
-    "inframe_codon_loss": "#ffd700",
-    "initiator_codon_change": "#ffd700",
-    "non_synonymous_codon": "#ffd700",
-    "intergenic_variant": "#636363",
-    "intron_variant": "#02599c",
-    "mature_miRNA_variant": "#458b00",
-    "nc_transcript_variant": "#32cd32",
-    "splice_acceptor_variant": "#ff7f50",
-    "splice_donor_variant": "#ff7f50",
-    "splice_region_variant": "#ff7f50",
-    "stop_gained": "#ff0000",
-    "stop_lost": "#ff0000",
-    "stop_retained_variant": "#76ee00",
-    "synonymous_codon": "#76ee00",
-    "other": "#000000"
-};
-
 
 SEQUENCE_COLORS = {A: "#009900", C: "#0000FF", G: "#857A00", T: "#aa0000", N: "#555555"};
-
-SAM_FLAGS = [
-    ["read paired", 0x1],
-    ["read mapped in proper pair", 0x2],
-    ["read unmapped", 0x4],
-    ["mate unmapped", 0x8],
-    ["read reverse strand", 0x10],
-    ["mate reverse strand", 0x20],
-    ["first in pair", 0x40],
-    ["second in pair", 0x80],
-    ["not primary alignment", 0x100],
-    ["read fails platform/vendor quality checks", 0x200],
-    ["read is PCR or optical duplicate", 0x400]
-];
 
 
 FEATURE_TYPES = {
