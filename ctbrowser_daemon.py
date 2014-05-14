@@ -61,7 +61,8 @@ elif AN_VERSION == 2:
     UNIPROT_CONVERSION = os.path.join(BASEPATH, "data/v2/uniprot2geneid.tsv")
     UNIPROT2GENE = dict([map(strip, line.split('\t')) for line in open(UNIPROT_CONVERSION) if line.strip()])
     GENE2UNIPROT = dict([v, k] for k,v in UNIPROT2GENE.iteritems())
-
+    REPEATS_GFF_FILE = os.path.join(BASEPATH, "data/v2/Predicted_repeats_C_thermophilum.scaffolds.fa.out.gff")
+    
 PEP_IMGS_DIR = os.path.join(BASEPATH, "ctbrowser/pep_img/")
     
 # Where all parsed information is sotored
@@ -442,6 +443,7 @@ def repeat_regions():
 
 @post('/search/')
 def search(q=None):
+    t1 = time.time()
     response.set_header("Access-Control-Allow-Origin","*")
     response.content_type = "application/json"
     seqid = request.POST.get('seqid', '')
@@ -450,8 +452,7 @@ def search(q=None):
     cl.SetMatchMode(sphinx.SPH_MATCH_ALL)
     cl.SetRankingMode(sphinx.SPH_RANK_SPH04)
     cl.SetSortMode(sphinx.SPH_SORT_RELEVANCE)
-   
-    cl.SetLimits (0, 100, 100)
+    cl.SetLimits (0, 50, 100)
     res = cl.Query("*%s*" %seqid)
     if not res:
         print 'query failed: %s' % cl.GetLastError()
@@ -475,21 +476,9 @@ def search(q=None):
     MATCHER = re.compile("(%s)"%q, re.IGNORECASE)
     if res.has_key('matches'):
         n = 1
-        for match in res['matches'][:10]:
-                attrsdump = ''
-                for attr in res['attrs']:
-                        attrname = attr[0]
-                        attrtype = attr[1]
-                        value = match['attrs'][attrname]
-                        if attrtype==sphinx.SPH_ATTR_TIMESTAMP:
-                                value = time.strftime ( '%Y-%m-%d %H:%M:%S', time.localtime(value) )
-                        attrsdump = '%s, %s=%s' % ( attrsdump, attrname, value )
-
-                #print '%d. doc_id=%s, weight=%d%s' % (n, match['id'], match['weight'], attrsdump, INDEX2REGION.get(int(match['id']), ""))
-                #print '%d. doc_id=%s, weight=%d%s' % (n, match['id'], match['weight'], attrsdump)
+        for match in res['matches']:
                 locus, biotype, region = INDEX2REGION[int(match['id'])]
                 desc = ', '.join(INDEX2DESC[int(match['id'])])
-                desc = re.sub(MATCHER, "<b>\\1</b>", desc)
                 chrom, _pos = region.split(':')
                 start, end = _pos.split('-')
                 matches['results'].append({"id":locus, "text":locus, "desc":desc, 'biotype':biotype,
@@ -500,6 +489,7 @@ def search(q=None):
                                            'uniprot':GENE2UNIPROT.get(locus, ''),
                                            })
                 n += 1
+    print time.time() - t1, "search query" 
     return web_return(json.dumps(matches), response)
 
 def get_repeats(region):
@@ -508,11 +498,17 @@ def get_repeats(region):
     genes = {}
     if start > len(SCAFFOLDS[ch]) or end < 0:
         return []
-   
-    for fch, fstart, fend, gene in FEATURES.get('repeat_region', []):
+
+    rep_entries = FEATURES.get('repeat_region', []) + FEATURES.get('repeat_region2', [])
+             
+    for fch, fstart, fend, gene in rep_entries:
         if str(fch) == ch and (between(fstart, start, end) or between(fend, start, end)):
             gstrand = parse_strand(gene.location.strand)
-            note= gene.qualifiers["note"][0]
+            try:
+                note = gene.qualifiers["note"][0]
+            except KeyError:
+                note = gene.qualifiers["Target"][0]
+            
             m = re.match("RepeatMasker,\s+Target\s+'([^']+)'\s+(\d+)\s(\d+)", note)
             if m:
                 gname = "%s (%s-%s)" %(m.groups()[0], m.groups()[1], m.groups()[2])
@@ -527,7 +523,7 @@ def get_repeats(region):
                         "strand":gstrand,
                         "transcripts":[]}
             genes[gname] = genedict
-    
+           
     result = sorted(genes.values(), lambda a,b: cmp(a["start"], b["start"]))             
     return result
 
@@ -679,6 +675,8 @@ def parse_region(region):
 def refresh_all_dbs():
     gbrecords, features, scaffolds, scaffold_genes = read_and_index_genome()
     gene2expr, gene2desc = read_and_index_extra_info()
+
+    
     return gbrecords, features, scaffolds, scaffold_genes, gene2expr, gene2desc
 
 def refresh_sphinx():
@@ -686,7 +684,8 @@ def refresh_sphinx():
     id2region = {}
     id2desc = {}
     i = 1
-    for ftype in ['gene', 'CDS', 'tRNA', 'rRNA', 'misc_RNA', 'repeat_region', 'misc_feature']:
+    for ftype in ['gene', 'CDS', 'tRNA', 'rRNA', 'misc_RNA',
+                  'repeat_region', 'misc_feature']:
         for fch, fstart, fend, f in FEATURES[ftype]:
             gname = f.qualifiers.get("locus_tag", ["NoName"])[0]
             txt = []
@@ -732,7 +731,16 @@ def start_webservices():
     # This starts the web service on the host and port specified. Currently it
     # should listen in "ct.bork.embl.de" and use the port 9000.
     run(host=HOST, port=WEBSERVICE_PORT, server='cherrypy')
-    
+
+def parse_gff(fname, ftype='unknown'):
+    from BCBio import GFF
+    entries = []
+    for e in GFF.parse(fname):
+        for f in e.features:
+            entries.append([e.id, f.location.start, f.location.end, f])
+    print len(entries), "entries read from GFF file", fname
+    return entries
+            
 # Utils 
 SHELL_COLORS = {
     "wr": '\033[1;37;41m', # white on red
@@ -833,7 +841,8 @@ if __name__ == '__main__':
                 print "Unable to load cached data. Try with --refresh"
                 sys.exit(1)
         
-        
+        print FEATURES['repeat_region'][0]
+        FEATURES['repeat_region2'] = parse_gff(REPEATS_GFF_FILE)
         sorted_sca = sorted(SCAFFOLDS.keys(),
                             lambda a,b: cmp(len(SCAFFOLD_GENES[a]), len(SCAFFOLD_GENES[b])),
                             reverse=True)

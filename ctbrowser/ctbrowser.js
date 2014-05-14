@@ -220,14 +220,14 @@ CtSequenceAdapter.prototype.getData = function(args){
 
    }else{
        if(this.sender != "move"){
-           this.trigger('data:ready',{
-               items:{
-                   sequence:this.sequence[chromosome],
-                   start:this.start[chromosome],
-                   end:this.end[chromosome]
-               },
-               params:params
-           });
+           // this.trigger('data:ready',{
+           //     items:{
+           //         sequence:this.sequence[chromosome],
+           //         start:this.start[chromosome],
+           //         end:this.end[chromosome]
+           //     },
+           //     params:params
+           // });
            this.trigger('data:ready',{
                items:{
                    sequence:this.sequence[chromosome],
@@ -406,7 +406,7 @@ var run = function() {
 		var results;
 		$.ajax({
 			type:'GET',
-			url:CT_HOST+'/search/'+queryStr, //tRNA
+			url:CT_HOST+'/search/'+queryStr, 
 			dataType: 'json',
 			async:false,
 			success:function(data){
@@ -639,14 +639,24 @@ jQuery(document).ready(function(){
              },
          },
          formatResult: function(e, container, query) {
+             var desc = e.desc;
+             if (e.desc.length > 10000){
+                 desc = e.desc.substring(0,120) + "...";}
+             var uniprot = '';
+             if (e.uniprot.length > 0){
+                 var uniprot = " ("+e.uniprot+")";}
+
              html = '<span class="s_geneid">' + e.id + '</span>'+
-                 '<span class="s_uniprot"> ('+e.uniprot+')</span>'+
+                 '<span class="s_uniprot">'+uniprot+'</span>'+
                  '<span class="s_biotype">, '+e.biotype+'. </span>'+
-                 '<span class="s_desc"> - '+e.desc+' -</span>'+
+                 '<span class="s_desc"> - '+desc+' -</span>'+
              '<span class="s_region"> ['+e.reg+']</span>';
              var regex = new RegExp( '(' + query.term + ')', 'gi' );
              var hi_html = html.replace(regex, '<span class="hi">$1</span>');
+
              return hi_html;
+
+
          },
          formatSelection: function(e) {
              html = '<span class="s_geneid">' + e.id + '</span>'+
@@ -673,6 +683,5 @@ jQuery(document).ready(function(){
                         container: 'body', 
                                 placement:'bottom'});
     console.log('hello there!', a);
-    
 });
 
