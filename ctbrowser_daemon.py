@@ -143,35 +143,6 @@ def read_and_index_extra_info():
     ''' Read custom files including info about eggnog mappings and expression experiments'''
     gene2expr = defaultdict(dict)
     if EXPR_FILE:
-        # for line in open(EXPR_FILE, "rU"):
-        #     if not line.strip() or line.startswith("#"):
-        #         continue
-        #     try:
-        #         #['CTHT_0043330', 'PH domain (AA 28-163)', 'SEC3', 'Saccharomyces cerevisiae',
-        #         # 'Ivana Vonkova',
-        #         # 'PH domain binding specificity',
-        #         # 'now expressed with N-terminal HisSUMO-tag and C-terminal sfGFP; could be cleaved out and re-cloned using BamHI/HindIII',
-        #         # 'Escherichia coli BL21 (DE3)',
-        #         # 'GGATCCGACGGTTCTGTGCCAGAAACCTACATCACTCACATCCGCATCACCGAATGGCAGAACTACCCGTCTTCCCCGCCACCACCGTCTGCACGTGCTCCGCAGTACGAAAAACCGCGTGTTATCATTGTAGCTGTGCGTAAAAGCGGTCGTCTGCGCGTTCACAAATCCAAAGAAAACGCGAACGGCACCTTCAGCATTGGCAAAACTTGGTGGCTGGACGATCTGCAGAGCATCGAATCTTTCACGTCTCCGTCTGCAAACCCAAACCTGCGCGAATGGGCTCGTGATGTCGGCTTTATTGTAACCCTCGGTAAACCGTACTATTGGGAGGCTCACTCCGACAAAGAGAAAAAATTCTTCATCGCGTCCCTGATCAAAATCTTCAACCGTTACACCGGTGGTCGTACTCCAAAGCTT',
-        #         # 'DGSVPETYITHIRITEWQNYPSSPPPPSARAPQYEKPRVIIVAVRKSGRLRVHKSKENANGTFSIGKTWWLDDLQSIESFTSPSANPNLREWARDVGFIVTLGKPYYWEAHSDKEKKFFIASLIKIFNRYTGGRTP\n']
-        #         #        
-        #         (locus, prj, qgene, qorg, researcher, variant,
-        #          functag, ex_system, ntseq, aaseq) = map(strip, line.split("\t"))
-        #     except ValueError:
-        #         print "Skipped line:", line
-        #         pass
-        #     else:
-        #         gene2expr[locus] = {
-        #             "Project":prj,
-        #             "Query gene":qgene,
-        #             "Query organism":qorg,
-        #             "Researcher":researcher,
-        #             "Variant":variant,
-        #             "Functional TAG":functag,
-        #             "Expressed system": ex_system,
-        #             "DNA seq": ntseq,
-        #             "Protein seq": aaseq,
-        #         }
         for line in open(EXPR_FILE, "rU"):
             if not line.strip() or line.startswith("#"):
                 continue
@@ -411,35 +382,6 @@ def repeat_regions():
 
     print "**Returning GENE json in", time.time() -t1        
     return web_return(as_json(by_region), response)
-
-
-# @get('/all')
-# def all():
-#     response.set_header("Access-Control-Allow-Origin","*")
-#     response.content_type = "application/json"
-#     chrdict = {"species":"CT","chromosomes":[]}
-#     for sca in SCAFFOLDS:
-#         chr_info = {"cytobands":[],
-#                     "numberGenes":0, "name":sca,"isCircular":0,
-#                     "size":len(SCAFFOLDS[sca]),
-#                     "end":len(SCAFFOLDS[sca]),
-#                     "start":1}
-#         chrdict["chromosomes"].append(chr_info)
-#     return {"result":chrdict}
-
-# @get('/info')
-# def info():
-#     response.set_header("Access-Control-Allow-Origin","*")
-#     response.content_type = "application/json"
-#     chrdict = {"species":"CT","chromosomes":[]}
-#     for sca in SCAFFOLDS:
-#         chr_info = {"cytobands":[],
-#                     "numberGenes":0,"name":sca,"isCircular":0,"size":len(SCAFFOLDS[sca]),"end":len(SCAFFOLDS[sca]),"start":1}
-#         chrdict["chromosomes"].append(chr_info)
-        
-#     return {"result":chrdict}
-
-
 
 @post('/search/')
 def search(q=None):
