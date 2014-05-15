@@ -34,6 +34,7 @@ GENE_BIOTYPE_COLORS = {
     "hypothetical protein": "yellow",
     "repeat_region": "steelblue",
     "repeat_region2": "orange",
+    "exon": "yellow",
     null: "black"
 };
 
@@ -189,7 +190,7 @@ FEATURE_TYPES = {
                 'length:&nbsp;<span class="info">' + (e.end - e.start + 1).toString().replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1,") + '</span><br>';
         },
         color: function (f) {
-            return GENE_BIOTYPE_COLORS[f.product];
+            return 'orange';
         },
         infoWidgetId: "id",
         height: 4,

@@ -106,7 +106,7 @@
            font-size:160%;
            font-weight:bold;
            margin-right:10px;
-           color:#CD6C6C;
+           color:#FF797E;
            text-align:right;
            margin-right:20px;
 
@@ -115,13 +115,13 @@
            font-size:80%;
            font-weight:bold;
            margin-right:10px;
-           color:slategrey;
+           color:lightgrey;
            padding:0px;
            margin:0px;
            vertical-align:middle;
            }
          #header{
-           background-color:ghostwhite;
+           background-color:#1C4E63;
            }
 
          a{
@@ -134,7 +134,7 @@
 
          .popover-title {
            color: white;
-           background-color: seagreen;
+           background-color: #1C4E63;
            font-weight:bold;
 
          }
@@ -147,6 +147,16 @@
            background-color: snow;
            font-size: 90%;        
          }
+
+         #search_label{
+           color:white;
+           font-weight:bold;
+           }
+
+         .close{
+           color:snow;
+           opacity:0.95;
+           }
 
         </style>
 
@@ -167,7 +177,7 @@
             <div id="subtitle">Genome Browser - <img style='padding-left:0px;' src='embl_logo.png'></div>
           </div>
           <div id="search_panel">
-            <div><b>Locate genes:</b> <input id="seqid_search"> 
+            <div><span id='search_label'>Locate genes:</span> <input id="seqid_search"> 
             <span id='ph_genes' class='btn btn-default btn-sm'> Pleckstrin domain homologs</a></span></div>
           </div>
         </div>

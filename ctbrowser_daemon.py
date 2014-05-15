@@ -262,10 +262,8 @@ def sequence():
     t1 = time.time()
     response.set_header("Access-Control-Allow-Origin","*")
     response.content_type = "application/json"
-
     by_region = []
     region = request.GET["region"]
-
     for reg in region.split(","):
         ch, start, end = parse_region(reg)
         #translate to string coordinates
