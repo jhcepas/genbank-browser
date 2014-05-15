@@ -530,7 +530,8 @@ var run = function() {
     });
     this.gene.renderer.on({
         'feature:click': function(event) {
-            console.log(event, "click in transcript"); },
+            show_gene_info(event);
+        },
 
     });
     tracks.push(this.gene);
@@ -538,7 +539,7 @@ var run = function() {
     var renderer = new FeatureRenderer(FEATURE_TYPES.gene);
     renderer.on({
         'feature:click': function(event) {
-            console.log(event, "click in gene");
+            show_gene_info(event);
         }
     });
 
@@ -566,10 +567,9 @@ var run = function() {
             }
         })
     });
-    this.gene.renderer.on({
+    this.repeats.renderer.on({
         'feature:click': function(event) {
-            console.log(event, "repeat"); },
-
+            show_gene_info(event); },
     });
     tracks.push(this.repeats);
 
@@ -615,7 +615,7 @@ var run = function() {
 
 jQuery(document).ready(function(){
     jQuery("#seqid_search").select2(
-        {placeholder: "Locate a gene by its ID or description",
+        {placeholder: "gene ID or description term",
          multiple:false,
          width:'500px',
          allowClear:true,
@@ -636,6 +636,19 @@ jQuery(document).ready(function(){
                  return data;
              },
          },
+
+         initSelection: function(element, callback) {
+             $.ajax({
+                 type: 'post',             
+                 url: CT_HOST+'/search/',
+                 data: {'seqid': element.val()}, 
+                 dataType: 'json',
+                 success: function (data, page) { 
+                     console.log(data.results[0]);
+                     callback(data.results[0]);
+                 },
+             })},
+
          formatResult: function(e, container, query) {
              var desc = e.desc;
              if (e.desc.length > 10000){
@@ -666,14 +679,78 @@ jQuery(document).ready(function(){
          escapeMarkup: function (m) { return m; },
         });
 
-
-    $('#seqid_search').on('change', function ( event ) { 
-        var locus = $('#seqid_search').select2('data');
-        genomeViewer.setRegion({chromosome:locus.chr,
-                                start:parseInt(locus.start)-2000,
-                                end:parseInt(locus.end)+2000}); });
-
+    $('#seqid_search').on('change', function ( event ) { update_search(); }); 
     $('#seqid_search').select2('focus');
 
 });
+
+function sleep(millis, callback, args) {
+    setTimeout(function(){ callback(args); }, millis);}
+
+function update_search(){
+    var locus = $('#seqid_search').select2('data');
+    if (locus != undefined){
+        genomeViewer.setRegion({chromosome:locus.chr,
+                                start:parseInt(locus.start)-2000,
+                                end:parseInt(locus.end)+2000});
+    }
+}
+
+function go_to_gene(genename){
+    $("#ph_genes").popover('hide');
+    console.log('got to gene', genename)
+    $("#seqid_search").select2('val', genename);
+    sleep(250, update_search);
+}
+
+function show_gene_info(gene){
+    console.log(gene.feature.id);
+
+    $('#regionField').popover({
+        html:true,
+        placement:"bottom",
+        trigger:'click',
+        title: '<span id="gene_ext_title" style="margin-right:20px;">'+gene.feature.id+'</span><button type="button" id="close" class="close" onclick="$(&quot;#regionField&quot;).popover(&quot;hide&quot;);">&times;</button>', 
+        content:'<div id="gene_ext_info">Loading... </div>',
+        container:"body",
+    });
+
+    $('#regionField').popover('show');
+    $.ajax({
+        type:'POST',
+        url:CT_HOST+'/seqid_data/',
+        data: {seqid:gene.feature.fid},
+        success: function (data) {
+            var h = '';
+            for (var key in {'type':0, 'location':0, 'qualifiers':0, 'strand':0,
+                             'pep_img':0, 'length:':0, 'NT Seq':0}) {
+                if (key in data){
+                    if (key == 'pep_img'){
+                        h += '<b><a target="_blank" href="http://wlab.ethz.ch/protter/">Protter</a> peptide image:</b><br> <a target="_blank" href="'+data[key]+'"><img height="300" src="'+data[key]+'"></a>'
+                    }
+                    else if (key=='qualifiers'){
+                        var trans = '';
+                        for (var qkey in data[key]){
+                            if (qkey == 'translation'){
+                               trans = '<b>'+qkey+': </b><pre>' + data[key][qkey] + '</pre>';
+                            }else{
+                                h += '<b>'+qkey+': </b>' + data[key][qkey] + '<br>';
+                            }
+                        }
+                        h += trans;
+                    }
+                    else if (key=='NT Seq'){
+                        h += '<b>nt seq:</b><pre>' + data[key] + '</pre>';
+                    }
+
+                    else{
+                        h += '<b>'+key+': </b>' + data[key] + '<br>';
+                    }
+                }
+            }
+            $('#gene_ext_info').html(h);
+        }
+    });
+
+}
 

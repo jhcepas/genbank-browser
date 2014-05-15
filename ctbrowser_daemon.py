@@ -10,7 +10,7 @@ import logging
 from StringIO import StringIO
 import gzip
 import json
-
+import textwrap
 
 from Bio import SeqIO
 from Bio.SeqFeature import CompoundLocation
@@ -221,6 +221,7 @@ def read_and_index_genome():
     # Map genebank regions and features into the genome assembly. Every GBF
     # entry should find a match in a scaffold.
     print color("Reading annotations from ", "green"), GBF_FILE
+    featureid = 1
     for e in SeqIO.parse(open(GBF_FILE, "rU"), "genbank"):
         gbrecords[e.id] = e
         startpos = None
@@ -247,9 +248,10 @@ def read_and_index_genome():
         for f in e.features:
             f.parent = e
             genome_start, genome_end =  genome_pos(f, scaffolds)
-            features[f.type].append([target_sca, genome_start, genome_end, f])
+            features[f.type].append([target_sca, genome_start, genome_end, f, featureid])
             if f.type == "gene":
                 scaffold_genes[target_sca].add(f)
+            featureid += 1
             
     return gbrecords, features, scaffolds, scaffold_genes
 
@@ -274,7 +276,6 @@ def sequence():
         start -= 1
         
         seq = str(SCAFFOLDS[ch][start:end]).upper()
-        print seq, start, end
         by_region.append({"id":reg, "result": {"chromosome":ch,
                                                "start":start,
                                                "end":end,
@@ -383,6 +384,36 @@ def repeat_regions():
     print "**Returning GENE json in", time.time() -t1        
     return web_return(as_json(by_region), response)
 
+
+@post('/seqid_data/')
+def search(q=None):
+    t1 = time.time()
+    response.set_header("Access-Control-Allow-Origin","*")
+    response.content_type = "application/json"
+    seqid = int(request.POST.get('seqid', ''))
+    data = {}
+    f = ID2FEATURE[seqid]
+    data["id"] = f.id
+    data["type"] = f.type
+    data['location'] = str(f.location)
+    data['strand'] = str(f.strand)
+    data['qualifiers'] = f.qualifiers
+    if f.strand == -1:
+        seq = f.location.extract(f.parent.seq).reverse_complement()
+    else:
+        seq = f.location.extract(f.parent.seq)
+    length = len(seq)
+    data['NT Seq'] = str(seq)
+    data['length'] = length
+    
+    if 'locus_tag' in f.qualifiers:
+        data['name'] = gname = f.qualifiers["locus_tag"][0]
+        if os.path.exists(os.path.join(PEP_IMGS_DIR, "svg", gname+".svg")):
+            data['pep_img'] = "pep_img/png/%s.png" %gname
+    print time.time() - t1, "seqid data query" 
+    return web_return(json.dumps(data), response)
+    
+
 @post('/search/')
 def search(q=None):
     t1 = time.time()
@@ -443,7 +474,7 @@ def get_repeats(region):
 
     rep_entries = FEATURES.get('repeat_region', []) + FEATURES.get('repeat_region2', [])
              
-    for fch, fstart, fend, gene in rep_entries:
+    for fch, fstart, fend, gene, fid in rep_entries:
         if str(fch) == ch and (between(fstart, start, end) or between(fend, start, end)):
             gstrand = parse_strand(gene.location.strand)
             try:
@@ -459,6 +490,7 @@ def get_repeats(region):
             else:
                 gname = note
             genedict = {"id": gname,
+                        "fid": fid, 
                         "biotype": biotype,
                         "featureType": "repeat",
                         "chromosome":ch,
@@ -481,11 +513,12 @@ def get_exons(region, biotypes, exclude_transcripts=False):
         return []
     
     #create new gene instances
-    for fch, fstart, fend, gene in FEATURES["gene"]:
+    for fch, fstart, fend, gene, fid in FEATURES["gene"]:
         if str(fch) == ch and (between(fstart, start, end) or between(fend, start, end)):
             gstrand = parse_strand(gene.location.strand) 
             gname = gene.qualifiers["locus_tag"][0]
             genedict = {"id": gname,
+                        "fid": fid, 
                         "uniprot": GENE2UNIPROT.get(gname, ''),
                         "biotype": "gene",
                         "pep_img": int(os.path.exists(os.path.join(PEP_IMGS_DIR, "svg", gname+".svg"))),
@@ -509,7 +542,7 @@ def get_exons(region, biotypes, exclude_transcripts=False):
         for ftype in biotypes:
             if ftype in exclude_biotypes:
                 continue
-            for fch, fstart, fend, prot in FEATURES[ftype]:
+            for fch, fstart, fend, prot, fid in FEATURES[ftype]:
                 if str(fch) == ch and (between(fstart, start, end) or between(fend, start, end)):
                     pstrand = parse_strand(gene.location.strand)
                     try:
@@ -523,6 +556,7 @@ def get_exons(region, biotypes, exclude_transcripts=False):
                         continue
                     transdict = {
                         "id": gname,
+                        "fid": fid, 
                         "biotype": ftype,
                         "chromosome":ch,
                         "start":fstart,
@@ -627,10 +661,10 @@ def refresh_sphinx():
     index = []
     id2region = {}
     id2desc = {}
-    i = 1
+    id2f = {}
     for ftype in ['gene', 'CDS', 'tRNA', 'rRNA', 'misc_RNA',
                   'repeat_region', 'misc_feature']:
-        for fch, fstart, fend, f in FEATURES[ftype]:
+        for fch, fstart, fend, f, fid in FEATURES[ftype]:
             gname = f.qualifiers.get("locus_tag", ["NoName"])[0]
             txt = []
             for key, value in f.qualifiers.iteritems():
@@ -639,10 +673,10 @@ def refresh_sphinx():
                     txt.append(value[0])
                 else:
                     txt.append('; '.join(map(str, value)))
-            index.append([i, gname, GENE2UNIPROT.get(gname, ''), ', '.join(txt)])
-            id2region[i] = [gname, ftype, "%s:%d-%d" %(fch, fstart, fend)]
-            id2desc[i] = txt
-            i += 1
+            index.append([fid, gname, GENE2UNIPROT.get(gname, ''), ', '.join(txt)])
+            id2region[fid] = [gname, ftype, "%s:%d-%d" %(fch, fstart, fend)]
+            id2desc[fid] = txt
+            id2f[fid] = f
             
     open(SPHINX_ANNOTATION_FILE, "w").write(
         '\n'.join(map(lambda x: '\t'.join(map(str, x)), index))+"\n")
@@ -651,7 +685,7 @@ def refresh_sphinx():
     print 'Updating sphinx index... '
     system('cd %s && %s --config %s annotations' %(BASEPATH, INDEXER, SPHINX_CONFIG_FILE))
    
-    return id2region, id2desc
+    return id2region, id2desc, id2f
         
 def start_sphinx():
     stop_sphinx()
@@ -768,30 +802,30 @@ if __name__ == '__main__':
             (GBRECORDS, FEATURES, SCAFFOLDS, SCAFFOLD_GENES, GENE2EXPR,
              GENE2DESC) = refresh_all_dbs()
 
-            INDEX2REGION, INDEX2DESC = refresh_sphinx()
+            INDEX2REGION, INDEX2DESC, ID2FEATURE = refresh_sphinx()
             
             # Saves the database for faster loading in the fugture
             cPickle.dump([GBRECORDS, FEATURES, SCAFFOLDS, SCAFFOLD_GENES, GENE2EXPR,
-                          GENE2DESC, INDEX2REGION, INDEX2DESC],
+                          GENE2DESC, INDEX2REGION, INDEX2DESC, ID2FEATURE],
                          open(DBFILE, "wb"))
 
         else:
             try:
                 (GBRECORDS, FEATURES, SCAFFOLDS, SCAFFOLD_GENES, GENE2EXPR, GENE2DESC,
-                 INDEX2REGION, INDEX2DESC) = cPickle.load(open(DBFILE))
+                 INDEX2REGION, INDEX2DESC, ID2FEATURE) = cPickle.load(open(DBFILE))
 
             except Exception, e:
                 print e
                 print "Unable to load cached data. Try with --refresh"
                 sys.exit(1)
         
-        print FEATURES['repeat_region'][0]
-        FEATURES['repeat_region2'] = parse_gff(REPEATS_GFF_FILE)
+        # print FEATURES['repeat_region'][0]
+        # FEATURES['repeat_region2'] = parse_gff(REPEATS_GFF_FILE)
+               
         sorted_sca = sorted(SCAFFOLDS.keys(),
                             lambda a,b: cmp(len(SCAFFOLD_GENES[a]), len(SCAFFOLD_GENES[b])),
                             reverse=True)
-
-
+        
         # Sphinx will not start if another instance is running in the same
         # port. This call will try to stop any other running instance, but it might
         # fail if the service was started from a different user or directory. Just

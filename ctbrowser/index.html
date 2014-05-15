@@ -13,13 +13,14 @@
         <script type="text/javascript" src="vendor/backbone-min.js"></script>
         <script type="text/javascript" src="vendor/rawdeflate.js"></script>
         <script type="text/javascript" src="vendor/jquery.min.js"></script>
-        <script type="text/javascript" src="bootstrap-3.1.1-dist/js/bootstrap.min.js"></script>
+
         <script type="text/javascript" src="vendor/jquery.qtip.min.js"></script>
         <!-- <script type="text/javascript" src="vendor/jquery.cookie.js"></script> -->
         <script type="text/javascript" src="vendor/jquery.sha1.js"></script>
         <script type="text/javascript" src="vendor/purl.min.js"></script>
         <script type="text/javascript" src="vendor/jquery.mousewheel.min.js"></script>
         <script type="text/javascript" src="vendor/gl-matrix-min.js"></script>
+        <script type="text/javascript" src="bootstrap-3.1.1-dist/js/bootstrap.min.js"></script>
         <script type="text/javascript" src="select2.min.js"></script>
         <!-- JS from Genome Viewer -->
         <!-- Genome-viewer -->
@@ -44,45 +45,14 @@
            height: 100%;
            /*overflow-y: auto;*/
            /*overflow-x: hidden;*/
-           padding: 10px;
-            }
-            #customSearch {
-                width: 80%;
-                /*overflow-y: auto;*/
-                /*overflow-x: hidden;*/
-                height:20px;
+           margin: 10px;
             }
 
-            .customSearchItem {
-				padding:2px;
-			}
-            .customSearchItemType {
-				padding:2px;
-                color: indianred;
-			}
-            .customSearchItemDesc {
-				padding:2px;
-                line-height: 13px;font-size:13px;
-			}
-
-            .customSearchItem:hover {color:#3276B1;cursor:pointer;}
-
-         .bootstrap .popover{
-           width:600px;
-           max-width:600px;
-         }
 
          .select2-results .select2-highlighted {
            background-color: #A6BEC1;
            color:#444;
          }
-
-         .ui-tooltip{
-           width:500px;
-           }
-
-         .ui-tooltip-shadow{
-           }
 
          .hi{
            background-color:#FAFFCB;
@@ -136,8 +106,47 @@
            font-size:160%;
            font-weight:bold;
            margin-right:10px;
+           color:#CD6C6C;
+           text-align:right;
+           margin-right:20px;
+
+           }
+         #subtitle{
+           font-size:80%;
+           font-weight:bold;
+           margin-right:10px;
+           color:slategrey;
+           padding:0px;
+           margin:0px;
+           vertical-align:middle;
+           }
+         #header{
+           background-color:ghostwhite;
            }
 
+         a{
+           cursor:pointer;
+           }
+         
+         .popover {
+           max-width:600px;
+           }
+
+         .popover-title {
+           color: white;
+           background-color: seagreen;
+           font-weight:bold;
+
+         }
+         .popover-content {
+           font-size: 80%;
+           overflow:auto;
+         }
+
+         .popover-content pre {
+           background-color: snow;
+           font-size: 90%;        
+         }
 
         </style>
 
@@ -152,20 +161,50 @@
     </head>
 
     <body>
-      <div id="search_panel">
-        <span id='page_title'>C.thermophilum Genome Browser </span><input id="seqid_search"> <span id='ph_genes' class='btn btn-default btn-sm' onclick='alert("not loaded yet :(");'> Pleckstrin domain homologs</a></span>
+      <div class='container-fluid'>
+        <div class='row' id='header'>
+          <div id='page_title' class='pull-right'><i>Chaetomium thermophilum</i>
+            <div id="subtitle">Genome Browser - <img style='padding-left:0px;' src='embl_logo.png'></div>
+          </div>
+          <div id="search_panel">
+            <div><b>Locate genes:</b> <input id="seqid_search"> 
+            <span id='ph_genes' class='btn btn-default btn-sm'> Pleckstrin domain homologs</a></span></div>
+          </div>
+        </div>
       </div>
       <div id="application"></div>
       <div class='row' id="footer">
-          Powered by <a src=""> genome-viewer </a>
+           <b>Structural and Computational Biology Unit</b>, <a src='http://embl.de'>EMBL</a><br>
+           <b>web contact</b>: huerta@embl.de<br>
+          Powered by <a src=""> Genome Viewer </a>
         <br>
-          web contact: huerta@embl.de
       </div>
-    </body>
 
+    </body>
     <script type="text/javascript">
      $(document).ready(run);
-    </script>
 
+     var ph_genes = [ ["CTHT_0049260", "G0SB85", "PH"], ["CTHT_0073150", "G0SHS0", "PH"], ["CTHT_0024600", "G0S5F3", "PH"], ["CTHT_0009680", "G0S0E0", "PH"], ["CTHT_0009680", "G0S0E0", "tandem PH"], ["CTHT_0019780", "G0S360", "PH"], ["CTHT_0023350", "G0S4S4", "PH"], ["CTHT_0034630", "G0S6E5", "PH"], ["CTHT_0011800", "G0S0Z6", "PH"], ["CTHT_0051110", "G0SDA8", "PH"], ["CTHT_0066170", "G0SGF8", "PH"], ["CTHT_0008080", "G0RZY6", "PH"], ["CTHT_0013450", "G0S1F9", "PH"], ["CTHT_0021090", "G0S3H8", "tandem PH"], ["CTHT_0048290", "G0SAZ0", "PH"], ["CTHT_0014900", "G0S1U9", "PH"], ["CTHT_0028820", "G0S7U2", "PH"], ["CTHT_0049050", "G0SB64", "PH"], ["CTHT_0001260", "G0RZ08", "PH"], ["CTHT_0025960", "G0S696", "PH"], ["CTHT_0026310", "G0S6I2", "PH"]] ;
+     var html_content = '<div>';
+     for (var i=0; i<ph_genes.length; i++){
+       var gene = ph_genes[i];
+       var html_gene = '<a href="javascript:void(0);" onclick="go_to_gene(\''+gene[0]+'\')" >'+
+                       '<span class="s_geneid">' + gene[0] + '</span>'+
+                       '<span class="s_uniprot"> ('+gene[1]+')</span>'+
+                       '<span class="s_biotype">, '+gene[2]+'. </span></a><br>';
+       html_content += html_gene; 
+     }
+     html_content += "</div>"
+     $("#ph_genes").popover({
+       html:true,
+       placement:"bottom",
+       trigger:"click",
+       title:'pleckstrin homology domains', 
+       content:html_content,
+       container:"body",
+     });
+
+
+    </script>
 
 </html>
