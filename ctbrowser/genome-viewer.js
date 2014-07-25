@@ -1,3 +1,5 @@
+/*! genome-viewer July 22, 2014 17:05:12 */
+/*! lib July 22, 2014 17:05:08 */
 /*
  * Copyright (c) 2012 Francisco Salavert (ICM-CIPF)
  * Copyright (c) 2012 Ruben Sanchez (ICM-CIPF)
@@ -23,6 +25,11 @@ var Utils = {
     //properties
     characters: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789",
 
+    number: {
+        sign: function (x) {
+            return x ? x < 0 ? -1 : 1 : 0;
+        }
+    },
     //Methods
     formatNumber: function (position) {
         return position.toString().replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1,");
@@ -199,6 +206,19 @@ var Utils = {
         return input.toLowerCase().replace(/[.-_\s](.)/g, function (match, group1) {
             return group1.toUpperCase();
         })
+    },
+    msg: function (title, msg) {
+        var div = $('<div class="ocb-msg-hidden"><div>' + title + '</div><div>' + msg + '</div></div>')[0];
+        $('body').append(div);
+        setTimeout(function () {
+            $(div).addClass('ocb-msg-shown');
+        }, 10);
+        setTimeout(function () {
+            $(div).removeClass('ocb-msg-shown');
+        }, 2000);
+        setTimeout(function () {
+            $(div).remove();
+        }, 2200);
     }
 
 };
@@ -214,7 +234,7 @@ Utils.images = {
 //    bucket: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAAZiS0dEAP8A/wD/oL2nkwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB90BCg4hBcbCoOMAAABsSURBVDjLY2RgYFBjYGCIZCAPLGeBam4g0wAGJgYKARMDA8NZCvSfZYQy6sk0oJEFiUNqODRQLQxGDYCAb2To/YZswEsyDHiJbMAHMgz4gO6F5aTkQpgXYElZkoGBgZeEbL2cgYHhMwMDw3MA93ARk+mSg4gAAAAASUVORK5CYII=",
     bucket: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH3QkQDC8RTstxRAAAAGBJREFUOMtjYBgswIWBgeE/idiFgYGBgRFqwH8GBoYGEi1tYGBgYGRBE9QjUvMlGANmgCsDA8NuElzRANXDwAQV2ENGuO1BNoBsMGoAlQ3wJTIdNEDVYgU+ROQBH6rmQgAWgB19xco60wAAAABJRU5ErkJggg==",
 //    dir: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAAAsSAAALEgHS3X78AAAKT2lDQ1BQaG90b3Nob3AgSUNDIHByb2ZpbGUAAHjanVNnVFPpFj333vRCS4iAlEtvUhUIIFJCi4AUkSYqIQkQSoghodkVUcERRUUEG8igiAOOjoCMFVEsDIoK2AfkIaKOg6OIisr74Xuja9a89+bN/rXXPues852zzwfACAyWSDNRNYAMqUIeEeCDx8TG4eQuQIEKJHAAEAizZCFz/SMBAPh+PDwrIsAHvgABeNMLCADATZvAMByH/w/qQplcAYCEAcB0kThLCIAUAEB6jkKmAEBGAYCdmCZTAKAEAGDLY2LjAFAtAGAnf+bTAICd+Jl7AQBblCEVAaCRACATZYhEAGg7AKzPVopFAFgwABRmS8Q5ANgtADBJV2ZIALC3AMDOEAuyAAgMADBRiIUpAAR7AGDIIyN4AISZABRG8lc88SuuEOcqAAB4mbI8uSQ5RYFbCC1xB1dXLh4ozkkXKxQ2YQJhmkAuwnmZGTKBNA/g88wAAKCRFRHgg/P9eM4Ors7ONo62Dl8t6r8G/yJiYuP+5c+rcEAAAOF0ftH+LC+zGoA7BoBt/qIl7gRoXgugdfeLZrIPQLUAoOnaV/Nw+H48PEWhkLnZ2eXk5NhKxEJbYcpXff5nwl/AV/1s+X48/Pf14L7iJIEyXYFHBPjgwsz0TKUcz5IJhGLc5o9H/LcL//wd0yLESWK5WCoU41EScY5EmozzMqUiiUKSKcUl0v9k4t8s+wM+3zUAsGo+AXuRLahdYwP2SycQWHTA4vcAAPK7b8HUKAgDgGiD4c93/+8//UegJQCAZkmScQAAXkQkLlTKsz/HCAAARKCBKrBBG/TBGCzABhzBBdzBC/xgNoRCJMTCQhBCCmSAHHJgKayCQiiGzbAdKmAv1EAdNMBRaIaTcA4uwlW4Dj1wD/phCJ7BKLyBCQRByAgTYSHaiAFiilgjjggXmYX4IcFIBBKLJCDJiBRRIkuRNUgxUopUIFVIHfI9cgI5h1xGupE7yAAygvyGvEcxlIGyUT3UDLVDuag3GoRGogvQZHQxmo8WoJvQcrQaPYw2oefQq2gP2o8+Q8cwwOgYBzPEbDAuxsNCsTgsCZNjy7EirAyrxhqwVqwDu4n1Y8+xdwQSgUXACTYEd0IgYR5BSFhMWE7YSKggHCQ0EdoJNwkDhFHCJyKTqEu0JroR+cQYYjIxh1hILCPWEo8TLxB7iEPENyQSiUMyJ7mQAkmxpFTSEtJG0m5SI+ksqZs0SBojk8naZGuyBzmULCAryIXkneTD5DPkG+Qh8lsKnWJAcaT4U+IoUspqShnlEOU05QZlmDJBVaOaUt2ooVQRNY9aQq2htlKvUYeoEzR1mjnNgxZJS6WtopXTGmgXaPdpr+h0uhHdlR5Ol9BX0svpR+iX6AP0dwwNhhWDx4hnKBmbGAcYZxl3GK+YTKYZ04sZx1QwNzHrmOeZD5lvVVgqtip8FZHKCpVKlSaVGyovVKmqpqreqgtV81XLVI+pXlN9rkZVM1PjqQnUlqtVqp1Q61MbU2epO6iHqmeob1Q/pH5Z/YkGWcNMw09DpFGgsV/jvMYgC2MZs3gsIWsNq4Z1gTXEJrHN2Xx2KruY/R27iz2qqaE5QzNKM1ezUvOUZj8H45hx+Jx0TgnnKKeX836K3hTvKeIpG6Y0TLkxZVxrqpaXllirSKtRq0frvTau7aedpr1Fu1n7gQ5Bx0onXCdHZ4/OBZ3nU9lT3acKpxZNPTr1ri6qa6UbobtEd79up+6Ynr5egJ5Mb6feeb3n+hx9L/1U/W36p/VHDFgGswwkBtsMzhg8xTVxbzwdL8fb8VFDXcNAQ6VhlWGX4YSRudE8o9VGjUYPjGnGXOMk423GbcajJgYmISZLTepN7ppSTbmmKaY7TDtMx83MzaLN1pk1mz0x1zLnm+eb15vft2BaeFostqi2uGVJsuRaplnutrxuhVo5WaVYVVpds0atna0l1rutu6cRp7lOk06rntZnw7Dxtsm2qbcZsOXYBtuutm22fWFnYhdnt8Wuw+6TvZN9un2N/T0HDYfZDqsdWh1+c7RyFDpWOt6azpzuP33F9JbpL2dYzxDP2DPjthPLKcRpnVOb00dnF2e5c4PziIuJS4LLLpc+Lpsbxt3IveRKdPVxXeF60vWdm7Obwu2o26/uNu5p7ofcn8w0nymeWTNz0MPIQ+BR5dE/C5+VMGvfrH5PQ0+BZ7XnIy9jL5FXrdewt6V3qvdh7xc+9j5yn+M+4zw33jLeWV/MN8C3yLfLT8Nvnl+F30N/I/9k/3r/0QCngCUBZwOJgUGBWwL7+Hp8Ib+OPzrbZfay2e1BjKC5QRVBj4KtguXBrSFoyOyQrSH355jOkc5pDoVQfujW0Adh5mGLw34MJ4WHhVeGP45wiFga0TGXNXfR3ENz30T6RJZE3ptnMU85ry1KNSo+qi5qPNo3ujS6P8YuZlnM1VidWElsSxw5LiquNm5svt/87fOH4p3iC+N7F5gvyF1weaHOwvSFpxapLhIsOpZATIhOOJTwQRAqqBaMJfITdyWOCnnCHcJnIi/RNtGI2ENcKh5O8kgqTXqS7JG8NXkkxTOlLOW5hCepkLxMDUzdmzqeFpp2IG0yPTq9MYOSkZBxQqohTZO2Z+pn5mZ2y6xlhbL+xW6Lty8elQfJa7OQrAVZLQq2QqboVFoo1yoHsmdlV2a/zYnKOZarnivN7cyzytuQN5zvn//tEsIS4ZK2pYZLVy0dWOa9rGo5sjxxedsK4xUFK4ZWBqw8uIq2Km3VT6vtV5eufr0mek1rgV7ByoLBtQFr6wtVCuWFfevc1+1dT1gvWd+1YfqGnRs+FYmKrhTbF5cVf9go3HjlG4dvyr+Z3JS0qavEuWTPZtJm6ebeLZ5bDpaql+aXDm4N2dq0Dd9WtO319kXbL5fNKNu7g7ZDuaO/PLi8ZafJzs07P1SkVPRU+lQ27tLdtWHX+G7R7ht7vPY07NXbW7z3/T7JvttVAVVN1WbVZftJ+7P3P66Jqun4lvttXa1ObXHtxwPSA/0HIw6217nU1R3SPVRSj9Yr60cOxx++/p3vdy0NNg1VjZzG4iNwRHnk6fcJ3/ceDTradox7rOEH0x92HWcdL2pCmvKaRptTmvtbYlu6T8w+0dbq3nr8R9sfD5w0PFl5SvNUyWna6YLTk2fyz4ydlZ19fi753GDborZ752PO32oPb++6EHTh0kX/i+c7vDvOXPK4dPKy2+UTV7hXmq86X23qdOo8/pPTT8e7nLuarrlca7nuer21e2b36RueN87d9L158Rb/1tWeOT3dvfN6b/fF9/XfFt1+cif9zsu72Xcn7q28T7xf9EDtQdlD3YfVP1v+3Njv3H9qwHeg89HcR/cGhYPP/pH1jw9DBY+Zj8uGDYbrnjg+OTniP3L96fynQ89kzyaeF/6i/suuFxYvfvjV69fO0ZjRoZfyl5O/bXyl/erA6xmv28bCxh6+yXgzMV70VvvtwXfcdx3vo98PT+R8IH8o/2j5sfVT0Kf7kxmTk/8EA5jz/GMzLdsAAAAgY0hSTQAAeiUAAICDAAD5/wAAgOkAAHUwAADqYAAAOpgAABdvkl/FRgAAAKNJREFUeNrEk7sNwkAQBefQ5m6BTiAAQssZiMh0QFUIMrAEpKYD8ynAJeD4nXQEkJHgu4CXv9GsdteFEEjJgMQ4gPli+aWx227cLwAD8FK8QZ4XTyCL6B6qal+YlzLgCpSn87HpbTCdzAKwAkpg1Bdgn/nbmDLQmby6hC3W5qUGGEcCGpNUJwBq09tgHdO+Pe61eamNvIMLgEkaxuoDuL9/42sAM20/EZafbV8AAAAASUVORK5CYII=",
-    dir: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH3QkQDBgWQKhE0wAAADRJREFUOMtjYBhowMjAwPCfCDU4AQuUNsQhf54aLmAgxgW9ZOovZqI0EEcNGBYGUJwSKQYAJoEFGqo9ooAAAAAASUVORK5CYII=",
+    dir: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAyRpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMy1jMDExIDY2LjE0NTY2MSwgMjAxMi8wMi8wNi0xNDo1NjoyNyAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIENTNiAoTWFjaW50b3NoKSIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDpDNzU0RUNBNzU3OEIxMUUyOEM3QzkxOEZDOTU1RTdFMCIgeG1wTU06RG9jdW1lbnRJRD0ieG1wLmRpZDpDNzU0RUNBODU3OEIxMUUyOEM3QzkxOEZDOTU1RTdFMCI+IDx4bXBNTTpEZXJpdmVkRnJvbSBzdFJlZjppbnN0YW5jZUlEPSJ4bXAuaWlkOkM3NTRFQ0E1NTc4QjExRTI4QzdDOTE4RkM5NTVFN0UwIiBzdFJlZjpkb2N1bWVudElEPSJ4bXAuZGlkOkM3NTRFQ0E2NTc4QjExRTI4QzdDOTE4RkM5NTVFN0UwIi8+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiA8P3hwYWNrZXQgZW5kPSJyIj8+S/WxbAAAAERJREFUeNpi/P//PwMlgJFSA1g2bNiAzYQLQOwIxB8IGcCEQ9wAiPcDsQBBF+CRAxnynlwXEA1GDRg1gCqZiWIDAAIMADidE0PBoGsZAAAAAElFTkSuQmCC",
     r: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAAZiS0dEAP8A/wD/oL2nkwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB90CDRIvNbHTpbwAAADjSURBVDjLpZFBbsIwEEUfVRZYahcVK3qKXoauMFK5C91nkyUB+xC5BqeAA7SKq1B5ugl2EiC04UkjayzN17NnROTRWvvJFbTWL8CBHqbGWOlSlqVkWSbGWAGm3aGHZiMiAByPP6FOd1rP2W7NvhvSCvDe10E+VJPFQpPnm1ZIcsmgPgJVVZGmaejX63y/XL4/AV/JJYPTCeDcN7PZWyuwKAqA8wARqSsGKDVGqXGjV8H07AnRQPq21TK8+YSBAQMN4hb6Df7wB/5eA+4zmEyehxk451itPrhFksSxUeP+lf+z+wXwdayJk/mqtgAAAABJRU5ErkJggg==",
     box: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAAZiS0dEAP8A/wD/oL2nkwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB9wMHAwRAVvTmTAAAAK/SURBVDjLpZM9bFxFGEXPNzPvZ+39sb2xHceREjDQBwlDCqqIiiotokAghYKEjvSkQkKJkEiB0lOkoAHaBAokFCQKUATIIOLIMbHWrHfX+7zvvZk3MzQODUgU3PJK5+g2F/5n5N/Kb66/1NNK3hAxr4HcFqVuvfju18V/Cu58sPmMVnJZ4K32Qr+t8za+KnCz4kCUuiGibm5euTv5h+CL958/nxj1XivVF+e6C9TVhPmFdbROgEhwNU1d4m09UaJuInLjhct3DgDUh5ee7j14PLxulLvYP/0seadPkub88Wib0eB3bDkmxgbRoFPpxeCuKvjsyQIzOyqImT7/y8Mh++NveW7jLFmrx6m1NlWxz6PHA7otQ7tloAmYJE9isOeeCJRtIrULLLUTjsqG7+//xs72z7jZgCTNONlVJKEiuobW0jqSaoiet19dFQATJcc2FSFEciNoLYwOHcPDASvdjM5cQntxlbR9gqacoFSK84VsnOrkH11Zdmp0FFXjobSeCFgXSDS0Eo11ge7yGXSaU092UUlCaEpC8FK4tDcu4rzZ2a/S+bWI94HSAgFigDQD24Cvp4gIOp0juBJvC2L07B1Uc/Mtg9k7sHMbywZrA3lLECV4AtaCpAp79CcmzXHlhOBrAJrGyNbOVBY7qTO1C9r5EKyPSttAiJEs01SuQStFkrdp6gKd5AzHjixVxCDxp+1paZRUxoc4Kp36bndYbS53U5WlCq0CMYIPMY7GI0mNpiqmGK0oK4jIveGkPgRqfTBt3A8Pqtvrq52HtglnGh9XIaKUkCQ6nj6RyWBsmdXCtFI/bu2Fq5c+3roGzIAgWokCDNACOhfOLb781Ip+vd+RC2dXWibROkxKvvp1z376yZe7d4HpMdz8/YVjiQYyoA30Ti6la2++0n/n83vTW/e3ix1gcgzXgPchBoC/AFu/UBF5InryAAAAAElFTkSuQmCC",
     bluebox: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAAZiS0dEAP8A/wD/oL2nkwAAAAlwSFlzAAALEwAACxMBAJqcGAAAAAd0SU1FB9wMHAwTE5pcivoAAALsSURBVDjLXZPPaxxlGMc/77wz+3N2k822tWsTIrQFe/BWEKxKCV5UohdFhJ60p6rgUfpP6C0K4kHx0ENEkV7aElHwUikhFVosRGoTm83+3pnZnXfed2beHtItIQ98+Z6+H57nga8AsNYKDkYcEofcHvKZEEJYcSTszPzqL3fmf3+w/+a51tytby9d6D0N5UecGeBZ8MPv/jh9fy/6dKzMpVPHmvWdbl/XCvKn5Wbl6+ufrNwGssMgYa2VgFj58sZr7VB/LqX3zlKrydJzTTzXxdqcx90hO+0Bk2l8Z74i1z6+cOba5VfOqGeAb3579M/NR53T40xwrDGHFALPEUjn4LoMi0ktwWTKXqCIqAVrbyycvHj2hHYBR+bO8Q/Ov0imEzZ2xrRDRalQwC9LLBalUgaJQy+tU6gvIBJbv3j2RA4IFxDdICFa9ulMCrz/UgOs5kEwpeh57I4Nt/dzsmLOYlEThgFjUePp33IHoD9SJAbuTVyudRweixJvnVtg3/i00wpLPiwQ0hkO6YYKawWj0UjONqAfKHwDkxTqqeW/RHA3hO2+Zqk05e5wTD9KmOqMKDEUqoLNzU0PyF2AQaBoaIhiw0h6TIwgUDCODb5NiWJNlKREyhAozXwOW1tbFSmlcAHbD2KaytCdGgyWglfEs4LeNKeaa4axYRgpwlgTTTXVDDqdTslaewAYh4kNlKUbZsTGonOwCYwm1vq5Ft1AMYgU08SQR5o0gziOcRxHuoCNtdl6uPHX6/Vmi3Yyh9I5IoEgMdkgT9x+qJhEGrdQo77cJMuy+4DJskwLa60DOCtf3HhZpfZKtVx+L3x+sfCv8CFxTINd72HfodQ4aQp5fP24/v/Hd4Nf/5RSJmma6lkXZn1wPvvq5qndsbhS9esf/Zy/UEtzxnURfn8+/fuHV7m353mecV1XSym1lDI72kaxvr5e3N7eruyP0tpG/e3LK/rW2mLNUb7vm3K5nFarVdNqtbJer2dXV1fzJ6cDpboAZRAGAAAAAElFTkSuQmCC",
@@ -632,7 +652,11 @@ Region.prototype = {
             return this.parse(obj);
         }
         this.chromosome = obj.chromosome || this.chromosome;
-        this.chromosome = this.chromosome;
+
+        if (typeof obj.position !== 'undefined') {
+            obj.start = parseInt(obj.position);
+            obj.end = obj.start;
+        }
 
         (_.isUndefined(obj.start)) ? this.start = parseInt(this.start) : this.start = parseInt(obj.start);
         (_.isUndefined(obj.end)) ? this.end = parseInt(this.end) : this.end = parseInt(obj.end);
@@ -961,6 +985,8 @@ FeatureBinarySearchTree.prototype = {
  */
 
 var CellBaseManager = {
+    host: 'http://www.ebi.ac.uk/cellbase/webservices/rest',
+    version: 'v3',
     get: function (args) {
         var success = args.success;
         var error = args.error;
@@ -1004,24 +1030,14 @@ var CellBaseManager = {
         if (!$.isPlainObject(args)) args = {};
         if (!$.isPlainObject(args.params)) args.params = {};
 
-        var version = 'latest';
-        if(typeof CELLBASE_VERSION !== 'undefined'){
-            version = CELLBASE_VERSION
-        }
+        var version = this.version;
         if(typeof args.version !== 'undefined' && args.version != null){
             version = args.version
         }
 
-        var host;
-        if(typeof CELLBASE_HOST !== 'undefined'){
-            host = CELLBASE_HOST
-        }
-        if (typeof args.host !== 'undefined' && args.version != null) {
+        var host = this.host;
+        if (typeof args.host !== 'undefined' && args.host != null) {
             host =  args.host;
-        }
-        if(typeof host === 'undefined'){
-            console.log("CELLBASE_HOST is not configured");
-            return;
         }
 
         delete args.host;
@@ -1432,6 +1448,49 @@ var OpencgaManager = {
             }
         });
     },
+    pollObject: function (args) {
+//       accountId, sessionId, bucketId, objectId
+        var queryParams = {
+            'start': args.start,
+            'limit': args.limit,
+            'sessionid': args.sessionId
+        };
+        var url = OpencgaManager.getObjectUrl(args.accountId, args.bucketId, args.objectId) + '/poll' + OpencgaManager.getQuery(queryParams);
+
+        $.ajax({
+            type: "GET",
+            url: url,
+            async: args.async,
+            success: function (data, textStatus, jqXHR) {
+                args.success(data);
+            },
+            error: function (jqXHR, textStatus, errorThrown) {
+                if (_.isFunction(args.error)) args.error(jqXHR);
+            }
+        });
+    },
+    grepObject: function (args) {
+//       accountId, sessionId, bucketId, objectId
+        var queryParams = {
+            'pattern': encodeURIComponent(args.pattern),
+            'ignoreCase': args.ignoreCase,
+            'multi': args.multi,
+            'sessionid': args.sessionId
+        };
+        var url = OpencgaManager.getObjectUrl(args.accountId, args.bucketId, args.objectId) + '/grep' + OpencgaManager.getQuery(queryParams);
+
+        $.ajax({
+            type: "GET",
+            url: url,
+            async: args.async,
+            success: function (data, textStatus, jqXHR) {
+                args.success(data);
+            },
+            error: function (jqXHR, textStatus, errorThrown) {
+                if (_.isFunction(args.error)) args.error(jqXHR);
+            }
+        });
+    },
 
     region: function (args) {
 //        accountId, sessionId, bucketId, objectId, region, queryParams
@@ -1605,6 +1664,31 @@ var OpencgaManager = {
         }
     },
 
+    jobFileGrep: function (args) {
+//        accountId, sessionId, jobId, filename, zip
+        var queryParams = {
+            'pattern': encodeURIComponent(args.pattern),
+            'ignoreCase': args.ignoreCase,
+            'multi': args.multi,
+            'filename': args.filename,
+            'sessionid': args.sessionId
+        };
+        var url = OpencgaManager.getJobAnalysisUrl(args.accountId, args.jobId) + '/grep' + OpencgaManager.getQuery(queryParams);
+
+        $.ajax({
+            type: "GET",
+            url: url,
+            async: args.async,
+            success: function (data, textStatus, jqXHR) {
+                args.success(data);
+            },
+            error: function (jqXHR, textStatus, errorThrown) {
+                if (_.isFunction(args.error)) args.error(jqXHR);
+            }
+        });
+    },
+
+
     pollurl: function (args) {
 //        accountId, sessionId, jobId, filename
         var queryParams = {
@@ -1644,6 +1728,24 @@ var OpencgaManager = {
         open(OpencgaManager.getJobAnalysisUrl(args.accountId, args.jobId) + '/download' + OpencgaManager.getQuery(queryParams));
     },
 
+    jobInfo: function (args) {
+        var queryParams = {
+            'sessionid': args.sessionId
+        };
+        var url = OpencgaManager.getJobAnalysisUrl(args.accountId, args.jobId) + '/info' + OpencgaManager.getQuery(queryParams);
+
+        $.ajax({
+            type: "GET",
+            url: url,
+            dataType: 'json',//still firefox 20 does not auto serialize JSON, You can force it to always do the parsing by adding dataType: 'json' to your call.
+            success: function (data, textStatus, jqXHR) {
+                args.success(data.response);
+            },
+            error: function (jqXHR, textStatus, errorThrown) {
+                if (_.isFunction(args.error)) args.error(jqXHR);
+            }
+        });
+    },
 
     /* ANALYSIS */
     runAnalysis: function (args) {
@@ -1654,7 +1756,6 @@ var OpencgaManager = {
         };
         var url = OpencgaManager.getAnalysisUrl(accountId, args.analysis) + '/run' + OpencgaManager.getQuery(queryParams);
         console.log(url);
-        console.log(args.paramsWS);
 
         $.ajax({
             type: "POST",
@@ -1723,15 +1824,28 @@ var OpencgaManager = {
         OpencgaManager.doGet(url, success, error);
     },
 
-    variants: function (args) {
+
+    /********/
+    /********/
+    /********/
+    /********/
+    /********/
+    // variation
+    variantsUrl: function (args) {
+//        accountId, jobId
+        var url = OpencgaManager.getJobAnalysisUrl(args.accountId, args.jobId) + '/variantsMongo'
+        return url
+    },
+    variantInfoMongo: function (args) {
 //        accountId, sessionId, jobId, filename
         var queryParams = {
-            'sessionid': args.sessionId,
-            'filename': args.fileName
+            'sessionid': args.sessionId
+//            'filename': args.filename
         };
-        var url = OpencgaManager.getJobAnalysisUrl(args.accountId, args.jobId) + '/variants' + OpencgaManager.getQuery(queryParams);
+        var url = OpencgaManager.getJobAnalysisUrl(args.accountId, args.jobId) + '/variantInfoMongo' + OpencgaManager.getQuery(queryParams);
 
         function success(data) {
+            console.log(data);
             args.success(data);
         }
 
@@ -1740,46 +1854,16 @@ var OpencgaManager = {
         }
 
         $.ajax({
-            type: "POST",
+            type: "GET",
             url: url,
-            data: args.formData,
-            dataType: 'json',
+            async: args.async,
             success: success,
             error: error
         });
-
-//        OpencgaManager.doPost(url, args.formData ,success, error);
         //	console.log(url);
     },
-    variantsMongo: function (args) {
-//        accountId, sessionId, jobId, filename
-        var queryParams = {
-            'sessionid': args.sessionId,
-            'filename': args.fileName
-        };
-        var url = OpencgaManager.getJobAnalysisUrl(args.accountId, args.jobId) + '/variantsMongo' + OpencgaManager.getQuery(queryParams);
-        console.log(url);
 
-        function success(data) {
-            args.success(data);
-        }
 
-        function error(data) {
-            if (_.isFunction(args.error)) args.error(data);
-        }
-
-        $.ajax({
-            type: "POST",
-            url: url,
-            data: args.formData,
-            dataType: 'json',
-            success: success,
-            error: error
-        });
-
-//        OpencgaManager.doPost(url, args.formData ,success, error);
-        //	console.log(url);
-    },
     variant_effects: function (args) {
 //        accountId, sessionId, jobId, filename
         var queryParams = {
@@ -1815,26 +1899,6 @@ var OpencgaManager = {
             'filename': args.filename
         };
         var url = OpencgaManager.getJobAnalysisUrl(args.accountId, args.jobId) + '/variant_info' + OpencgaManager.getQuery(queryParams);
-
-        function success(data) {
-            console.log(data);
-            args.success(data);
-        }
-
-        function error(data) {
-            if (_.isFunction(args.error)) args.error(data);
-        }
-
-        OpencgaManager.doGet(url, success, error);
-        //	console.log(url);
-    },
-    variantInfoMongo: function (args) {
-//        accountId, sessionId, jobId, filename
-        var queryParams = {
-            'sessionid': args.sessionId
-//            'filename': args.filename
-        };
-        var url = OpencgaManager.getJobAnalysisUrl(args.accountId, args.jobId) + '/variantInfoMongo' + OpencgaManager.getQuery(queryParams);
 
         function success(data) {
             console.log(data);
@@ -2097,12 +2161,11 @@ FileWidget.prototype.draw = function(){
 		featureCountBar.add([this.featureCountLabel]);
 		
 		/** Bar for the file upload browser **/
-		var browseBar = Ext.create('Ext.toolbar.Toolbar',{cls:'bio-border-false'});
+		var browseBar = Ext.create('Ext.toolbar.Toolbar');
 		browseBar.add(this.getFileUpload());
 		
 		this.panel = Ext.create('Ext.panel.Panel', {
 			border: false,
-			cls:'panel-border-top panel-border-bottom',
 	//		padding: "0 0 10 0",
 			height:230,
 			title: "Previsualization",
@@ -3570,10 +3633,10 @@ GeneInfoWidget.prototype.getdataTypes = function (){
 	                { text: "Reactome"},
 	                { text: "Interpro"}
 	            ] },
-	            { text: "Regulatory", children: [
-	                { text: "TFBS"}
+//	            { text: "Regulatory", children: [
+//	                { text: "TFBS"}
 //	                { text: "miRNA targets"}
-	            ]},
+//	            ]},
 	            { text:"Protein", children: [
 	                { text: "Features"},//protein profile
 	                { text: "3D structure"}
@@ -3596,8 +3659,8 @@ GeneInfoWidget.prototype.optionClick = function (item){
 			case "GO": this.panel.add(this.getXrefGrid(this.data.transcripts, 'GO', 'transcript').show());  break;
 			case "Interpro": this.panel.add(this.getXrefGrid(this.data.transcripts, 'Interpro', 'transcript').show());  break;
 			case "Reactome": this.panel.add(this.getXrefGrid(this.data.transcripts, 'Reactome', 'transcript').show());  break;
-			case "TFBS": this.panel.add(this.getTfbsGrid(this.data.transcripts).show());  break;
-			case "miRNA targets": this.panel.add(this.getMirnaTargetGrid(this.data.mirnaTargets).show());  break;
+//			case "TFBS": this.panel.add(this.getTfbsGrid(this.data.transcripts).show());  break;
+//			case "miRNA targets": this.panel.add(this.getMirnaTargetGrid(this.data.mirnaTargets).show());  break;
 			case "Features": this.panel.add(this.getProteinFeaturesGrid(this.data.proteinFeatures).show());  break;
 			case "3D structure": this.panel.add(this.get3Dprotein(this.data.snps).show());  break;
 		}
@@ -3662,13 +3725,13 @@ GeneInfoWidget.prototype.getXrefGrid = function(transcripts, dbname, groupField)
         for(var j = 0; j<transcripts[i].xrefs.length; j++){
             var xref = transcripts[i].xrefs[j];
             if(dbname == 'Xref'){
-                var shortName  = xref.dbNameShort.toLowerCase();
-                if(shortName != 'go' && shortName != 'interpro' && shortName != 'reactome'){
+                var xrefName  = xref.dbName.toLowerCase();
+                if(xrefName != 'go' && xrefName != 'interpro' && xrefName != 'reactome'){
                     xref.transcript = transcripts[i].id;
                     data.push(xref);
                 }
             }else{
-                if(xref.dbNameShort.toLowerCase() == dbname.toLowerCase()){
+                if(xref.dbName.toLowerCase() == dbname.toLowerCase()){
                     xref.transcript = transcripts[i].id;
                     data.push(xref);
                 }
@@ -3865,7 +3928,7 @@ GeneInfoWidget.prototype.get3Dprotein = function(data){
       	    			var pdb_name=pdbs[i].id;
       	    			var pan = Ext.create('Ext.panel.Panel',{
       	    				title:pdb_name,
-      	    				bodyCls:'background-black',
+      	    				bodyCls:'ocb-background-black',
       	    				html:'<canvas class="ChemDoodleWebComponent" id="pdb_canvas_'+pdb_name+'" width="600" height="600" style="width: 600px; height: 600px; ">This browser does not support HTML5/Canvas.</canvas>',
       	    				listeners:{
       	    					afterrender:function(este){
@@ -4272,7 +4335,7 @@ GeneOrangeInfoWidget.prototype.get3Dprotein = function(data){
       	    			var pdb_name=pdbs[i].trim();
       	    			var pan = Ext.create('Ext.panel.Panel',{
       	    				title:pdb_name,
-      	    				bodyCls:'background-black',
+      	    				bodyCls:'ocb-background-black',
       	    				html:'<canvas class="ChemDoodleWebComponent" id="pdb_canvas_'+pdb_name+'" width="600" height="600" style="width: 600px; height: 600px; ">This browser does not support HTML5/Canvas.</canvas>',
       	    				listeners:{
       	    					afterrender:function(este){
@@ -5968,6 +6031,3386 @@ VCFVariantInfoWidget.prototype.dataReceived = function (data){
 };
 
 /*
+ * Copyright (c) 2014 Francisco Salavert (SGL-CIPF)
+ * Copyright (c) 2014 Alejandro Alemán (SGL-CIPF)
+ * Copyright (c) 2014 Ignacio Medina (EBI-EMBL)
+ *
+ * This file is part of JSorolla.
+ *
+ * JSorolla is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * JSorolla is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with JSorolla. If not, see <http://www.gnu.org/licenses/>.
+ */
+function ConsequenceTypeFilterFormPanel(args) {
+    _.extend(this, Backbone.Events);
+
+    //set default args
+    this.id = Utils.genId("ConsequenceTypeFilterFormPanel");
+    this.target;
+    this.height = 400;
+    this.title = "Consequence Type";
+    this.border = false;
+    this.autoRender = true;
+    this.collapsible = true;
+    this.titleCollapse = false;
+    this.collapsed = false;
+    this.headerConfig;
+    this.consequenceTypes = [];
+    this.fields = [
+        {name: 'name', type: 'string'},
+        {name: 'acc', type: 'string'}
+    ];
+    this.columns = [
+        {
+            xtype: 'treecolumn',
+            flex: 2,
+            sortable: false,
+            dataIndex: 'name',
+            tooltipType: 'qtip'
+        },
+        {
+            text: '',
+            flex: 1,
+            dataIndex: 'acc',
+            renderer: function (value, meta, record) {
+                var link = "http://www.sequenceontology.org/miso/current_release/term/" + value;
+                return ' <a href=' + link + ' target="_blank">' + value + '</a>';
+            }
+
+        }
+    ];
+
+    //set instantiation args, must be last
+    _.extend(this, args);
+
+    this.on(this.handlers);
+
+    this.rendered = false;
+    if (this.autoRender) {
+        this.render(this.targetId);
+    }
+
+}
+
+ConsequenceTypeFilterFormPanel.prototype = {
+    render: function () {
+        var _this = this;
+        console.log("Initializing " + this.id);
+
+        //HTML skel
+        this.div = document.createElement('div');
+        this.div.setAttribute('id', this.id);
+
+        this.panel = this._createPanel();
+    },
+    draw: function () {
+        this.targetDiv = (this.target instanceof HTMLElement ) ? this.target : document.querySelector('#' + this.target);
+        if (!this.targetDiv) {
+            console.log('target not found');
+            return;
+        }
+        this.targetDiv.appendChild(this.div);
+
+        this.panel.render(this.div);
+    },
+    clear: function () {
+        var node = this.panel.getRootNode();
+        node.cascadeBy(function (n) {
+            n.set('checked', false);
+        });
+    },
+    getValues: function () {
+        var node = this.panel.getRootNode();
+        var consequence_types = [];
+        node.cascadeBy(function (n) {
+            if (n.get('checked') && n.isLeaf()) {
+                consequence_types.push(n.get('name'));
+            }
+        });
+        if (consequence_types.length > 0) {
+            return {ct: consequence_types};
+        } else {
+            return {};
+        }
+    },
+    _createPanel: function () {
+
+        Ext.define('Tree Model', {
+            extend: 'Ext.data.Model',
+            fields: this.fields
+        });
+
+        var store = Ext.create('Ext.data.TreeStore', {
+            model: 'Tree Model',
+            proxy: {
+                type: 'memory',
+                data: this.consequenceTypes,
+                reader: {
+                    type: 'json'
+                }
+            }
+        });
+
+        var treePanel = Ext.create('Ext.tree.Panel', {
+            title: this.title,
+            border: this.border,
+            useArrows: true,
+            rootVisible: false,
+            store: store,
+            multiSelect: true,
+            singleExpand: true,
+            hideHeaders: true,
+            height: this.height,
+            collapsible: this.collapsible,
+            titleCollapse: this.titleCollapse,
+            collapsed: this.collapsed,
+            header: this.headerConfig,
+            columns: this.columns,
+            listeners: {
+                'checkchange': function (node, checked) {
+                    node.cascadeBy(function (n) {
+                        n.set('checked', checked);
+                    });
+                }
+            }
+        });
+
+        return treePanel;
+    },
+    getPanel: function () {
+        return this.panel;
+    }
+}
+
+/*
+ * Copyright (c) 2014 Francisco Salavert (SGL-CIPF)
+ * Copyright (c) 2014 Alejandro Alemán (SGL-CIPF)
+ * Copyright (c) 2014 Ignacio Medina (EBI-EMBL)
+ *
+ * This file is part of JSorolla.
+ *
+ * JSorolla is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * JSorolla is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with JSorolla. If not, see <http://www.gnu.org/licenses/>.
+ */
+function FormPanel(args) {
+    _.extend(this, Backbone.Events);
+
+    //set default args
+    this.id = Utils.genId("FormPanel");
+    this.target;
+    this.autoRender = true;
+    this.height;
+    this.width;
+    this.title;
+    this.collapsible = false;
+    this.titleCollapse = false;
+    this.submitButtonText = 'Search';
+    this.clearButtonText = 'Clear';
+    this.barItems = [];
+    this.border = true;
+    this.filters = [];
+    this.mode = 'accordion';
+    this.toolbarPosition = 'top';
+    this.headerConfig;
+
+    //set instantiation args, must be last
+    _.extend(this, args);
+
+    this.on(this.handlers);
+
+    this.rendered = false;
+    if (this.autoRender) {
+        this.render(this.targetId);
+    }
+}
+
+FormPanel.prototype = {
+    render: function () {
+        var _this = this;
+        console.log("Initializing " + this.id);
+
+        //HTML skel
+        this.div = document.createElement('div');
+        this.div.setAttribute('id', this.id);
+
+        var filters = [];
+
+        for (var i = 0; i < this.filters.length; i++) {
+            var filter = this.filters[i];
+            filters.push(filter.getPanel());
+        }
+
+        this.panel = this._createPanel();
+        this.filtersPanel.add(filters);
+        if (this.mode == 'tabs') {
+            this.filtersPanel.setActiveTab(0);
+        }
+
+    },
+    draw: function () {
+        this.targetDiv = (this.target instanceof HTMLElement ) ? this.target : document.querySelector('#' + this.target);
+        if (!this.targetDiv) {
+            console.log('target not found');
+            return;
+        }
+        this.targetDiv.appendChild(this.div);
+
+        this.panel.render(this.div);
+
+    },
+    clear: function () {
+        for (var i = 0; i < this.filters.length; i++) {
+            var filter = this.filters[i];
+            filter.clear();
+        }
+    },
+    getValues: function () {
+        var values = {};
+        for (var i = 0; i < this.filters.length; i++) {
+            var filter = this.filters[i];
+            _.extend(values, filter.getValues());
+        }
+        return values;
+    },
+    update: function () {
+        if (this.panel) {
+            this.panel.update();
+        }
+    },
+    _createPanel: function () {
+        var _this = this;
+
+        var barItems = [
+            {
+                xtype: 'button',
+                text: this.clearButtonText,
+                tooltip: this.clearButtonText,
+                handler: function () {
+                    _this.clear();
+                    Utils.msg('Clear', 'Sucessfully');
+                }
+            },
+            {
+                xtype: 'button',
+                text: this.submitButtonText,
+                tooltip: this.submitButtonText,
+                formBind: true,
+                flex:1,
+                handler: function () {
+                    _this.trigger('submit', {values: _this.getValues(), sender: _this});
+//                            console.log(values);
+//
+//                            for (var i = 0; i < _this.filters.length; i++) {
+//                                var filter = _this.filters[i];
+//                                var form = filter.filter.getForm();
+//                                _.extend(values, form);
+//
+//                            }
+
+                }
+            }
+        ];
+        barItems = barItems.concat(this.barItems);
+
+
+        var pan;
+        switch (this.mode) {
+            case 'tabs':
+                this.filtersPanel = Ext.create('Ext.tab.Panel', {
+                    border: false,
+                    plain: true
+                });
+                break;
+            case 'accordion':
+                this.filtersPanel = Ext.create('Ext.container.Container', {
+                    layout: {
+                        type: 'accordion',
+                        titleCollapse: true,
+                        multi: true
+                    }
+                });
+                break;
+            case 'vbox':
+                this.filtersPanel = Ext.create('Ext.container.Container', {
+                    margin: '20 0 0 0',
+                    layout: {
+                        type: 'vbox',
+                        align: 'stretch'
+                    },
+                    defaults: {
+                        margin: '20 0 0 0'
+                    }
+                });
+                break;
+        }
+
+        var form = Ext.create('Ext.form.Panel', {
+            border: this.border,
+            height: this.height,
+            width: this.width,
+            title: this.title,
+            header: this.headerConfig,
+            collapsible: this.collapsible,
+            titleCollapse: this.titleCollapse,
+            margin: '0 20 0 0',
+            autoScroll: true,
+            items: [
+                {
+                    xtype: 'container',
+                    width: '100%',
+                    bodyPadding: 5,
+                    defaults: {
+                        margin: '10'
+                    },
+                    layout: {
+                        type: 'hbox'
+                    },
+                    items: barItems
+                },
+                this.filtersPanel
+            ]
+//            dockedItems: [
+//                {
+//                    xtype: 'toolbar',
+//                    dock: this.toolbarPosition,
+//                    width: '100%',
+//                    height: 45,
+////                border:false,
+//                    items: barItems
+//                }
+//            ]
+        });
+        return form;
+
+    }
+}
+
+/*
+ * Copyright (c) 2014 Francisco Salavert (SGL-CIPF)
+ * Copyright (c) 2014 Alejandro Alemán (SGL-CIPF)
+ * Copyright (c) 2014 Ignacio Medina (EBI-EMBL)
+ *
+ * This file is part of JSorolla.
+ *
+ * JSorolla is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * JSorolla is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with JSorolla. If not, see <http://www.gnu.org/licenses/>.
+ */
+function MafFilterFormPanel(args) {
+    _.extend(this, Backbone.Events);
+
+    //set default args
+    this.id = Utils.genId("MafFilterFormPanel");
+    this.target;
+    this.autoRender = true;
+    this.title = "MAF";
+    this.border = false;
+    this.collapsible = true;
+    this.titleCollapse = false;
+    this.headerConfig;
+    this.testRegion = "";
+
+    //set instantiation args, must be last
+    _.extend(this, args);
+
+    this.on(this.handlers);
+
+    this.rendered = false;
+    if (this.autoRender) {
+        this.render(this.targetId);
+    }
+}
+
+MafFilterFormPanel.prototype = {
+    render: function () {
+        var _this = this;
+        console.log("Initializing " + this.id);
+
+        //HTML skel
+        this.div = document.createElement('div');
+        this.div.setAttribute('id', this.id);
+
+        this.panel = this._createPanel();
+    },
+    draw: function () {
+        this.targetDiv = (this.target instanceof HTMLElement ) ? this.target : document.querySelector('#' + this.target);
+        if (!this.targetDiv) {
+            console.log('target not found');
+            return;
+        }
+        this.targetDiv.appendChild(this.div);
+
+        this.panel.render(this.div);
+    },
+    _createPanel: function () {
+
+
+        var thousandContainer = Ext.create('Ext.form.FieldContainer', {
+            layout: {
+                type: 'vbox',
+                align: 'stretch'
+            },
+            items: [
+                {
+                    xtype: 'textfield',
+                    labelAlign: 'right',
+                    fieldLabel: '1000G MAF < ',
+                    name: 'maf_1000g_controls',
+                    labelWidth: 110
+                },
+                {
+                    xtype: 'textfield',
+                    labelAlign: 'right',
+                    fieldLabel: 'EVS MAF < ',
+                    labelWidth: 110,
+                    name: 'maf_evs_controls'
+
+                }
+            ]
+        });
+
+        var populationsContainer = Ext.create('Ext.form.FieldContainer', {
+//            fieldLabel: '<span style="color:gray">1000G Populations</span>',
+//            labelAlign: 'top',
+            layout: {
+                type: 'vbox',
+                align: 'stretch'
+            },
+            items: [
+                {
+                    xtype: 'box',
+                    margin:'0 20 0 0',
+                    html: '<span style="color:gray">1000G Populations</span>'
+                },
+                {
+                    xtype: 'textfield',
+                    labelAlign: 'right',
+                    fieldLabel: 'African MAF < ',
+                    labelWidth: 110,
+                    name: 'maf_1000g_afr_controls'
+                },
+                {
+                    xtype: 'textfield',
+                    labelAlign: 'right',
+                    fieldLabel: 'American MAF < ',
+                    labelWidth: 110,
+                    name: 'maf_1000g_ame_controls'
+                },
+                {
+                    xtype: 'textfield',
+                    labelAlign: 'right',
+                    fieldLabel: 'Asian MAF < ',
+                    labelWidth: 110,
+                    name: 'maf_1000g_asi_controls'
+                },
+                {
+                    xtype: 'textfield',
+                    labelAlign: 'right',
+                    fieldLabel: 'European MAF < ',
+                    labelWidth: 110,
+                    name: 'maf_1000g_eur_controls'
+                }
+            ]
+        });
+
+        return Ext.create('Ext.form.Panel', {
+            title: this.title,
+            border: this.border,
+            collapsible: this.collapsible,
+            titleCollapse: this.titleCollapse,
+            header: this.headerConfig,
+            bodyPadding: 5,
+            margin: "0 0 5 0",
+            buttonAlign: 'center',
+            layout: {
+                type: 'vbox',
+                align: 'stretch'
+            },
+            allowBlank: false,
+            items: [thousandContainer, populationsContainer ]
+        });
+
+    },
+    getPanel: function () {
+        return this.panel;
+    },
+    getValues: function () {
+        var values = this.panel.getValues();
+        for (key in values) {
+            if (values[key] == '') {
+                delete values[key]
+            }
+        }
+        return values;
+    },
+    clear: function () {
+        this.panel.reset();
+    }
+}
+
+/*
+ * Copyright (c) 2014 Francisco Salavert (SGL-CIPF)
+ * Copyright (c) 2014 Alejandro Alemán (SGL-CIPF)
+ * Copyright (c) 2014 Ignacio Medina (EBI-EMBL)
+ *
+ * This file is part of JSorolla.
+ *
+ * JSorolla is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * JSorolla is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with JSorolla. If not, see <http://www.gnu.org/licenses/>.
+ */
+function PositionFilterFormPanel(args) {
+    _.extend(this, Backbone.Events);
+
+    //set default args
+    this.id = Utils.genId("PositionFilterFormPanel");
+    this.target;
+    this.autoRender = true;
+    this.title = "Position";
+    this.border = false;
+    this.collapsible = true;
+    this.titleCollapse = false;
+    this.headerConfig;
+    this.testRegion = "";
+
+    //set instantiation args, must be last
+    _.extend(this, args);
+
+    this.on(this.handlers);
+
+    this.rendered = false;
+    if (this.autoRender) {
+        this.render(this.targetId);
+    }
+}
+
+PositionFilterFormPanel.prototype = {
+    render: function () {
+        var _this = this;
+        console.log("Initializing " + this.id);
+
+        //HTML skel
+        this.div = document.createElement('div');
+        this.div.setAttribute('id', this.id);
+
+        this.panel = this._createPanel();
+    },
+    draw: function () {
+        this.targetDiv = (this.target instanceof HTMLElement ) ? this.target : document.querySelector('#' + this.target);
+        if (!this.targetDiv) {
+            console.log('target not found');
+            return;
+        }
+        this.targetDiv.appendChild(this.div);
+
+        this.panel.render(this.div);
+    },
+    _createPanel: function () {
+        var snp = Ext.create('Ext.form.field.TextArea', {
+            id: this.id + "snp",
+            name: "snp",
+            margin: '0 0 0 5',
+            //allowBlank: true,
+            width: '100%',
+            fieldLabel: 'SNP id',
+            labelAlign: 'top',
+            regex: /^[rs]s\d+$/
+        });
+
+        var regionList = Ext.create('Ext.form.field.TextArea', {
+            id: this.id + "region",
+            name: "region",
+            emptyText: '1:1-1000000,2:1-1000000',
+            margin: '0 0 0 5',
+            //allowBlank: true,
+            width: '100%',
+            fieldLabel: 'Chromosomal Location',
+            labelAlign: 'top',
+            value: this.testRegion
+        });
+
+        var gene = Ext.create('Ext.form.field.TextArea', {
+            id: this.id + "gene",
+            name: "gene",
+            margin: '0 0 0 5',
+            //allowBlank: true,
+            width: '100%',
+            fieldLabel: 'Gene / Transcript',
+            labelAlign: 'top'
+        });
+
+        return Ext.create('Ext.form.Panel', {
+            bodyPadding: "5",
+            margin: "0 0 5 0",
+            buttonAlign: 'center',
+            layout: 'vbox',
+            title: this.title,
+            border: this.border,
+            collapsible: this.collapsible,
+            titleCollapse: this.titleCollapse,
+            header: this.headerConfig,
+            allowBlank: false,
+            items: [snp, regionList, gene]
+        });
+
+    },
+    getPanel: function () {
+        return this.panel;
+    },
+    getValues: function () {
+        var values = this.panel.getValues();
+        for (key in values) {
+            if (values[key] == '') {
+                delete values[key]
+            }
+        }
+        return values;
+    },
+    clear: function () {
+        this.panel.reset();
+    }
+}
+
+/*
+ * Copyright (c) 2014 Francisco Salavert (SGL-CIPF)
+ * Copyright (c) 2014 Alejandro Alemán (SGL-CIPF)
+ * Copyright (c) 2014 Ignacio Medina (EBI-EMBL)
+ *
+ * This file is part of JSorolla.
+ *
+ * JSorolla is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * JSorolla is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with JSorolla. If not, see <http://www.gnu.org/licenses/>.
+ */
+function SegregationFilterFormPanel(args) {
+    _.extend(this, Backbone.Events);
+
+    //set default args
+    this.id = Utils.genId("SegregationFilterFormPanel");
+    this.target;
+    this.autoRender = true;
+    this.title = "Segregation";
+    this.border = false;
+    this.collapsible = true;
+    this.titleCollapse = false;
+    this.headerConfig;
+    this.testRegion = "";
+
+    //set instantiation args, must be last
+    _.extend(this, args);
+
+    this.on(this.handlers);
+
+    this.rendered = false;
+    if (this.autoRender) {
+        this.render(this.targetId);
+    }
+}
+
+SegregationFilterFormPanel.prototype = {
+    render: function () {
+        var _this = this;
+        console.log("Initializing " + this.id);
+
+        //HTML skel
+        this.div = document.createElement('div');
+        this.div.setAttribute('id', this.id);
+
+        this.panel = this._createPanel();
+    },
+    draw: function () {
+        this.targetDiv = (this.target instanceof HTMLElement ) ? this.target : document.querySelector('#' + this.target);
+        if (!this.targetDiv) {
+            console.log('target not found');
+            return;
+        }
+        this.targetDiv.appendChild(this.div);
+
+        this.panel.render(this.div);
+    },
+    _createPanel: function () {
+
+
+        var header = Ext.create('Ext.form.FieldContainer', {
+            margin: '0 0 0 100',
+            flex: 1,
+            layout: {
+                type: 'hbox',
+                align: 'stretch'
+            },
+            items: [
+                { xtype: 'label', text: '0/0', flex: 1},
+                { xtype: 'label', text: '0/1', flex: 1},
+                { xtype: 'label', text: '1/1', flex: 1}
+            ]
+        });
+
+        var items = [header];
+
+        for (var i = 0; i < this.samples.length; i++) {
+            var name = this.samples[i];
+
+            items.push(
+                Ext.create('Ext.form.FieldContainer', {
+                    fieldLabel: name,
+                    labelWidth: 100,
+                    flex: 1,
+                    layout: {
+                        type: 'hbox',
+                        align: 'stretch'
+                    },
+                    items: [
+                        {xtype: 'checkbox', name: "sampleGT_" + name, inputValue: '0/0,0|0', flex: 1},
+                        {xtype: 'checkbox', name: "sampleGT_" + name, inputValue: '0/1,1/0, 0|1,1|0', flex: 1},
+                        {xtype: 'checkbox', name: "sampleGT_" + name, inputValue: '1/1,1|1', flex: 1}
+                    ]
+                })
+            );
+        }
+
+
+        return Ext.create('Ext.form.Panel', {
+            title: this.title,
+            border: this.border,
+            collapsible: this.collapsible,
+            titleCollapse: this.titleCollapse,
+            header: this.headerConfig,
+            bodyPadding: "5",
+            margin: "0 0 5 0",
+            buttonAlign: 'center',
+            layout: {
+                type: 'vbox',
+                align: 'stretch'
+            },
+            allowBlank: false,
+            items: items
+        });
+
+    },
+    getPanel: function () {
+        return this.panel;
+    },
+    getValues: function () {
+        var values = this.panel.getValues();
+        for (key in values) {
+            if (values[key] == '') {
+                delete values[key]
+            }
+        }
+        return values;
+    },
+    clear: function () {
+        this.panel.reset();
+    }
+}
+
+/*
+ * Copyright (c) 2014 Francisco Salavert (SGL-CIPF)
+ * Copyright (c) 2014 Alejandro Alemán (SGL-CIPF)
+ * Copyright (c) 2014 Ignacio Medina (EBI-EMBL)
+ *
+ * This file is part of JSorolla.
+ *
+ * JSorolla is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * JSorolla is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with JSorolla. If not, see <http://www.gnu.org/licenses/>.
+ */
+function StudyFilterFormPanel(args) {
+    _.extend(this, Backbone.Events);
+
+    //set default args
+    this.id = Utils.genId("StudyFilterFormPanel");
+    this.target;
+    this.autoRender = true;
+    this.title = "Select Studies";
+//    this.studies = [];
+    this.studiesStore;
+    this.border = true;
+    this.height = 300;
+
+    //set instantiation args, must be last
+    _.extend(this, args);
+
+    this.on(this.handlers);
+
+
+    this.rendered = false;
+    if (this.autoRender) {
+        this.render(this.targetId);
+    }
+
+}
+
+StudyFilterFormPanel.prototype = {
+    render: function () {
+        var _this = this;
+        console.log("Initializing " + this.id);
+
+        //HTML skel
+        this.div = document.createElement('div');
+        this.div.setAttribute('id', this.id);
+
+        this.panel = this._createPanel();
+    },
+    draw: function () {
+        this.targetDiv = (this.target instanceof HTMLElement ) ? this.target : document.querySelector('#' + this.target);
+        if (!this.targetDiv) {
+            console.log('target not found');
+            return;
+        }
+        this.targetDiv.appendChild(this.div);
+
+        this.panel.render(this.div);
+    },
+    _createPanel: function () {
+        var _this = this;
+//        var store = Ext.create('Ext.data.Store', {
+//            fields: [
+//                {name: 'studyName', type: 'string'},
+//                {name: 'studyId', type: 'string'}
+//            ],
+//            storeId: this.id + 'ConsequenceTypeSelectorStore',
+//            data: []
+//        });
+
+//        var cbg = Ext.create('Ext.form.CheckboxGroup', {
+////            layout: 'hbox',
+//            autoScroll: true,
+//            defaultType: 'checkboxfield'
+//        });
+//
+//        var cbgItems = [];
+//
+//        for (var i = 0; i < this.studies.length; i++) {
+//            var study = this.studies[i];
+//            cbgItems.push(Ext.create('Ext.form.field.Checkbox', {
+//                boxLabel: study.studyName,
+//                name: 'studies',
+//                inputValue: study.studyId,
+//                margin: '0 0 0 5',
+//                checked: false
+//            }));
+//        }
+//
+//        cbg.add(cbgItems);
+
+//        this.tagField = Ext.create('Ext.form.field.Tag', {
+////            fieldLabel: 'Select a study',
+////                    labelAlign: 'top',
+//            store: this.studiesStore,
+//            reference: this.id + 'ConsequenceTypeSelectorStore',
+//            displayField: 'studyName',
+//            valueField: 'studyId',
+//            filterPickList: true,
+//            queryMode: 'local',
+//            publishes: 'value',
+//            flex: 1,
+//            grow: false,
+//            autoScroll: true,
+//            name: 'studies',
+//            listeners: {
+//                change: function () {
+//                    var form = this.up();
+//                    if (form) {
+//                        form.update();
+//                    }
+//                }
+//            }
+//        });
+
+//
+//        this.studiesStore = Ext.create('Ext.data.Store', {
+//            pageSize: 50,
+//            proxy: {
+//                type: 'memory'
+//            },
+//            fields: [
+//                {name: 'studyName', type: 'string'},
+//                {name: 'studyId', type: 'string'}
+//            ],
+//            autoLoad: false
+//        });
+
+        var studySearchField = Ext.create('Ext.form.field.Text', {
+            emptyText: 'search',
+            listeners: {
+                change: function () {
+                    var value = this.getValue();
+                    if (value == "") {
+                        _this.studiesStore.clearFilter();
+                    } else {
+                        var regex = new RegExp(value, "i");
+                        _this.studiesStore.filterBy(function (e) {
+                            return regex.test(e.get('studyName'));
+                        });
+                    }
+                }
+            }
+        });
+
+        var grid = Ext.create('Ext.grid.Panel', {
+                store: this.studiesStore,
+                border: this.border,
+                loadMask: true,
+                hideHeaders: true,
+                plugins: 'bufferedrenderer',
+                features: [
+                    {ftype: 'summary'}
+                ],
+                height: this.height - 70,
+                viewConfig: {
+                    emptyText: 'No studies found',
+                    enableTextSelection: true,
+                    markDirty: false,
+                    listeners: {
+                        itemclick: function (este, record) {
+                        },
+                        itemcontextmenu: function (este, record, item, index, e) {
+
+                        }
+                    }
+                },
+                selModel: {
+                    listeners: {
+                        'selectionchange': function (selModel, selectedRecord) {
+
+                        }
+                    }
+                },
+                columns: [
+                    {
+                        text: 'Active',
+                        xtype: 'checkcolumn',
+                        dataIndex: 'uiactive',
+                        width: 50
+                    },
+                    {
+                        text: "Name",
+                        dataIndex: 'studyName',
+                        flex: 10
+                    },
+//                    {
+//                        text: "ID",
+//                        dataIndex: 'studyId',
+//                        flex: 3
+//                    }
+                ]
+            }
+        );
+
+
+        var form = Ext.create('Ext.form.Panel', {
+            bodyPadding: "5",
+            margin: "0 0 5 0",
+            buttonAlign: 'center',
+            border: false,
+            title: this.title,
+            height: this.height,
+            layout: {
+                type: 'vbox',
+                align: 'stretch'
+            },
+            items: [
+                studySearchField,
+                grid
+            ]
+        });
+
+        return form;
+    },
+    getPanel: function () {
+        return this.panel;
+    },
+    getValues: function () {
+        var values = [];
+        var records = this.studiesStore.query().items;
+        for (var i = 0; i < records.length; i++) {
+            var record = records[i];
+            var active = record.get('uiactive');
+            if (active) {
+                values.push(record.get('studyId'))
+            }
+        }
+        var res = {};
+        if (values.length > 0) {
+            res['studies'] = values;
+        }
+        return res;
+    },
+    clear: function () {
+        this.panel.reset();
+    }
+}
+
+/*
+ * Copyright (c) 2014 Francisco Salavert (SGL-CIPF)
+ * Copyright (c) 2014 Alejandro Alemán (SGL-CIPF)
+ * Copyright (c) 2014 Ignacio Medina (EBI-EMBL)
+ *
+ * This file is part of JSorolla.
+ *
+ * JSorolla is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * JSorolla is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with JSorolla. If not, see <http://www.gnu.org/licenses/>.
+ */
+function VariantBrowserGrid(args) {
+    _.extend(this, Backbone.Events);
+
+    //set default args
+    this.id = Utils.genId("Widget");
+    this.target;
+    this.data = [];
+    this.dataParser;
+    this.responseParser;
+    this.columns;
+    this.attributes;
+    this.type;
+    this.height = 400;
+    this.pageSize = 10;
+    this.title = "VariantBrowserGrid";
+    this.autoRender = true;
+    this.border = false;
+    this.responseRoot = "response[0].result";
+    this.responseTotal = "response[0].numTotalResults";
+    this.startParam = "skip";
+
+    //set instantiation args, must be last
+    _.extend(this, args);
+
+    this.on(this.handlers);
+
+    this.rendered = false;
+    if (this.autoRender) {
+        this.render(this.targetId);
+    }
+
+}
+
+VariantBrowserGrid.prototype = {
+    render: function () {
+        var _this = this;
+        console.log("Initializing " + this.id);
+
+        //HTML skel
+        this.div = document.createElement('div');
+        this.div.setAttribute('id', this.id);
+
+
+        this.panel = this._createPanel();
+    },
+    draw: function () {
+        this.targetDiv = (this.target instanceof HTMLElement ) ? this.target : document.querySelector('#' + this.target);
+        if (!this.targetDiv) {
+            console.log('target not found');
+            return;
+        }
+        this.targetDiv.appendChild(this.div);
+        this.panel.render(this.div);
+    },
+    _createPanel: function () {
+
+        var _this = this;
+
+        this.model = Ext.define('Variant', {
+            extend: 'Ext.data.Model',
+            idProperty: 'iid',
+            fields: this.attributes
+        });
+
+
+
+        this.store = Ext.create('Ext.data.Store', {
+                pageSize: this.pageSize,
+                model: this.model,
+                remoteSort: true,
+                proxy: {
+                    type: 'memory',
+                    enablePaging: true
+                },
+                listeners: {
+                    beforeload: function (store, operation, eOpts) {
+                        _this.trigger("variant:clear", {sender: _this});
+                    }
+                }
+
+            }
+        );
+
+        for (var i = 0; i < this.samples.length; i++) {
+            var sampleName = this.samples[i];
+            this._addSampleColumn(sampleName);
+        }
+
+
+        this.paging = Ext.create('Ext.PagingToolbar', {
+            store: _this.store,
+            id: _this.id + "_pagingToolbar",
+            pageSize: _this.pageSize,
+            displayInfo: true,
+            displayMsg: 'Variants {0} - {1} of {2}',
+            emptyMsg: "No variants to display"
+        });
+
+        var grid = Ext.create('Ext.grid.Panel', {
+                title: this.title,
+                store: this.store,
+                border: this.border,
+                header: this.headerConfig,
+                loadMask: true,
+                columns: this.columns,
+                plugins: 'bufferedrenderer',
+                animCollapse: false,
+                height: this.height,
+                features: [
+                    {ftype: 'summary'}
+                ],
+                viewConfig: {
+                    emptyText: 'No records to display',
+                    enableTextSelection: true
+                },
+                tbar: this.paging
+            }
+        );
+
+        grid.getSelectionModel().on('selectionchange', function (sm, selectedRecord) {
+            if (selectedRecord.length) {
+                var row = selectedRecord[0].data;
+                _this.trigger("variant:change", {sender: _this, args: row});
+            }
+        });
+
+        this.grid = grid;
+        return grid;
+    },
+    load: function (data) {
+        var _this = this;
+        this.store.destroy();
+
+        if (typeof this.dataParser !== 'undefined') {
+            this.dataParser(data)
+        } else {
+            this._parserFunction(data);
+
+        }
+
+        this.store = Ext.create('Ext.data.Store', {
+            pageSize: this.pageSize,
+            model: this.model,
+            data: data,
+            remoteSort: true,
+            proxy: {
+                type: 'memory',
+                enablePaging: true
+
+            },
+            listeners: {
+                beforeload: function (store, operation, eOpts) {
+                    _this.trigger("variant:clear", {sender: _this});
+                },
+                load: function (store, records, successful, operation, eOpts) {
+                    _this.setLoading(false);
+                }
+            }
+        });
+        this.grid.reconfigure(this.store, this.columnsGrid);
+        this.paging.bindStore(this.store);
+        this.paging.doRefresh();
+    },
+    loadUrl: function (baseUrl, filterParams) {
+        var _this = this;
+        this.store.destroy();
+
+        console.log("filter");
+        console.log(filterParams)
+
+        this.store = Ext.create('Ext.data.Store', {
+            pageSize: this.pageSize,
+            model: this.model,
+            remoteSort: true,
+            proxy: {
+                url: baseUrl,
+                type: 'ajax',
+                startParam: this.startParam,
+                reader: {
+                    root: this.responseRoot,
+                    totalProperty: this.responseTotal,
+                    transform: function (response) {
+                        var data = [];
+                        if (typeof _this.responseParser !== 'undefined') {
+                            data = _this.responseParser(response);
+                        }
+                        if (typeof _this.dataParser !== 'undefined') {
+                            _this.dataParser(data);
+                        } else {
+                            _this._parserFunction(data);
+                        }
+                        return response;
+                    }
+                },
+                extraParams: filterParams,
+                actionMethods: {create: 'GET', read: 'GET', update: 'GET', destroy: 'GET'}
+            },
+            listeners: {
+                load: function (store, records, successful, operation, eOpts) {
+
+                    console.log(records);
+
+                    if (typeof this.dataParser !== 'undefined') {
+                        _this.dataParser(records);
+                    } else {
+                        _this._parserFunction(records);
+
+                    }
+
+                    console.log(records);
+
+                    _this.setLoading(false);
+                },
+                beforeload: function (store, operation, eOpts) {
+                    _this.trigger("variant:clear", {sender: _this});
+                },
+            }
+
+        });
+
+        this.grid.reconfigure(this.store, this.columnsGrid);
+        this.paging.bindStore(this.store);
+        this.store.load();
+
+    },
+    _parserFunction: function (data) {
+        for (var i = 0; i < data.length; i++) {
+            var variant = data[i];
+
+            if (variant.hgvs && variant.hgvs.genomic && variant.hgvs.genomic.length > 0) {
+                variant.hgvs_name = variant.hgvs.genomic[0];
+            }
+        }
+
+    },
+    setLoading: function (loading) {
+        this.panel.setLoading(loading);
+    },
+    _addSampleColumn: function (sampleName) {
+
+        var _this = this;
+
+        for (var i = 0; i < _this.attributes.length; i++) {
+            if (_this.attributes[i].name == sampleName) {
+                return false;
+            }
+        }
+
+        _this.attributes.push({
+            "name": sampleName,
+            "type": "string"
+        });
+
+        for (var i = 0; i < _this.columns.length; i++) {
+            var col = _this.columns[i];
+
+            if (col['text'] == "Samples") {
+                col["columns"].push({
+                    "text": sampleName,
+                    "dataIndex": sampleName,
+                    "flex": 1,
+                    "sortable": false
+                });
+            }
+        }
+        this.store.setFields(this.attributes);
+    }
+};
+
+/*
+ * Copyright (c) 2014 Francisco Salavert (SGL-CIPF)
+ * Copyright (c) 2014 Alejandro Alemán (SGL-CIPF)
+ * Copyright (c) 2014 Ignacio Medina (EBI-EMBL)
+ *
+ * This file is part of JSorolla.
+ *
+ * JSorolla is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * JSorolla is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with JSorolla. If not, see <http://www.gnu.org/licenses/>.
+ */
+function VariantEffectGrid(args) {
+    _.extend(this, Backbone.Events);
+    this.id = Utils.genId("VariantEffectGrid");
+
+    this.target;
+    this.autoRender = true;
+    this.storeConfig = {};
+    this.gridConfig = {};
+    this.headerConfig;
+
+    _.extend(this, args);
+
+    this.on(this.handlers);
+
+    this.rendered = false;
+    if (this.autoRender) {
+        this.render();
+    }
+
+}
+
+VariantEffectGrid.prototype = {
+    render: function () {
+        var _this = this;
+
+        //HTML skel
+        this.div = document.createElement('div');
+        this.div.setAttribute('id', this.id);
+
+        this.chartDiv = document.createElement('div');
+        $(this.chartDiv).css({
+            'height': '200px'
+        });
+
+        this.panel = this._createPanel();
+
+    },
+    draw: function () {
+        this.targetDiv = (this.target instanceof HTMLElement ) ? this.target : document.querySelector('#' + this.target);
+        if (!this.targetDiv) {
+            console.log('target not found');
+            return;
+        }
+        this.targetDiv.appendChild(this.div);
+        this.panel.render(this.div);
+    },
+
+    clear: function () {
+        this.store.removeAll();
+        this._updateChart([], []);
+    },
+    load: function (data) {
+
+        var _this = this;
+
+        var effects = _this._prepareEffectData(data);
+
+        _this.grid.setLoading(true);
+        _this.clear();
+        this.store.loadData(effects);
+
+
+        var populations = [];
+        var values = [];
+        //TODO
+//        for (key in data.controls) {
+//            values.push(data.controls[key].maf);
+//            populations.push(key);
+//        }
+        this._updateChart(populations, values);
+
+
+        this.trigger("load:finish", {sender: _this})
+        this.grid.setLoading(false);
+
+    },
+    _updateChart: function (populations, values) {
+        var chart = $(this.chartDiv).highcharts();
+        if (chart) {
+            chart.xAxis[0].setCategories(populations, false);
+            chart.series[0].setData(values, false);
+            chart.redraw();
+        }
+    },
+    _createPanel: function () {
+        var _this = this;
+
+        var storeArgs = {
+            storeId: "EffectStore",
+            groupField: 'featureId',
+            pageSize: 10,
+            fields: [
+                {name: 'position', type: 'string'},
+                { name: 'allele', type: 'string'},
+                { name: 'cDnaPosition', type: 'int'},
+                { name: 'canonical', type: 'boolean'},
+                { name: 'cdsPosition', type: 'int'},
+                { name: 'consequenceTypes', type: 'string'},
+                { name: 'featureBiotype', type: 'string'},
+                { name: 'featureId', type: 'string'},
+                { name: 'featureStrand', type: 'string'},
+                { name: 'featureType', type: 'string'},
+                { name: 'geneId', type: 'string'},
+                { name: 'geneName', type: 'string'},
+                { name: 'geneNameSource', type: 'string'},
+                { name: 'proteinPosition', type: 'int'},
+                { name: 'variantToTranscriptDistance', type: 'int'},
+                { name: 'polyphenScore', type: 'number'},
+                { name: 'siftScore', type: 'number'}
+            ],
+            data: [],
+            autoLoad: false,
+            proxy: {type: 'memory'}
+        }
+
+        _.extend(storeArgs, this.storeConfig);
+
+        this.store = Ext.create("Ext.data.Store", storeArgs);
+
+
+        var gridArgs = {
+            title: 'Effects',
+            store: this.store,
+            loadMask: true,
+            border: true,
+            //height: this.height,
+            height: 200,
+            header: this.headerConfig,
+            viewConfig: {
+                emptyText: 'No records to display',
+                enableTextSelection: true
+            },
+            plugins: ["bufferedrenderer"],
+            columns: [
+                { text: "Location", dataIndex: "position", flex: 1},
+                //{ text: "cDnaPosition"                , dataIndex: "cDnaPosition", flex: 1},
+                //{ text: "canonical"                   , dataIndex: "canonical", flex: 1},
+                //{ text: "cdsPosition"                 , dataIndex: "cdsPosition", flex: 1},
+                { text: "Conseq. Types", dataIndex: "consequenceTypes", flex: 1},
+                {text: "Feature", columns: [
+                    { text: "Id", dataIndex: "featureId", flex: 1},
+                    { text: "Strand", dataIndex: "featureStrand", flex: 1},
+                    { text: "Biotype", dataIndex: "featureBiotype", flex: 1},
+                    { text: "Type", dataIndex: "featureType", flex: 1}
+                ]},
+                {text: 'Genes',
+                    columns: [
+                        { text: "Id", dataIndex: "geneId", flex: 1},
+                        { text: "Name", dataIndex: "geneName", flex: 1},
+                        { text: "Source", dataIndex: "geneNameSource", flex: 1}
+                    ]},
+                { text: "Protein Position", dataIndex: "proteinPosition", flex: 1},
+                { text: "Distance to Transcript", dataIndex: "variantToTranscriptDistance", flex: 1},
+                { text: "Scores",
+                    columns: [
+                        { text: "Polyphen", dataIndex: "polyphenScore", flex: 1},
+                        { text: "SIFT", dataIndex: "siftScore", flex: 1}
+                    ]
+                }
+            ],
+            viewConfig: {
+                emptyText: 'No records to display'
+            }
+        }
+
+        _.extend(gridArgs, this.gridConfig);
+
+        this.grid = Ext.create('Ext.grid.Panel', gridArgs);
+
+        $(this.chartDiv).highcharts({
+            chart: {
+                type: 'bar'
+            },
+            title: {
+                text: null
+            },
+            xAxis: {
+//                categories: populations,
+//                categories: [],
+                title: {
+                    text: 'Populations',
+                    align: 'high'
+                }
+            },
+            yAxis: {
+                min: 0,
+                max: 1,
+                title: {
+                    text: 'Minimum Allele Frequency',
+                    align: 'high'
+                },
+                labels: {
+                    overflow: 'justify'
+                }
+            },
+            plotOptions: {
+                bar: {
+                    dataLabels: {
+                        enabled: true
+                    }
+                }
+            },
+            legend: {
+                layout: 'vertical',
+                align: 'right',
+                verticalAlign: 'top',
+                x: -40,
+                y: 100,
+                floating: true,
+                borderWidth: 1,
+                backgroundColor: (Highcharts.theme && Highcharts.theme.legendBackgroundColor || '#FFFFFF'),
+                shadow: true
+            },
+            credits: {
+                enabled: false
+            },
+            series: [
+                {
+                    name: 'MAF',
+//                    data: []
+//                    data: data
+                }
+            ]
+        });
+
+        var panel = Ext.create('Ext.container.Container', {
+            layout: {
+                type: 'vbox',
+                align: 'stretch'
+            },
+            overflowY: true,
+            padding: 10,
+            items: [
+                this.grid,
+                {
+                    xtype: 'panel',
+                    margin: '10 0 0 0',
+                    border: false,
+                    title: 'Population Frequencies',
+                    header: this.headerConfig,
+                    contentEl: this.chartDiv
+                }
+            ],
+            height: this.height
+        });
+        return panel;
+
+
+    },
+    _prepareEffectData: function (data) {
+
+        var finalData = [];
+        var chromosome = data.chromosome;
+        var position = data.start;
+        var reference = data.referenceAllele;
+
+        console.log(data);
+        for (var key in data.effects) {
+
+            for (var i = 0, l = data.effects[key].length; i < l; i++) {
+                var v = data.effects[key][i];
+                v.position = chromosome + ":" + position + " " + reference + " > " + key;
+                v.consequenceTypes = v.consequenceTypes.join(",");
+                v.polyphenScore = data.proteinSubstitutionScores.polyphenScore;
+                v.siftScore = data.proteinSubstitutionScores.siftScore;
+
+                finalData.push(v);
+            }
+
+        }
+
+        return finalData;
+    },
+    _prepareFrequencyData: function (data) {
+
+        var finalData = [];
+
+        finalData.push({ name: "maf1000G", maf: Math.random()});
+        finalData.push({ name: "maf1000GAfrican", maf: Math.random()});
+        finalData.push({ name: "maf1000GAmerican", maf: Math.random()});
+        finalData.push({ name: "maf1000GAsian", maf: Math.random()});
+        finalData.push({ name: "maf1000GEuropean", maf: Math.random()});
+        finalData.push({ name: "mafNhlbiEspAfricanAmerican", maf: Math.random()});
+        finalData.push({ name: "mafNhlbiEspEuropeanAmerican", maf: Math.random()});
+
+        return finalData;
+    }
+}
+
+
+
+/*
+ * Copyright (c) 2014 Francisco Salavert (SGL-CIPF)
+ * Copyright (c) 2014 Alejandro Alemán (SGL-CIPF)
+ * Copyright (c) 2014 Ignacio Medina (EBI-EMBL)
+ *
+ * This file is part of JSorolla.
+ *
+ * JSorolla is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * JSorolla is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with JSorolla. If not, see <http://www.gnu.org/licenses/>.
+ */
+function VariantFileBrowserPanel(args) {
+    _.extend(this, Backbone.Events);
+    this.id = Utils.genId("VariantFileBrowserPanel");
+
+    this.target;
+    this.title = "File Browser";
+    this.height = 800;
+    this.autoRender = true;
+    this.studies = [];
+
+    _.extend(this, args);
+
+    this.on(this.handlers);
+
+    this.rendered = false;
+
+    if (this.autoRender) {
+        this.render();
+    }
+}
+
+VariantFileBrowserPanel.prototype = {
+    render: function () {
+        var _this = this;
+
+        //HTML skel
+        this.div = document.createElement('div');
+        this.div.setAttribute('id', this.id);
+
+        this.panel = this._createPanel();
+
+    },
+    draw: function () {
+        this.targetDiv = (this.target instanceof HTMLElement ) ? this.target : document.querySelector('#' + this.target);
+        if (!this.targetDiv) {
+            console.log('target not found');
+            return;
+        }
+
+        this.targetDiv.appendChild(this.div);
+        this.panel.render(this.div);
+
+    },
+    load: function (studies) {
+        this.panel.removeAll(true);
+        var studiesPanels = [];
+        for (var i = 0; i < studies.length; i++) {
+            var study = studies[i];
+            studiesPanels.push(this._createStudyPanel(study));
+        }
+        this.panel.add(studiesPanels);
+    },
+    _createPanel: function () {
+        var panel = Ext.create('Ext.container.Container', {
+            layout: {
+                type: 'vbox',
+                align: 'stretch'
+            }
+        });
+        if (this.studies.length > 0) {
+            this.load(this.studies);
+        }
+
+        return panel;
+    },
+    _createStudyPanel: function (study) {
+
+
+        var filePanels = [];
+        for (var i = 0; i < study.files.length; i++) {
+            var file = study.files[i];
+            filePanels.push(this._createFilePanel(file));
+        }
+
+        var filesContainer = Ext.create('Ext.container.Container', {
+            layout: {
+                type: 'vbox',
+                align: 'stretch'
+            },
+            overflowY: true,
+            padding: 10,
+            items: filePanels
+
+        });
+
+        var studyPanel = Ext.create('Ext.container.Container', {
+            items: [
+                {
+                    xtype: 'box',
+                    cls: 'eva-header-3',
+                    overCls:'eva-pointer eva-underline',
+                    html: study.studyName,
+                    listeners: {
+                        afterrender: function () {
+                            this.getEl().on('click', function () {
+                                if (filesContainer.isHidden()) {
+                                    filesContainer.show();
+                                } else {
+                                    filesContainer.hide();
+                                }
+                            });
+                        }
+                    }
+                },
+                filesContainer
+            ]
+        });
+        return studyPanel;
+
+    },
+    _createFilePanel: function (file) {
+
+        var filePanel = Ext.create('Ext.container.Container', {
+            layout: 'vbox',
+            items: [
+                {
+                    xtype: 'box',
+                    cls: 'eva-header-5',
+                    margin: '5 5 5 10',
+                    html: file.fileName
+                },
+                {
+                    xtype: 'container',
+                    layout: 'hbox',
+                    items: [
+//                        {
+//                            xtype: 'container',
+//                            data: file,
+//                            tpl: new Ext.XTemplate(
+//                                    '<table class="eva-stats-table">' +
+//                                    '<tr>' +
+//                                    '<td class="header">File name:</td>' +
+//                                    '<td>{fileName}</td>' +
+//                                    '</tr>',
+//                                    '<tr>' +
+//                                    '<td class="header">Study name:</td>' +
+//                                    '<td>{studyName}</td>' +
+//                                    '</tr>',
+//                                '</table>'
+//                            ),
+//                            margin: '5 5 5 10'
+//                        },
+                        {
+                            xtype: 'container',
+                            data: file.stats,
+                            tpl: new Ext.XTemplate(
+                                    '<table class="eva-stats-table">' +
+                                    '<tr>' +
+                                    '<td class="header">Variants count:</td>' +
+                                    '<td>{variantsCount}</td>' +
+                                    '</tr>',
+                                    '<tr>' +
+                                    '<td class="header">Samples count:</td>' +
+                                    '<td>{samplesCount}</td>' +
+                                    '</tr>',
+                                    '<tr>' +
+                                    '<td class="header">SNPs count:</td>' +
+                                    '<td>{snpsCount}</td>' +
+                                    '</tr>',
+                                    '<tr>' +
+                                    '<td class="header">Indels count:</td>' +
+                                    '<td>{indelsCount}</td>' +
+                                    '</tr>',
+                                    '<tr>' +
+                                    '<td class="header">Pass count:</td>' +
+                                    '<td>{passCount}</td>' +
+                                    '</tr>',
+                                    '<tr>' +
+                                    '<td class="header">Ti/Tv Ratio:</td>' +
+                                    '<td>{[this.titv(values)]}</td>' +
+                                    '</tr>',
+                                    '<tr>' +
+                                    '<td class="header">Mean quality:</td>' +
+                                    '<td>{meanQuality}</td>' +
+                                    '</tr>',
+                                '</table>', {
+                                    titv: function (values) {
+                                        var res = values.transitionsCount / values.transversionsCount;
+                                        return res.toFixed(2);
+                                    }
+                                }
+                            ),
+                            margin: '5 5 5 10'
+                        },
+                    ]
+                },
+
+            ]
+        });
+
+        return filePanel;
+
+    },
+    setLoading: function(loading){
+        this.panel.setLoading(loading);
+    }
+};
+
+/*
+ * Copyright (c) 2014 Francisco Salavert (SGL-CIPF)
+ * Copyright (c) 2014 Alejandro Alemán (SGL-CIPF)
+ * Copyright (c) 2014 Ignacio Medina (EBI-EMBL)
+ *
+ * This file is part of JSorolla.
+ *
+ * JSorolla is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * JSorolla is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with JSorolla. If not, see <http://www.gnu.org/licenses/>.
+ */
+function VariantGenotypeGrid(args) {
+    _.extend(this, Backbone.Events);
+    this.id = Utils.genId("VariantGenotypeGrid");
+
+    this.autoRender = true;
+    this.storeConfig = {};
+    this.gridConfig = {};
+    this.height = 500;
+    this.target;
+
+    _.extend(this, args);
+
+    this.on(this.handlers);
+
+    this.rendered = false;
+
+    if (this.autoRender) {
+        this.render(this.targetId);
+    }
+}
+
+VariantGenotypeGrid.prototype = {
+    render: function () {
+        var _this = this;
+
+        //HTML skel
+        this.div = document.createElement('div');
+        this.div.setAttribute('id', this.id);
+
+        this.panel = this._createPanel();
+
+    },
+    draw: function () {
+        this.targetDiv = (this.target instanceof HTMLElement ) ? this.target : document.querySelector('#' + this.target);
+        if (!this.targetDiv) {
+            console.log('target not found');
+            return;
+        }
+        this.targetDiv.appendChild(this.div);
+        this.panel.render(this.div);
+    },
+    clear: function () {
+        this.studiesContainer.removeAll(true);
+    },
+    load: function (data) {
+        this.clear();
+        var panels = [];
+        for (var key in data) {
+            var study = data[key];
+            if (Object.keys(study.samplesData).length > 0) {
+                panels.push(this._createStudyPanel(study));
+            }
+        }
+        this.studiesContainer.add(panels);
+
+    },
+    _createPanel: function () {
+        this.studiesContainer = Ext.create('Ext.container.Container', {
+            layout: {
+                type: 'accordion',
+                titleCollapse: true,
+//                fill: false,
+                multi: true
+            }
+        });
+
+        var panel = Ext.create('Ext.container.Container', {
+            layout: {
+                type: 'vbox',
+                align: 'stretch'
+            },
+            overflowY: true,
+            padding: 10,
+            items: [
+                {
+                    xtype: 'box',
+                    cls: 'ocb-header-4',
+                    html: 'Studies',
+                    margin: '5 0 10 10'
+                },
+                this.studiesContainer
+            ],
+            height: this.height
+        });
+        return panel;
+    },
+    _createStudyPanel: function (data) {
+        var stats = (data.stats) ? data.stats : {};
+        var samples = (data.samplesData) ? data.samplesData : {};
+
+        var finalData = [];
+        for (var key in samples) {
+            var s = samples[key];
+            finalData.push({
+                sample: key,
+                genotype: s.GT
+            });
+        }
+        console.log(finalData);
+        var store = Ext.create("Ext.data.Store", {
+            //storeId: "GenotypeStore",
+            pageSize: 10,
+            fields: [
+                {name: "sample", type: "string" },
+                {name: "genotype", type: "string"},
+                {name: "sex", type: "string"},
+                {name: "phenotype", type: "string"}
+            ],
+            data: finalData,
+            proxy: {type: 'memory'}
+        });
+
+        var grid = Ext.create('Ext.grid.Panel', {
+            store: store,
+            loadMask: true,
+            width: 400,
+            height: 300,
+            margin: 20,
+            viewConfig: {
+                emptyText: 'No records to display',
+                enableTextSelection: true
+            },
+            plugins: ["bufferedrenderer"],
+            columns: [
+                {
+                    text: "Sample",
+                    dataIndex: "sample",
+                    flex: 1
+                },
+                {
+                    text: "Genotype",
+                    dataIndex: "genotype",
+                    flex: 1
+                },
+                {
+                    text: "Sex",
+                    dataIndex: "sex",
+                    flex: 1
+                },
+                {
+                    text: "Phenotype",
+                    dataIndex: "phenotype",
+                    flex: 1
+                }
+            ]
+        });
+
+        var gts = this._getGenotypeCount(stats.genotypesCount);
+
+        var genotypeChart;
+        if (gts.length > 0) {
+            var store = Ext.create('Ext.data.Store', {
+                fields: ['genotype', 'count'],
+                data: gts
+            });
+
+            genotypeChart = Ext.create('Ext.chart.Chart', {
+                xtype: 'chart',
+                width: 200,
+                height: 130,
+                store: store,
+                animate: true,
+                shadow: true,
+                legend: {
+                    position: 'right'
+                },
+                theme: 'Base:gradients',
+                //insetPadding: 60,
+                series: [
+                    {
+                        type: 'pie',
+                        field: 'count',
+                        showInLegend: true,
+                        tips: {
+                            trackMouse: true,
+                            renderer: function (storeItem, item) {
+                                var name = storeItem.get('genotype');
+                                this.setTitle(name + ': ' + storeItem.get('count'));
+                            }
+                        },
+                        highlight: {
+                            segment: {
+                                margin: 20
+                            }
+                        },
+                        label: {
+                            field: 'genotype',
+                            display: 'rotate',
+                            contrast: true,
+                            font: '10px Arial'
+                        }
+
+                    }
+                ]
+            });
+        }
+
+        var studyPanel = Ext.create('Ext.panel.Panel', {
+            title: data.studyId,
+            border: true,
+            layout: {
+                type: 'hbox',
+                align: 'stretch'
+            },
+            items: [
+                grid,
+                genotypeChart
+            ]
+        });
+
+        return studyPanel;
+
+    },
+    _getGenotypeCount: function (gc) {
+        var res = [];
+        for (var key in gc) {
+            res.push({
+                genotype: key,
+                count: gc[key]
+            })
+        }
+        return res;
+    }
+};
+
+/*
+ * Copyright (c) 2014 Francisco Salavert (SGL-CIPF)
+ * Copyright (c) 2014 Alejandro Alemán (SGL-CIPF)
+ * Copyright (c) 2014 Ignacio Medina (EBI-EMBL)
+ *
+ * This file is part of JSorolla.
+ *
+ * JSorolla is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * JSorolla is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with JSorolla. If not, see <http://www.gnu.org/licenses/>.
+ */
+function VariantStatsPanel(args) {
+    _.extend(this, Backbone.Events);
+    this.id = Utils.genId("VariantStatsPanel");
+
+    this.target;
+    this.title = "Stats";
+    this.height = 500;
+    this.autoRender = true;
+
+    _.extend(this, args);
+
+    this.on(this.handlers);
+
+    this.rendered = false;
+
+    if (this.autoRender) {
+        this.render();
+    }
+}
+
+VariantStatsPanel.prototype = {
+    render: function () {
+        var _this = this;
+
+        //HTML skel
+        this.div = document.createElement('div');
+        this.div.setAttribute('id', this.id);
+
+        this.panel = this._createPanel();
+
+    },
+    draw: function () {
+        this.targetDiv = (this.target instanceof HTMLElement ) ? this.target : document.querySelector('#' + this.target);
+        if (!this.targetDiv) {
+            console.log('target not found');
+            return;
+        }
+
+        this.targetDiv.appendChild(this.div);
+        this.panel.render(this.div);
+
+    },
+    clear: function () {
+        this.studiesContainer.removeAll(true);
+    },
+    load: function (data) {
+        this.clear();
+
+        var panels = [];
+
+        for (var key in data) {
+            var study = data[key];
+            var studyPanel = this._createStudyPanel(study);
+            panels.push(studyPanel);
+
+        }
+
+        this.studiesContainer.add(panels);
+    },
+    _createPanel: function () {
+        this.studiesContainer = Ext.create('Ext.container.Container', {
+            layout: {
+                type: 'accordion',
+                titleCollapse: true,
+//                fill: false,
+                multi: true
+            }
+        });
+
+        var panel = Ext.create('Ext.container.Container', {
+            layout: {
+                type: 'vbox',
+                align: 'stretch'
+            },
+            overflowY: true,
+            padding: 10,
+            items: [
+                {
+                    xtype: 'box',
+                    cls: 'ocb-header-4',
+                    html: 'Studies',
+                    margin: '5 0 10 10'
+                },
+                this.studiesContainer
+            ],
+            height: this.height
+        });
+        return panel;
+    },
+    _createStudyPanel: function (data) {
+
+        var stats = (data.stats) ? data.stats : {};
+        var attributes = (data.attributes) ? data.attributes : {};
+
+        var studyPanel = Ext.create('Ext.panel.Panel', {
+            title: data.studyId,
+            border: false,
+            layout: 'vbox',
+            items: [
+                {
+                    xtype: 'container',
+                    data: attributes,
+                    tpl: new Ext.XTemplate(
+                        '<table class="ocb-attributes-table"><tr>',
+                        '<tpl foreach=".">',
+                        '<td class="header">{$}</td>', // the special **`{$}`** variable contains the property name
+                            '</tpl>' +
+                            '</tr><tr>',
+                        '<tpl foreach=".">',
+                        '<td>{.}</td>', // within the loop, the **`{.}`** variable is set to the property value
+                        '</tpl>',
+                        '</tr></table>'
+                    ),
+                    margin: '10 5 5 10'
+                },
+                {
+                    xtype: 'box',
+                    cls: 'ocb-header-5',
+                    margin: '5 5 5 10',
+                    html: 'Stats'
+                },
+                {
+                    xtype: 'container',
+                    layout: 'hbox',
+                    items: [
+                        {
+                            xtype: 'container',
+                            data: stats,
+                            tpl: new Ext.XTemplate(
+                                    '<table class="ocb-stats-table">' +
+                                    '<tr>' +
+                                    '<td class="header">Minor Allele Frequency:</td>' +
+                                    '<td>{maf} ({mafAllele})</td>' +
+                                    '</tr>',
+                                    '<tr>' +
+                                    '<td class="header">Minor Genotype Frequency:</td>' +
+                                    '<td>{mgf} ({mgfAllele})</td>' +
+                                    '</tr>',
+                                    '<tr>' +
+                                    '<td class="header">Mendelian Errors:</td>' +
+                                    '<td>{mendelianErrors}</td>' +
+                                    '</tr>',
+                                    '<tr>' +
+                                    '<td class="header">Missing Alleles:</td>' +
+                                    '<td>{missingAlleles}</td>' +
+                                    '</tr>',
+                                    '<tr>' +
+                                    '<td class="header">Missing Genotypes:</td>' +
+                                    '<td>{missingGenotypes}</td>' +
+                                    '</tr>',
+                                '</table>'
+                            ),
+                            margin: '5 5 5 10'
+                        }
+                    ]
+                }
+
+            ]
+        });
+
+        var gts = this._getGenotypeCount(stats.genotypesCount);
+
+        if (gts.length > 0) {
+            var store = Ext.create('Ext.data.Store', {
+                fields: ['genotype', 'count'],
+                data: gts
+            });
+
+            var genotypeChart = Ext.create('Ext.chart.Chart', {
+                xtype: 'chart',
+                width: 200,
+                height: 130,
+                store: store,
+                animate: true,
+                shadow: true,
+                legend: {
+                    position: 'right'
+                },
+                theme: 'Base:gradients',
+                series: [
+                    {
+                        type: 'pie',
+                        field: 'count',
+                        showInLegend: true,
+                        tips: {
+                            trackMouse: true,
+                            renderer: function (storeItem, item) {
+                                var name = storeItem.get('genotype');
+                                this.setTitle(name + ': ' + storeItem.get('count'));
+                            }
+                        },
+                        highlight: {
+                            segment: {
+                                margin: 20
+                            }
+                        },
+                        label: {
+                            field: 'genotype',
+                            display: 'rotate',
+                            contrast: true,
+                            font: '10px Arial'
+                        }
+
+                    }
+                ]
+            });
+            studyPanel.down().nextSibling().nextSibling().add(genotypeChart);
+        }
+
+        return studyPanel;
+    },
+    _getGenotypeCount: function (gc) {
+        var res = [];
+        for (var key in gc) {
+            res.push({
+                genotype: key,
+                count: gc[key]
+            })
+        }
+        return res;
+    }
+};
+
+/*
+ * Copyright (c) 2014 Francisco Salavert (SGL-CIPF)
+ * Copyright (c) 2014 Alejandro Alemán (SGL-CIPF)
+ * Copyright (c) 2014 Ignacio Medina (EBI-EMBL)
+ *
+ * This file is part of JSorolla.
+ *
+ * JSorolla is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * JSorolla is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with JSorolla. If not, see <http://www.gnu.org/licenses/>.
+ */
+function VariantStudyBrowserPanel(args) {
+    _.extend(this, Backbone.Events);
+    this.id = Utils.genId("VariantStudyBrowserPanel");
+
+    this.target;
+    this.title = "Study Browser";
+    this.height = 800;
+    this.autoRender = true;
+//    this.studies = [];
+    this.studiesStore;
+    this.host;
+    this.border = false;
+    this.speciesList = [
+        {
+            assembly: "GRCh37.p7",
+            common: "human",
+            id: "extModel256-1",
+            sciAsembly: "Homo sapiens (GRCh37.p7)",
+            scientific: "Homo sapiens",
+            species: "hsa"
+        }
+    ];
+
+    _.extend(this, args);
+
+    this.on(this.handlers);
+
+    this.rendered = false;
+
+    if (this.autoRender) {
+        this.render();
+    }
+}
+
+VariantStudyBrowserPanel.prototype = {
+    render: function () {
+        var _this = this;
+
+        //HTML skel
+        this.div = document.createElement('div');
+        this.div.setAttribute('id', this.id);
+
+        this.panel = this._createPanel();
+
+    },
+    draw: function () {
+        this.targetDiv = (this.target instanceof HTMLElement ) ? this.target : document.querySelector('#' + this.target);
+        if (!this.targetDiv) {
+            console.log('target not found');
+            return;
+        }
+
+        this.targetDiv.appendChild(this.div);
+        this.panel.render(this.div);
+
+    },
+    load: function (studies) {
+        //TODO
+    },
+    _createPanel: function () {
+        var _this = this;
+
+        var speciesStore = Ext.create('Ext.data.Store', {
+            autoLoad: true,
+            fields: ['species', 'common', 'scientific', 'assembly', 'sciAsembly'],
+            data: this.speciesList
+        });
+
+        var speciesCombo = Ext.create('Ext.form.field.ComboBox', {
+            fieldLabel: 'Choose Species',
+//            labelWidth: this.labelWidth,
+            labelAlign: 'top',
+            name: 'species',
+            displayField: 'scientific',
+            valueField: 'species',
+            editable: false,
+            allowBlank: false,
+            store: speciesStore,
+            listeners: {
+                change: function () {
+                    if (this.getValue()) {
+
+                    }
+                }
+            }
+        });
+
+//        this.studiesStore = Ext.create('Ext.data.Store', {
+//            pageSize: 50,
+//            proxy: {
+//                type: 'memory'
+//            },
+//            fields: [
+//                {name: 'studyName', type: 'string'},
+//                {name: 'studyId', type: 'string'}
+//            ],
+//            data: this.studies
+//        });
+
+        var studySearchField = Ext.create('Ext.form.field.Text', {
+            fieldLabel: 'Name Search',
+            labelAlign: 'top',
+            emptyText: 'search',
+            listeners: {
+                change: function () {
+                    var value = this.getValue();
+                    if (value == "") {
+                        _this.studiesStore.clearFilter();
+                    } else {
+                        var regex = new RegExp(value, "i");
+                        _this.studiesStore.filterBy(function (e) {
+                            return regex.test(e.get('studyName'));
+                        });
+                    }
+                }
+            }
+
+        });
+
+        this.grid = Ext.create('Ext.grid.Panel', {
+                title: 'Studies',
+                store: this.studiesStore,
+                header: this.headerConfig,
+                loadMask: true,
+//                hideHeaders: true,
+                plugins: 'bufferedrenderer',
+                height: 500,
+                features: [
+                    {ftype: 'summary'}
+                ],
+                viewConfig: {
+                    emptyText: 'No studies found',
+                    enableTextSelection: true,
+                    markDirty: false,
+                    listeners: {
+                        itemclick: function (este, record) {
+//                            var url = _this.host + "v1/studies/" + record.get("projectId") + "/summary"
+//                            $.ajax({
+//                                url: url,
+//                                dataType: 'json',
+//                                async: false,
+//                                success: function (response, textStatus, jqXHR) {
+//                                    var data = (response !== undefined && response.response.length > 0 ) ? response.response[0].result[0] : [];
+//
+//                                    var studyPanel = _this._createStudyPanel(data);
+//
+//                                    $.ajax({
+//                                        url: _this.host + "v1/studies/" + record.get("alias") + "/files",
+//                                        dataType: 'json',
+//                                        success: function (response, textStatus, jqXHR) {
+//                                            var files = (response !== undefined && response.response.length > 0 && response.response[0].numResults > 0) ? response.response[0].result : [];
+//
+//                                            var filesPanel = _this._createFilesPanel(files);
+//                                            _this.rightPanel.removeAll(true);
+//                                            _this.rightPanel.add(studyPanel);
+//                                            _this.rightPanel.add(filesPanel);
+//
+//                                        },
+//                                        error: function (jqXHR, textStatus, errorThrown) {
+//                                            console.log('Error loading studies');
+//                                        }
+//                                    });
+//                                },
+//                                error: function (jqXHR, textStatus, errorThrown) {
+//                                    console.log('Error loading studies');
+//                                }
+//                            });
+                        },
+                        itemcontextmenu: function (este, record, item, index, e) {
+
+                        }
+                    }
+                },
+                selModel: {
+                    listeners: {
+                        'selectionchange': function (sm, selectedRecord) {
+                            if (selectedRecord.length) {
+                                var row = selectedRecord[0].data;
+                                _this.trigger("variant:change", {sender: _this, args: row});
+                            }
+                        }
+                    }
+                },
+                columns: [
+                    {
+                        text: 'Active',
+                        xtype: 'checkcolumn',
+                        dataIndex: 'uiactive',
+                        flex: 1
+                    },
+                    {
+                        text: "Name",
+                        dataIndex: 'studyName',
+                        flex: 10
+                    },
+                    {
+                        text: "ID",
+                        dataIndex: 'studyId',
+                        flex: 3
+                    }
+                ],
+//                tbar: {
+//                    height: 40,
+//                    items: [
+//
+//                    ]
+//                }
+            }
+        );
+
+        this.leftPanel = Ext.create('Ext.container.Container', {
+            flex: 1,
+            layout: {
+                type: 'vbox',
+                align: 'stretch'
+            },
+            defaults: {
+                margin: 10
+            },
+            items: [
+                speciesCombo,
+                studySearchField
+            ]
+        });
+
+
+        this.rightPanel = Ext.create('Ext.container.Container', {
+            flex: 4,
+            layout: {
+                type: 'vbox',
+                align: 'stretch'
+            },
+            defaults: {
+                margin: 10
+            },
+            items: [this.grid]
+        });
+
+        var panel = Ext.create('Ext.panel.Panel', {
+            title: this.title,
+            border: this.border,
+            header: this.headerConfig,
+            layout: {
+                type: 'hbox',
+                align: 'stretch'
+            },
+            defaults: {
+                margin: 10
+            },
+            items: [
+                this.leftPanel,
+                this.rightPanel
+            ]
+        });
+
+        return panel;
+    },
+
+    setLoading: function (loading) {
+        this.panel.setLoading(loading);
+    },
+
+    update: function () {
+        if(this.panel){
+            this.panel.update();
+        }
+    }
+
+//    _createStudyPanel: function (file) {
+//
+//        var filePanel = Ext.create('Ext.container.Container', {
+//            layout: 'vbox',
+//            items: [
+//                {
+//                    xtype: 'container',
+//                    data: file,
+//                    tpl: new Ext.XTemplate(
+//                            '<table class="eva-stats-table">' +
+//                            '<tr>' +
+//                            '<td class="header">Species</td>' +
+//                            '<td>{species}</td>' +
+//                            '</tr>',
+//                            '<tr>' +
+//                            '<td class="header">Material</td>' +
+//                            '<td>{material}</td>' +
+//                            '</tr>',
+//                            '<tr>' +
+//                            '<td class="header">Scope</td>' +
+//                            '<td>{scope}</td>' +
+//                            '</tr>',
+//                            '<tr>' +
+//                            '<td class="header">Type</td>' +
+//                            '<td>{type}</td>' +
+//                            '</tr>',
+//                            '<tr>' +
+//                            '<td class="header">Sources</td>' +
+//                            '<td>{sources}</td>' +
+//                            '</tr>',
+//                            '<tr>' +
+//                            '<td class="header">Description</td>' +
+//                            '<td>{description}</td>' +
+//                            '</tr>',
+//                        '</table>'
+//                    ),
+//                    margin: '5 5 5 10'
+//                }
+//
+//            ]
+//        });
+//
+//        return filePanel;
+//
+//    },
+//
+//
+//    _createFilesPanel: function (files) {
+//        var filePanels = [];
+//        for (var i = 0; i < files.length; i++) {
+//            var file = files[i];
+//            filePanels.push(this._createFilePanel(file));
+//        }
+//
+//        var filesContainer = Ext.create('Ext.container.Container', {
+//            layout: {
+//                type: 'vbox',
+//                align: 'stretch'
+//            },
+//            overflowY: true,
+//            padding: 10,
+//            items: filePanels
+//
+//        });
+//
+//        var studyPanel = Ext.create('Ext.container.Container', {
+//            items: [
+//                filesContainer
+//            ]
+//        });
+//        return studyPanel;
+//
+//    },
+//    _createFilePanel: function (file) {
+//
+//        var filePanel = Ext.create('Ext.container.Container', {
+//            layout: 'vbox',
+//            items: [
+//                {
+//                    xtype: 'box',
+//                    cls: 'eva-header-5',
+//                    margin: '5 5 5 10',
+//                    html: file.fileName
+//                },
+//                {
+//                    xtype: 'container',
+//                    layout: 'hbox',
+//                    items: [
+//                        {
+//                            xtype: 'container',
+//                            data: file.stats,
+//                            tpl: new Ext.XTemplate(
+//                                    '<table class="eva-stats-table">' +
+//                                    '<tr>' +
+//                                    '<td class="header">Variants count:</td>' +
+//                                    '<td>{variantsCount}</td>' +
+//                                    '</tr>',
+//                                    '<tr>' +
+//                                    '<td class="header">Samples count:</td>' +
+//                                    '<td>{samplesCount}</td>' +
+//                                    '</tr>',
+//                                    '<tr>' +
+//                                    '<td class="header">SNPs count:</td>' +
+//                                    '<td>{snpsCount}</td>' +
+//                                    '</tr>',
+//                                    '<tr>' +
+//                                    '<td class="header">Indels count:</td>' +
+//                                    '<td>{indelsCount}</td>' +
+//                                    '</tr>',
+//                                    '<tr>' +
+//                                    '<td class="header">Pass count:</td>' +
+//                                    '<td>{passCount}</td>' +
+//                                    '</tr>',
+//                                    '<tr>' +
+//                                    '<td class="header">Ti/Tv Ratio:</td>' +
+//                                    '<td>{[this.titv(values)]}</td>' +
+//                                    '</tr>',
+//                                    '<tr>' +
+//                                    '<td class="header">Mean quality:</td>' +
+//                                    '<td>{meanQuality}</td>' +
+//                                    '</tr>',
+//                                '</table>', {
+//                                    titv: function (values) {
+//                                        var res = values.transitionsCount / values.transversionsCount;
+//                                        return res.toFixed(2);
+//                                    }
+//                                }
+//                            ),
+//                            margin: '5 5 5 10'
+//                        }
+//                    ]
+//                }
+//
+//            ]
+//        });
+//        return filePanel;
+//    },
+
+};
+
+/*
+ * Copyright (c) 2014 Francisco Salavert (SGL-CIPF)
+ * Copyright (c) 2014 Alejandro Alemán (SGL-CIPF)
+ * Copyright (c) 2014 Ignacio Medina (EBI-EMBL)
+ *
+ * This file is part of JSorolla.
+ *
+ * JSorolla is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * JSorolla is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with JSorolla. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+function VariantWidget(args) {
+
+    _.extend(this, Backbone.Events);
+
+    this.id = Utils.genId("VariantWidget");
+
+    //set default args
+    this.target;
+    this.width;
+    this.height;
+    this.autoRender = true;
+    this.data = [];
+    this.host;
+    this.closable = true;
+    this.filters = {
+        segregation: true,
+        maf: true,
+        effect: true,
+        region: true,
+        gene: true
+    };
+    this.headerConfig;
+    this.attributes = [];
+    this.columns = [];
+    this.samples = [];
+    this.defaultToolConfig = {
+        headerConfig: {
+            baseCls: 'ocb-title-2'
+        },
+        effect: true,
+        genomeViewer: true,
+        genotype: true,
+        stats: true
+    };
+    this.tools = [];
+    this.dataParser;
+    this.responseParser;
+
+    this.responseRoot = "response[0].result";
+    this.responseTotal = "response[0].numTotalResults";
+    this.startParam = "skip";
+
+    this.browserGridConfig = {
+        title: 'variant browser grid',
+        border: false
+    };
+    this.toolPanelConfig = {
+        title: 'Variant data',
+        border: false
+    };
+    this.toolsConfig = {
+        headerConfig: {
+            baseCls: 'ocb-title-2'
+        }
+    };
+
+
+    _.extend(this.filters, args.filters);
+    _.extend(this.browserGridConfig, args.browserGridConfig);
+    _.extend(this.defaultToolConfig, args.defaultToolConfig);
+
+    delete args.filters;
+    delete args.defaultToolConfig;
+
+//set instantiation args, must be last
+    _.extend(this, args);
+
+    this.selectedToolDiv;
+
+    this.rendered = false;
+    if (this.autoRender) {
+        this.render();
+    }
+
+}
+
+VariantWidget.prototype = {
+    render: function () {
+        var _this = this;
+
+        //HTML skel
+        this.div = document.createElement('div');
+        this.div.setAttribute('id', this.id);
+
+        this.variantBrowserGridDiv = document.createElement('div');
+        this.variantBrowserGridDiv.setAttribute('class', 'ocb-variant-widget-grid');
+        this.div.appendChild(this.variantBrowserGridDiv);
+
+        this.variantBrowserGrid = this._createVariantBrowserGrid(this.variantBrowserGridDiv);
+
+        this.tabPanelDiv = document.createElement('div');
+        this.tabPanelDiv.setAttribute('class', 'ocb-variant-tab-panel');
+        this.div.appendChild(this.tabPanelDiv);
+
+        this.toolTabPanel = Ext.create("Ext.tab.Panel", {
+            title: this.toolPanelConfig.title,
+            border: this.toolPanelConfig.border,
+            layout: 'fit',
+            margin: '10 0 0 0',
+            plain: true,
+            animCollapse: false,
+            header: this.headerConfig,
+            collapseDirection: Ext.Component.DIRECTION_BOTTOM,
+            titleCollapse: true,
+            overlapHeader: true,
+            height: 540,
+            defaults: {
+                hideMode: 'offsets',
+                autoShow: true
+            },
+            listeners: {
+                tabchange: function (tabPanel, newTab, oldTab, eOpts) {
+                    _this.selectedToolDiv = newTab.contentEl;
+                    if (_this.lastVariant) {
+                        _this.trigger('variant:change', {variant: _this.lastVariant, sender: _this});
+                    }
+                }
+            }
+        });
+
+        var tabPanelItems = [];
+
+        if (this.defaultToolConfig.stats) {
+            this.variantStatsPanelDiv = document.createElement('div');
+            this.variantStatsPanelDiv.setAttribute('class', 'ocb-variant-stats-panel');
+            this.variantStatsPanel = this._createVariantStatsPanel(this.variantStatsPanelDiv);
+            tabPanelItems.push({
+                title: 'File and Stats',
+//                border: 0,
+                contentEl: this.variantStatsPanelDiv
+            });
+        }
+
+        if (this.defaultToolConfig.effect) {
+            this.variantEffectGridDiv = document.createElement('div');
+            this.variantEffectGridDiv.setAttribute('class', 'ocb-variant-effect-grid');
+            this.variantEffectGrid = this._createVariantEffectGrid(this.variantEffectGridDiv);
+            tabPanelItems.push({
+                title: 'Effect and Annotation',
+                contentEl: this.variantEffectGridDiv
+            });
+        }
+
+        if (this.defaultToolConfig.genotype) {
+            this.variantGenotypeGridDiv = document.createElement('div');
+            this.variantGenotypeGridDiv.setAttribute('class', 'ocb-variant-genotype-grid');
+            this.variantGenotypeGrid = this._createVariantGenotypeGrid(this.variantGenotypeGridDiv);
+            tabPanelItems.push({
+                title: 'Genotype',
+//                border: 0,
+                contentEl: this.variantGenotypeGridDiv
+            });
+        }
+
+        if (this.defaultToolConfig.genomeViewer) {
+            this.genomeViewerDiv = document.createElement('div');
+            this.genomeViewerDiv.setAttribute('class', 'ocb-gv');
+            this.genomeViewer = this._createGenomeViewer(this.genomeViewerDiv);
+            tabPanelItems.push({
+                title: 'Genomic Context',
+                contentEl: this.genomeViewerDiv,
+                autoScroll: true
+            });
+        }
+
+        for (var i = 0; i < this.tools.length; i++) {
+            var tool = this.tools[i];
+            var toolDiv = document.createElement('div');
+
+            tool.tool.target = toolDiv;
+
+            tabPanelItems.push({
+                title: tool.title,
+                contentEl: toolDiv
+            });
+        }
+
+        this.toolTabPanel.add(tabPanelItems);
+
+        this.rendered = true;
+    },
+    draw: function () {
+        var _this = this;
+        this.targetDiv = (this.target instanceof HTMLElement ) ? this.target : document.querySelector('#' + this.target);
+        if (!this.targetDiv) {
+            console.log('target not found');
+            return;
+        }
+        this.targetDiv.appendChild(this.div);
+
+        this.variantBrowserGrid.draw();
+
+        this.toolTabPanel.render(this.tabPanelDiv);
+
+
+        for (var i = 0; i < this.toolTabPanel.items.items.length; i++) {
+            this.toolTabPanel.setActiveTab(i);
+        }
+
+        if (this.defaultToolConfig.effect) {
+
+            this.variantEffectGrid.draw();
+        }
+
+        if (this.defaultToolConfig.genotype) {
+
+            this.variantGenotypeGrid.draw();
+        }
+
+        if (this.defaultToolConfig.genomeViewer) {
+            this.genomeViewer.draw();
+        }
+
+        if (this.defaultToolConfig.stats) {
+            this.variantStatsPanel.draw();
+        }
+
+        for (var i = 0; i < this.tools.length; i++) {
+            var tool = this.tools[i];
+            tool.tool.draw();
+        }
+
+        this.toolTabPanel.setActiveTab(0);
+    },
+    _createVariantBrowserGrid: function (target) {
+        var _this = this;
+
+
+        var variantBrowserGrid = new VariantBrowserGrid({
+            title: this.browserGridConfig.title,
+            target: target,
+            data: this.data,
+            border: this.browserGridConfig.border,
+            dataParser: this.dataParser,
+            responseRoot: this.responseRoot,
+            responseTotal: this.responseTotal,
+            responseParser: this.responseParser,
+            startParam: this.startParam,
+            attributes: this.attributes,
+            columns: this.columns,
+            samples: this.samples,
+            headerConfig: this.headerConfig,
+            handlers: {
+                "variant:change": function (e) {
+                    _this.lastVariant = e.args;
+                    _this.trigger('variant:change', {variant: _this.lastVariant, sender: _this});
+                },
+                "variant:clear": function (e) {
+                    //_this.lastVariant = e.args;
+                    _this.trigger('variant:clear', {sender: _this});
+                }
+            }
+        });
+        return variantBrowserGrid;
+    },
+
+    _createVariantEffectGrid: function (target) {
+        var _this = this;
+        var variantEffectGrid = new VariantEffectGrid({
+            target: target,
+            headerConfig: this.defaultToolConfig.headerConfig,
+            gridConfig: {
+                flex: 1,
+                layout: {
+                    align: 'stretch'
+                }
+            },
+            handlers: {
+                "load:finish": function (e) {
+                }
+            }
+        });
+
+        this.variantBrowserGrid.on("variant:clear", function (e) {
+            variantEffectGrid.clear(true);
+        });
+
+        this.on("variant:change", function (e) {
+            if (target === _this.selectedToolDiv) {
+                var variant = e.variant;
+
+                var effectData = _this._loadExampleData();
+
+                variantEffectGrid.load(effectData);
+            }
+
+        });
+        return variantEffectGrid;
+    },
+    _createVariantStatsPanel: function (target) {
+        var _this = this;
+        var variantStatsPanel = new VariantStatsPanel({
+            target: target,
+            headerConfig: this.defaultToolConfig.headerConfig,
+            handlers: {
+                "load:finish": function (e) {
+//                    _this.grid.setLoading(false);
+                }
+            }
+        });
+
+        this.variantBrowserGrid.on("variant:clear", function (e) {
+            variantStatsPanel.clear(true);
+        });
+
+        this.on("variant:change", function (e) {
+            if (target === _this.selectedToolDiv) {
+                var variant = e.variant;
+                if (variant.files) {
+                    variantStatsPanel.load(variant.files);
+                }
+            }
+        });
+        return variantStatsPanel;
+    },
+    _createVariantGenotypeGrid: function (target) {
+        var _this = this;
+        var variantGenotypeGrid = new VariantGenotypeGrid({
+            target: target,
+            headerConfig: this.defaultToolConfig.headerConfig,
+            gridConfig: {
+                flex: 1,
+                layout: {
+                    align: 'stretch'
+                }
+            },
+            handlers: {
+                "load:finish": function (e) {
+
+                }
+            }
+        });
+
+        this.variantBrowserGrid.on("variant:clear", function (e) {
+            variantGenotypeGrid.clear(true);
+        });
+
+        _this.on("variant:change", function (e) {
+            if (target === _this.selectedToolDiv) {
+                var variant = e.variant;
+                if (variant.files) {
+                    variantGenotypeGrid.load(variant.files);
+                }
+            }
+        });
+        return variantGenotypeGrid;
+    },
+
+
+    _createGenomeViewer: function (target) {
+        var _this = this;
+
+
+        var region = new Region({
+            chromosome: "13",
+            start: 32889611,
+            end: 32889611
+        });
+
+        var genomeViewer = new GenomeViewer({
+            sidePanel: false,
+            target: target,
+            border: false,
+            resizable: true,
+            width: this.width - 20,
+            region: region,
+            trackListTitle: '',
+            drawNavigationBar: true,
+            drawKaryotypePanel: false,
+            drawChromosomePanel: false,
+            drawRegionOverviewPanel: true,
+            overviewZoomMultiplier: 50,
+            navigationBarConfig: {
+                componentsConfig: {
+                    restoreDefaultRegionButton: false,
+                    regionHistoryButton: false,
+                    speciesButton: false,
+                    chromosomesButton: false,
+                    karyotypeButton: false,
+                    chromosomeButton: false,
+                    regionButton: false,
+//                    zoomControl: false,
+                    windowSizeControl: false,
+//                    positionControl: false,
+//                    moveControl: false,
+//                    autoheightButton: false,
+//                    compactButton: false,
+//                    searchControl: false
+                }
+            }
+        });
+
+
+        var renderer = new FeatureRenderer(FEATURE_TYPES.gene);
+        renderer.on({
+            'feature:click': function (event) {
+                // feature click event example
+                console.log(event)
+            }
+        });
+        var geneOverview = new FeatureTrack({
+//        title: 'Gene overview',
+            minHistogramRegionSize: 20000000,
+            maxLabelRegionSize: 10000000,
+            height: 100,
+
+            renderer: renderer,
+
+            dataAdapter: new CellBaseAdapter({
+                category: "genomic",
+                subCategory: "region",
+                resource: "gene",
+                params: {
+                    exclude: 'transcripts,chunkIds'
+                },
+                species: genomeViewer.species,
+                cacheConfig: {
+                    chunkSize: 100000
+                }
+            })
+        });
+
+
+        var sequence = new SequenceTrack({
+//        title: 'Sequence',
+            height: 30,
+            visibleRegionSize: 200,
+
+            renderer: new SequenceRenderer(),
+
+            dataAdapter: new SequenceAdapter({
+                category: "genomic",
+                subCategory: "region",
+                resource: "sequence",
+                species: genomeViewer.species
+            })
+        });
+
+
+        var gene = new GeneTrack({
+            title: 'Gene',
+            minHistogramRegionSize: 20000000,
+            maxLabelRegionSize: 10000000,
+            minTranscriptRegionSize: 200000,
+            height: 140,
+
+            renderer: new GeneRenderer(),
+
+            dataAdapter: new CellBaseAdapter({
+                category: "genomic",
+                subCategory: "region",
+                resource: "gene",
+                species: genomeViewer.species,
+                params: {
+                    exclude: 'transcripts.tfbs,transcripts.xrefs,transcripts.exons.sequence'
+                },
+                cacheConfig: {
+                    chunkSize: 100000
+                }
+            })
+        });
+
+        var snp = new FeatureTrack({
+            title: 'SNP',
+            featureType: 'SNP',
+            minHistogramRegionSize: 10000,
+            maxLabelRegionSize: 3000,
+            height: 100,
+
+            renderer: new FeatureRenderer(FEATURE_TYPES.snp),
+
+            dataAdapter: new CellBaseAdapter({
+                category: "genomic",
+                subCategory: "region",
+                resource: "snp",
+                params: {
+                    exclude: 'transcriptVariations,xrefs,samples'
+                },
+                species: genomeViewer.species,
+                cacheConfig: {
+                    chunkSize: 10000
+                }
+            })
+        });
+
+        genomeViewer.addOverviewTrack(geneOverview);
+        genomeViewer.addTrack([sequence, gene, snp]);
+
+
+        this.on("variant:change", function (e) {
+            if (target === _this.selectedToolDiv) {
+                var variant = e.variant;
+                var region = new Region(variant);
+                if (!_.isUndefined(genomeViewer)) {
+                    genomeViewer.setRegion(region);
+                }
+            }
+        });
+
+        return genomeViewer;
+    },
+    retrieveData: function (baseUrl, filterParams) {
+        this.variantBrowserGrid.loadUrl(baseUrl, filterParams);
+    },
+    setLoading: function (loading) {
+        this.variantBrowserGrid.setLoading(loading);
+    },
+    _loadExampleData: function () {
+        var data = {"chromosome": "1", "start": 10001, "end": 10001, "referenceAllele": "T", "genes": [], "effects": {"G": [
+                {"allele": "G", "geneId": "ENSG00000223972", "geneName": "DDX11L1", "geneNameSource": "HGNC", "featureId": "ENST00000456328", "featureType": "Transcript", "featureBiotype": "processed_transcript", "featureStrand": "1", "cDnaPosition": -1, "cdsPosition": -1, "proteinPosition": -1, "consequenceTypes": [1631], "canonical": true, "variantToTranscriptDistance": 1868},
+                {"allele": "G", "geneId": "ENSG00000227232", "geneName": "WASH7P", "geneNameSource": "HGNC", "featureId": "ENST00000488147", "featureType": "Transcript", "featureBiotype": "unprocessed_pseudogene", "featureStrand": "-1", "cDnaPosition": -1, "cdsPosition": -1, "proteinPosition": -1, "consequenceTypes": [1632], "canonical": false, "variantToTranscriptDistance": 4403},
+                {"allele": "G", "geneId": "ENSG00000227232", "geneName": "WASH7P", "geneNameSource": "HGNC", "featureId": "ENST00000541675", "featureType": "Transcript", "featureBiotype": "unprocessed_pseudogene", "featureStrand": "-1", "cDnaPosition": -1, "cdsPosition": -1, "proteinPosition": -1, "consequenceTypes": [1632], "canonical": false, "variantToTranscriptDistance": 4362},
+                {"allele": "G", "geneId": "ENSG00000223972", "geneName": "DDX11L1", "geneNameSource": "HGNC", "featureId": "ENST00000450305", "featureType": "Transcript", "featureBiotype": "transcribed_unprocessed_pseudogene", "featureStrand": "1", "cDnaPosition": -1, "cdsPosition": -1, "proteinPosition": -1, "consequenceTypes": [1631], "canonical": false, "variantToTranscriptDistance": 2009},
+                {"allele": "G", "geneId": "ENSG00000223972", "geneName": "DDX11L1", "geneNameSource": "HGNC", "featureId": "ENST00000515242", "featureType": "Transcript", "featureBiotype": "transcribed_unprocessed_pseudogene", "featureStrand": "1", "cDnaPosition": -1, "cdsPosition": -1, "proteinPosition": -1, "consequenceTypes": [1631], "canonical": false, "variantToTranscriptDistance": 1871},
+                {"allele": "G", "geneId": "ENSG00000227232", "geneName": "WASH7P", "geneNameSource": "HGNC", "featureId": "ENST00000538476", "featureType": "Transcript", "featureBiotype": "unprocessed_pseudogene", "featureStrand": "-1", "cDnaPosition": -1, "cdsPosition": -1, "proteinPosition": -1, "consequenceTypes": [1632], "canonical": false, "variantToTranscriptDistance": 4410},
+                {"allele": "G", "geneId": "ENSG00000223972", "geneName": "DDX11L1", "geneNameSource": "HGNC", "featureId": "ENST00000518655", "featureType": "Transcript", "featureBiotype": "transcribed_unprocessed_pseudogene", "featureStrand": "1", "cDnaPosition": -1, "cdsPosition": -1, "proteinPosition": -1, "consequenceTypes": [1631], "canonical": false, "variantToTranscriptDistance": 1873},
+                {"allele": "G", "geneId": "ENSG00000227232", "geneName": "WASH7P", "geneNameSource": "HGNC", "featureId": "ENST00000438504", "featureType": "Transcript", "featureBiotype": "unprocessed_pseudogene", "featureStrand": "-1", "cDnaPosition": -1, "cdsPosition": -1, "proteinPosition": -1, "consequenceTypes": [1632], "canonical": true, "variantToTranscriptDistance": 4362},
+                {"allele": "G", "geneId": "ENSG00000227232", "geneName": "WASH7P", "geneNameSource": "HGNC", "featureId": "ENST00000423562", "featureType": "Transcript", "featureBiotype": "unprocessed_pseudogene", "featureStrand": "-1", "cDnaPosition": -1, "cdsPosition": -1, "proteinPosition": -1, "consequenceTypes": [1632], "canonical": false, "variantToTranscriptDistance": 4362},
+                {"allele": "G", "featureId": "ENSR00000668495", "featureType": "RegulatoryFeature", "cDnaPosition": -1, "cdsPosition": -1, "proteinPosition": -1, "consequenceTypes": [1566], "canonical": false, "variantToTranscriptDistance": -1}
+            ], "A": [
+                {"allele": "A", "geneId": "ENSG00000223972", "geneName": "DDX11L1", "geneNameSource": "HGNC", "featureId": "ENST00000456328", "featureType": "Transcript", "featureBiotype": "processed_transcript", "featureStrand": "1", "cDnaPosition": -1, "cdsPosition": -1, "proteinPosition": -1, "consequenceTypes": [1631], "canonical": true, "variantToTranscriptDistance": 1868},
+                {"allele": "A", "geneId": "ENSG00000227232", "geneName": "WASH7P", "geneNameSource": "HGNC", "featureId": "ENST00000488147", "featureType": "Transcript", "featureBiotype": "unprocessed_pseudogene", "featureStrand": "-1", "cDnaPosition": -1, "cdsPosition": -1, "proteinPosition": -1, "consequenceTypes": [1632], "canonical": false, "variantToTranscriptDistance": 4403},
+                {"allele": "A", "geneId": "ENSG00000227232", "geneName": "WASH7P", "geneNameSource": "HGNC", "featureId": "ENST00000541675", "featureType": "Transcript", "featureBiotype": "unprocessed_pseudogene", "featureStrand": "-1", "cDnaPosition": -1, "cdsPosition": -1, "proteinPosition": -1, "consequenceTypes": [1632], "canonical": false, "variantToTranscriptDistance": 4362},
+                {"allele": "A", "geneId": "ENSG00000223972", "geneName": "DDX11L1", "geneNameSource": "HGNC", "featureId": "ENST00000450305", "featureType": "Transcript", "featureBiotype": "transcribed_unprocessed_pseudogene", "featureStrand": "1", "cDnaPosition": -1, "cdsPosition": -1, "proteinPosition": -1, "consequenceTypes": [1631], "canonical": false, "variantToTranscriptDistance": 2009},
+                {"allele": "A", "geneId": "ENSG00000223972", "geneName": "DDX11L1", "geneNameSource": "HGNC", "featureId": "ENST00000515242", "featureType": "Transcript", "featureBiotype": "transcribed_unprocessed_pseudogene", "featureStrand": "1", "cDnaPosition": -1, "cdsPosition": -1, "proteinPosition": -1, "consequenceTypes": [1631], "canonical": false, "variantToTranscriptDistance": 1871},
+                {"allele": "A", "geneId": "ENSG00000227232", "geneName": "WASH7P", "geneNameSource": "HGNC", "featureId": "ENST00000538476", "featureType": "Transcript", "featureBiotype": "unprocessed_pseudogene", "featureStrand": "-1", "cDnaPosition": -1, "cdsPosition": -1, "proteinPosition": -1, "consequenceTypes": [1632], "canonical": false, "variantToTranscriptDistance": 4410},
+                {"allele": "A", "geneId": "ENSG00000223972", "geneName": "DDX11L1", "geneNameSource": "HGNC", "featureId": "ENST00000518655", "featureType": "Transcript", "featureBiotype": "transcribed_unprocessed_pseudogene", "featureStrand": "1", "cDnaPosition": -1, "cdsPosition": -1, "proteinPosition": -1, "consequenceTypes": [1631], "canonical": false, "variantToTranscriptDistance": 1873},
+                {"allele": "A", "geneId": "ENSG00000227232", "geneName": "WASH7P", "geneNameSource": "HGNC", "featureId": "ENST00000438504", "featureType": "Transcript", "featureBiotype": "unprocessed_pseudogene", "featureStrand": "-1", "cDnaPosition": -1, "cdsPosition": -1, "proteinPosition": -1, "consequenceTypes": [1632], "canonical": true, "variantToTranscriptDistance": 4362},
+                {"allele": "A", "geneId": "ENSG00000227232", "geneName": "WASH7P", "geneNameSource": "HGNC", "featureId": "ENST00000423562", "featureType": "Transcript", "featureBiotype": "unprocessed_pseudogene", "featureStrand": "-1", "cDnaPosition": -1, "cdsPosition": -1, "proteinPosition": -1, "consequenceTypes": [1632], "canonical": false, "variantToTranscriptDistance": 4362},
+                {"allele": "A", "featureId": "ENSR00000668495", "featureType": "RegulatoryFeature", "cDnaPosition": -1, "cdsPosition": -1, "proteinPosition": -1, "consequenceTypes": [1566], "canonical": false, "variantToTranscriptDistance": -1}
+            ], "C": [
+                {"allele": "C", "geneId": "ENSG00000223972", "geneName": "DDX11L1", "geneNameSource": "HGNC", "featureId": "ENST00000456328", "featureType": "Transcript", "featureBiotype": "processed_transcript", "featureStrand": "1", "cDnaPosition": -1, "cdsPosition": -1, "proteinPosition": -1, "consequenceTypes": [1631], "canonical": true, "variantToTranscriptDistance": 1868},
+                {"allele": "C", "geneId": "ENSG00000227232", "geneName": "WASH7P", "geneNameSource": "HGNC", "featureId": "ENST00000488147", "featureType": "Transcript", "featureBiotype": "unprocessed_pseudogene", "featureStrand": "-1", "cDnaPosition": -1, "cdsPosition": -1, "proteinPosition": -1, "consequenceTypes": [1632], "canonical": false, "variantToTranscriptDistance": 4403},
+                {"allele": "C", "geneId": "ENSG00000227232", "geneName": "WASH7P", "geneNameSource": "HGNC", "featureId": "ENST00000541675", "featureType": "Transcript", "featureBiotype": "unprocessed_pseudogene", "featureStrand": "-1", "cDnaPosition": -1, "cdsPosition": -1, "proteinPosition": -1, "consequenceTypes": [1632], "canonical": false, "variantToTranscriptDistance": 4362},
+                {"allele": "C", "geneId": "ENSG00000223972", "geneName": "DDX11L1", "geneNameSource": "HGNC", "featureId": "ENST00000450305", "featureType": "Transcript", "featureBiotype": "transcribed_unprocessed_pseudogene", "featureStrand": "1", "cDnaPosition": -1, "cdsPosition": -1, "proteinPosition": -1, "consequenceTypes": [1631], "canonical": false, "variantToTranscriptDistance": 2009},
+                {"allele": "C", "geneId": "ENSG00000223972", "geneName": "DDX11L1", "geneNameSource": "HGNC", "featureId": "ENST00000515242", "featureType": "Transcript", "featureBiotype": "transcribed_unprocessed_pseudogene", "featureStrand": "1", "cDnaPosition": -1, "cdsPosition": -1, "proteinPosition": -1, "consequenceTypes": [1631], "canonical": false, "variantToTranscriptDistance": 1871},
+                {"allele": "C", "geneId": "ENSG00000227232", "geneName": "WASH7P", "geneNameSource": "HGNC", "featureId": "ENST00000538476", "featureType": "Transcript", "featureBiotype": "unprocessed_pseudogene", "featureStrand": "-1", "cDnaPosition": -1, "cdsPosition": -1, "proteinPosition": -1, "consequenceTypes": [1632], "canonical": false, "variantToTranscriptDistance": 4410},
+                {"allele": "C", "geneId": "ENSG00000223972", "geneName": "DDX11L1", "geneNameSource": "HGNC", "featureId": "ENST00000518655", "featureType": "Transcript", "featureBiotype": "transcribed_unprocessed_pseudogene", "featureStrand": "1", "cDnaPosition": -1, "cdsPosition": -1, "proteinPosition": -1, "consequenceTypes": [1631], "canonical": false, "variantToTranscriptDistance": 1873},
+                {"allele": "C", "geneId": "ENSG00000227232", "geneName": "WASH7P", "geneNameSource": "HGNC", "featureId": "ENST00000438504", "featureType": "Transcript", "featureBiotype": "unprocessed_pseudogene", "featureStrand": "-1", "cDnaPosition": -1, "cdsPosition": -1, "proteinPosition": -1, "consequenceTypes": [1632], "canonical": true, "variantToTranscriptDistance": 4362},
+                {"allele": "C", "geneId": "ENSG00000227232", "geneName": "WASH7P", "geneNameSource": "HGNC", "featureId": "ENST00000423562", "featureType": "Transcript", "featureBiotype": "unprocessed_pseudogene", "featureStrand": "-1", "cDnaPosition": -1, "cdsPosition": -1, "proteinPosition": -1, "consequenceTypes": [1632], "canonical": false, "variantToTranscriptDistance": 4362},
+                {"allele": "C", "featureId": "ENSR00000668495", "featureType": "RegulatoryFeature", "cDnaPosition": -1, "cdsPosition": -1, "proteinPosition": -1, "consequenceTypes": [1566], "canonical": false, "variantToTranscriptDistance": -1}
+            ], "-": [
+                {"allele": "-", "geneId": "ENSG00000223972", "geneName": "DDX11L1", "geneNameSource": "HGNC", "featureId": "ENST00000456328", "featureType": "Transcript", "featureBiotype": "processed_transcript", "featureStrand": "1", "cDnaPosition": -1, "cdsPosition": -1, "proteinPosition": -1, "consequenceTypes": [1631], "canonical": true, "variantToTranscriptDistance": 1868},
+                {"allele": "-", "geneId": "ENSG00000227232", "geneName": "WASH7P", "geneNameSource": "HGNC", "featureId": "ENST00000488147", "featureType": "Transcript", "featureBiotype": "unprocessed_pseudogene", "featureStrand": "-1", "cDnaPosition": -1, "cdsPosition": -1, "proteinPosition": -1, "consequenceTypes": [1632], "canonical": false, "variantToTranscriptDistance": 4403},
+                {"allele": "-", "geneId": "ENSG00000227232", "geneName": "WASH7P", "geneNameSource": "HGNC", "featureId": "ENST00000541675", "featureType": "Transcript", "featureBiotype": "unprocessed_pseudogene", "featureStrand": "-1", "cDnaPosition": -1, "cdsPosition": -1, "proteinPosition": -1, "consequenceTypes": [1632], "canonical": false, "variantToTranscriptDistance": 4362},
+                {"allele": "-", "geneId": "ENSG00000223972", "geneName": "DDX11L1", "geneNameSource": "HGNC", "featureId": "ENST00000450305", "featureType": "Transcript", "featureBiotype": "transcribed_unprocessed_pseudogene", "featureStrand": "1", "cDnaPosition": -1, "cdsPosition": -1, "proteinPosition": -1, "consequenceTypes": [1631], "canonical": false, "variantToTranscriptDistance": 2009},
+                {"allele": "-", "geneId": "ENSG00000223972", "geneName": "DDX11L1", "geneNameSource": "HGNC", "featureId": "ENST00000515242", "featureType": "Transcript", "featureBiotype": "transcribed_unprocessed_pseudogene", "featureStrand": "1", "cDnaPosition": -1, "cdsPosition": -1, "proteinPosition": -1, "consequenceTypes": [1631], "canonical": false, "variantToTranscriptDistance": 1871},
+                {"allele": "-", "geneId": "ENSG00000227232", "geneName": "WASH7P", "geneNameSource": "HGNC", "featureId": "ENST00000538476", "featureType": "Transcript", "featureBiotype": "unprocessed_pseudogene", "featureStrand": "-1", "cDnaPosition": -1, "cdsPosition": -1, "proteinPosition": -1, "consequenceTypes": [1632], "canonical": false, "variantToTranscriptDistance": 4410},
+                {"allele": "-", "geneId": "ENSG00000223972", "geneName": "DDX11L1", "geneNameSource": "HGNC", "featureId": "ENST00000518655", "featureType": "Transcript", "featureBiotype": "transcribed_unprocessed_pseudogene", "featureStrand": "1", "cDnaPosition": -1, "cdsPosition": -1, "proteinPosition": -1, "consequenceTypes": [1631], "canonical": false, "variantToTranscriptDistance": 1873},
+                {"allele": "-", "geneId": "ENSG00000227232", "geneName": "WASH7P", "geneNameSource": "HGNC", "featureId": "ENST00000438504", "featureType": "Transcript", "featureBiotype": "unprocessed_pseudogene", "featureStrand": "-1", "cDnaPosition": -1, "cdsPosition": -1, "proteinPosition": -1, "consequenceTypes": [1632], "canonical": true, "variantToTranscriptDistance": 4362},
+                {"allele": "-", "geneId": "ENSG00000227232", "geneName": "WASH7P", "geneNameSource": "HGNC", "featureId": "ENST00000423562", "featureType": "Transcript", "featureBiotype": "unprocessed_pseudogene", "featureStrand": "-1", "cDnaPosition": -1, "cdsPosition": -1, "proteinPosition": -1, "consequenceTypes": [1632], "canonical": false, "variantToTranscriptDistance": 4362},
+                {"allele": "-", "featureId": "ENSR00000668495", "featureType": "RegulatoryFeature", "cDnaPosition": -1, "cdsPosition": -1, "proteinPosition": -1, "consequenceTypes": [1566], "canonical": false, "variantToTranscriptDistance": -1}
+            ]}, "frequencies": {"maf1000G": 0.6, "maf1000GAfrican": 0.5, "maf1000GAmerican": 0.4, "maf1000GAsian": 0.3, "maf1000GEuropean": 0.2, "mafNhlbiEspAfricanAmerican": 0.1, "mafNhlbiEspEuropeanAmerican": 0.2}, "proteinSubstitutionScores": {"polyphenScore": -1.0, "siftScore": -1.0}, "regulatoryEffect": {"motifPosition": 0, "motifScoreChange": 0.0, "highInformationPosition": false}}
+            ;
+        return data
+    }
+};
+
+/*
  * Copyright (c) 2012 Francisco Salavert (ICM-CIPF)
  * Copyright (c) 2012 Ruben Sanchez (ICM-CIPF)
  * Copyright (c) 2012 Ignacio Medina (ICM-CIPF)
@@ -5997,6 +9440,7 @@ function NetworkFileWidget(args) {
     this.title = 'Network widget abstract class';
     this.width = 600;
     this.height = 300;
+    this.layoutSelector = true;
 
     //set instantiation args, must be last
     _.extend(this, args);
@@ -6065,51 +9509,64 @@ NetworkFileWidget.prototype.draw = function () {
             ]
         });
 
-        var comboLayout = Ext.create('Ext.form.field.ComboBox', {
-            margin: "0 0 0 5",
-            width: 120,
-            editable: false,
-            displayField: 'name',
-            valueField: 'name',
-            value: "none",
-            store: new Ext.data.SimpleStore({
-                fields: ['name'],
-                data: [
-                    ["none"],
-                    ["Force directed"],
-                    ["Random"],
-                    ["Circle"]
-                ]
-            })
-        });
+        var comboLayout;
+        if (this.layoutSelector) {
+            var comboLayout = Ext.create('Ext.form.field.ComboBox', {
+                margin: "0 0 0 5",
+                width: 240,
+                editable: false,
+                labelWidth: 90,
+                fieldLabel: 'Apply layout',
+                displayField: 'name',
+                valueField: 'name',
+                value: "Force directed",
+                store: new Ext.data.SimpleStore({
+                    fields: ['name'],
+                    data: [
+                        ["Force directed"],
+                        ["Random"],
+                        ["Circle"],
+                        ["none"]
+                    ]
+                })
+            });
+        }
 
         this.panel = Ext.create('Ext.window.Window', {
             title: this.title,
-            width: this.width,
-            height: this.height,
             resizable: false,
-            layout: { type: 'vbox', align: 'stretch'},
-            items: [this.grid],
-            dockedItems:[
-                browseBar
-            ],
-            buttons: [
-                {
-                    xtype: 'text',
-                    margin: "5 0 0 0",
-                    text: 'Apply layout:'
-                },
-                comboLayout,
-                '->',
-                {text: 'Ok', handler: function () {
-                    _this.trigger('okButton:click', {content: _this.content, layout: comboLayout.getValue(), sender: _this});
-                    _this.panel.close();
+            items: {
+                border: false,
+                width: this.width,
+                height: this.height,
+                layout: { type: 'vbox', align: 'stretch'},
+                items: [
+                    this.grid
+                ],
+                tbar: browseBar,
+                bbar: {
+                    defaults: {
+                        width: 100
+                    },
+                    items: [
+                        comboLayout,
+                        '->',
+                        {text: 'Ok', handler: function () {
+                            var layout;
+                            if (comboLayout) {
+                                layout = comboLayout.getValue()
+                            }
+                            _this.trigger('okButton:click', {content: _this.content, layout: layout, sender: _this});
+                            _this.panel.close();
+                        }
+                        },
+                        {text: 'Cancel', handler: function () {
+                            _this.panel.close();
+                        }}
+                    ]
+
                 }
-                },
-                {text: 'Cancel', handler: function () {
-                    _this.panel.close();
-                }}
-            ],
+            },
             listeners: {
                 scope: this,
                 minimize: function () {
@@ -6239,56 +9696,63 @@ AttributeLayoutConfigureWidget.prototype = {
         this.window = Ext.create('Ext.window.Window', {
             id: this.id + 'window',
             title: 'Attribute layout configuration',
-            bodyStyle: {
-                backgroundColor: 'white',
-                fontFamily: 'Oxygen'
-            },
-            bodyPadding: 10,
-            width: this.width,
             closable: false,
             minimizable: true,
             constrain: true,
             collapsible: true,
-            layout: {
-                type: 'vbox',
-                align: 'stretch'
-            },
-            items: [
-                {
-                    xtype: 'box',
-                    style: {
-                        fontSize: '13px',
-                        fontWeight: 'bold',
-                        borderBottom: '1px solid lightgray',
-                        marginBottom: '10px'
-                    },
-                    html: 'Select attribute as node position'
+            items: {
+                bodyPadding: 10,
+                width: this.width,
+                layout: {
+                    type: 'vbox',
+                    align: 'stretch'
                 },
-                {
-                    xtype: 'container',
-                    style: {
-                        marginBottom: '20px'
+                items: [
+                    {
+                        xtype: 'box',
+                        style: {
+                            fontSize: '13px',
+                            fontWeight: 'bold',
+                            borderBottom: '1px solid lightgray',
+                            marginBottom: '10px'
+                        },
+                        html: 'Select attribute as node position'
                     },
-                    layout: {
-                        type: 'vbox',
-                        align: 'stretch'
+                    {
+                        xtype: 'container',
+                        style: {
+                            marginBottom: '20px'
+                        },
+                        layout: {
+                            type: 'vbox',
+                            align: 'stretch'
+                        },
+                        defaults: { margin: '1 0 1 0' },
+                        items: [
+                            this.xAtributeCombo,
+                            this.yAtributeCombo,
+                            this.normalizeCheckBox
+                        ]
+                    }
+                ],
+                bbar: {
+                    layout : {
+                        pack : 'end'
                     },
-                    defaults: { margin: '1 0 1 0' },
+                    defaults: {
+                        width: 100
+                    },
                     items: [
-                        this.xAtributeCombo,
-                        this.yAtributeCombo,
-                        this.normalizeCheckBox
+                        {
+                            text: 'Apply',
+                            handler: function () {
+                                _this.setLayout();
+                            }
+                        }
                     ]
                 }
-            ],
-            buttons: [
-                {
-                    text: 'Apply',
-                    handler: function () {
-                        _this.setLayout();
-                    }
-                }
-            ],
+            },
+
             listeners: {
                 minimize: function () {
                     this.hide();
@@ -6336,8 +9800,9 @@ AttributeLayoutConfigureWidget.prototype = {
                     yMin = Math.min(y, yMin);
                 }
             });
-            var xRange = xMax - xMin;
-            var yRange = yMax - yMin;
+            var xRange = (xMax === xMin) ? 1 : xMax - xMin;
+            var yRange = (yMax === yMin) ? 1 : yMax - yMin;
+
 
             var width = this.networkViewer.getLayoutWidth();
             var height = this.networkViewer.getLayoutHeight();
@@ -6351,7 +9816,7 @@ AttributeLayoutConfigureWidget.prototype = {
                 y = (y - yMin) * height / yRange;
 
                 if (!isNaN(x) && !isNaN(y)) {
-                    _this.network.setVertexCoordsById(record.get("Id"), x, y);
+                    _this.network.setVertexCoordsById(record.get("id"), x, y);
                 }
             });
 
@@ -6362,7 +9827,7 @@ AttributeLayoutConfigureWidget.prototype = {
                 var x = parseFloat(record.get(xAttributeName));
                 var y = parseFloat(record.get(yAttributeName));
                 if (!isNaN(x) && !isNaN(y)) {
-                    _this.network.setVertexCoordsById(record.get("Id"), x, y);
+                    _this.network.setVertexCoordsById(record.get("id"), x, y);
                 }
             });
         }
@@ -6430,7 +9895,7 @@ AttributeNetworkFileWidget.prototype.getFileUpload = function () {
                 node.value = v.replace("C:\\fakepath\\", "");
 
                 var attributeNetworkDataAdapter = new AttributeNetworkDataAdapter({
-                    dataSource: new FileDataSource({file:file}),
+                    dataSource: new FileDataSource({file: file}),
                     handlers: {
                         'data:load': function (event) {
                             _this.processData(attributeNetworkDataAdapter);
@@ -6491,7 +9956,7 @@ AttributeNetworkFileWidget.prototype.processData = function (attributesDataAdapt
         });
 
         var disabled = false;
-        if (name == "Id") {
+        if (name == "id") {
             disabled = true;
             existNameColumn = true;
         }
@@ -6518,22 +9983,20 @@ AttributeNetworkFileWidget.prototype.processData = function (attributesDataAdapt
     }
 
     if (!existNameColumn) {
-        this.infoLabel.setText("<span class='err'>Invalid file. The column 'Id' is required.</span>", false);
+        this.infoLabel.setText("<span class='err'>Invalid file. The column 'id' is required.</span>", false);
     }
     else if (!uniqueNameValues) {
-        this.infoLabel.setText("<span class='err'>Invalid file. The values for 'Id' column must be uniques.</span>", false);
+        this.infoLabel.setText("<span class='err'>Invalid file. The values for 'id' column must be uniques.</span>", false);
     }
     else {
         this.cbgAttributes.add(cbgItems);
-        this.checkboxBar.show();
-        this.createNodesBar.show();
-
+        this.fieldContainer.show();
         Ext.getCmp(this.id + 'okBtn').setDisabled(false);
     }
 
     this.gridTbar.add(this.gridColumnNameFields);
 
-    this.model.setFields(this.content.attributes);
+    this.gridStore.setFields(this.content.attributes);
 
     this.grid.reconfigure(this.gridStore, this.columnsGrid);
 
@@ -6591,28 +10054,19 @@ AttributeNetworkFileWidget.prototype.draw = function () {
         var browseBar = Ext.create('Ext.toolbar.Toolbar', {cls: 'bio-border-false', dock: 'top'});
         browseBar.add(this.getFileUpload());
 
+
         this.infoLabel = Ext.create('Ext.toolbar.TextItem', {html: 'Please select a network saved File'});
         this.countLabel = Ext.create('Ext.toolbar.TextItem');
         var infobar = Ext.create('Ext.toolbar.Toolbar', {cls: 'bio-border-false', dock: 'bottom'});
         infobar.add([this.infoLabel, '->', this.countLabel]);
 
-        this.cbgLabel = Ext.create('Ext.draw.Text', {
-            text: "Import:",
-            margin: "0 0 0 3"
-        });
 
         this.cbgAttributes = Ext.create('Ext.form.CheckboxGroup', {
-            margin: '2 2 2 2',
+            fieldLabel: 'Import',
+            labelWidth: 40,
             layout: 'hbox',
             autoScroll: true,
             defaultType: 'checkboxfield'
-        });
-
-        this.checkboxBar = Ext.create('Ext.toolbar.Toolbar', {
-            cls: 'bio-border-false',
-            dock: 'bottom',
-            hidden: true,
-            items: [this.cbgLabel, this.cbgAttributes]
         });
 
         this.createNodesCkb = Ext.create('Ext.form.field.Checkbox', {
@@ -6620,26 +10074,23 @@ AttributeNetworkFileWidget.prototype.draw = function () {
             boxLabel: "Create nodes for unrecognized names."
         });
 
-        this.createNodesBar = Ext.create('Ext.toolbar.Toolbar', {
-            cls: 'bio-border-false',
-            dock: 'bottom',
-            hidden: true,
-            items: this.createNodesCkb
+
+        this.fieldContainer = Ext.create('Ext.form.FieldContainer', {
+            margin:'0 0 0 10',
+            hidden:true,
+            items: [this.cbgAttributes, this.createNodesCkb]
         });
+
 
         /** Grid for Preview **/
         this.columnsGrid = [];
-
-        this.model = Ext.define('User', {
-            extend: 'Ext.data.Model'
-        });
 
         this.gridStore = Ext.create('Ext.data.Store', {
             pageSize: 50,
             proxy: {
                 type: 'memory'
             },
-            model: this.model
+            fields: []
         });
 
         this.gridTbar = Ext.create('Ext.toolbar.Toolbar', {
@@ -6655,34 +10106,52 @@ AttributeNetworkFileWidget.prototype.draw = function () {
             loadMask: true,
             plugins: ['bufferedrenderer'],
             hideHeaders: true,
-            dockedItems: [browseBar, infobar, this.createNodesBar, this.checkboxBar]
+            dockedItems: [infobar]
         });
 
         this.panel = Ext.create('Ext.window.Window', {
             title: this.title,
-            width: this.width,
-            height: this.height,
             resizable: false,
             modal: true,
-            layout: { type: 'vbox', align: 'stretch'},
-            items: [this.grid],
-            buttons: [
-                {
-                    id: _this.id + 'okBtn',
-                    text: 'Ok',
-                    disabled: true,
-                    handler: function () {
-                        _this.trigger('okButton:click', {content: _this.filterColumnsToImport(), sender: _this});
-                        _this.panel.close();
-                    }
-                },
-                {
-                    text: 'Cancel',
-                    handler: function () {
-                        _this.panel.close();
-                    }
+            items: {
+                layout: { type: 'vbox', align: 'stretch'},
+                width: this.width,
+                height: this.height,
+                border: 0,
+                items: [
+                    this.grid,
+                    this.fieldContainer
+                ],
+                dockedItems: [
+                    browseBar
+                ],
+                bbar: {
+                    layout : {
+                        pack : 'end'
+                    },
+                    defaults: {
+                        width: 100
+                    },
+                    items: [
+                        {
+                            id: _this.id + 'okBtn',
+                            text: 'Ok',
+                            disabled: true,
+                            handler: function () {
+                                _this.trigger('okButton:click', {content: _this.filterColumnsToImport(), sender: _this});
+                                _this.panel.close();
+                            }
+                        },
+                        {
+                            text: 'Cancel',
+                            handler: function () {
+                                _this.panel.close();
+                            }
+                        }
+                    ]
+
                 }
-            ],
+            },
             listeners: {
                 scope: this,
                 minimize: function () {
@@ -6763,10 +10232,14 @@ AttributeEditWidget.prototype = {
 
         var modifyRowsFormPanel = Ext.create('Ext.form.Panel', {
             title: 'Edit multiple values',
-            bodyPadding: "10 0 10 10",
+            bodyPadding: 10,
             layout: 'vbox',
-            border:0,
-            flex:1,
+            border: 0,
+//            flex: 1,
+            defaults: {
+                width: '100%',
+                labelWidth: 55
+            },
             dockedItems: [
                 {
                     xtype: 'toolbar',
@@ -6792,7 +10265,6 @@ AttributeEditWidget.prototype = {
                 this.createValueField(),
                 {
                     xtype: 'button',
-                    width: 170,
                     text: 'Apply on selected rows',
                     formBind: true, // only enabled if the form is valid
                     disabled: true,
@@ -6807,31 +10279,31 @@ AttributeEditWidget.prototype = {
         });
         var addAttributeFormPanel = Ext.create('Ext.form.Panel', {
             title: 'Add attribute',
-            bodyPadding: "10 0 10 10",
+            bodyPadding: 10,
             layout: 'vbox',
             border: 0,
-            flex:1,
+//            flex: 1,
             style: {
                 borderTopColor: 'lightgray',
                 borderTopStyle: 'solid',
                 borderTopWidth: '1px'
             },
+            defaults: {
+                width: '100%',
+                labelWidth: 55
+            },
             items: [
                 {
                     xtype: 'textfield',
-                    width: 170,
                     fieldLabel: 'Name',
-                    labelWidth: 50,
                     allowBlank: false
                 },
                 {
                     xtype: 'combo',
-                    hidden:true,
-                    store: ['string','int','float'],
+                    hidden: true,
+                    store: ['string', 'int', 'float'],
                     value: 'string',
-                    width: 170,
                     fieldLabel: 'Type',
-                    labelWidth: 50,
                     editable: false,
                     queryMode: 'local',
                     allowBlank: false
@@ -6845,7 +10317,6 @@ AttributeEditWidget.prototype = {
 //                },
                 {
                     xtype: 'button',
-                    width: 170,
                     text: 'Apply',
                     formBind: true, // only enabled if the form is valid
                     disabled: true,
@@ -6860,27 +10331,31 @@ AttributeEditWidget.prototype = {
                 },
                 {
                     xtype: 'box',
-                    margin: "10 0 0 0"
+                    margin: '10 0 0 0',
+                    html: ''
                 }
             ]
         });
 
         var removeAttributeFormPanel = Ext.create('Ext.form.Panel', {
             title: 'Remove attribute',
-            bodyPadding: "10 0 10 10",
+            bodyPadding: 10,
             layout: 'vbox',
             border: 0,
-            flex:1,
+//            flex: 1,
             style: {
                 borderTopColor: 'lightgray',
                 borderTopStyle: 'solid',
                 borderTopWidth: '1px'
             },
+            defaults: {
+                width: '100%',
+                labelWidth: 55
+            },
             items: [
                 this.createAttributesCombo(),
                 {
                     xtype: 'button',
-                    width: 170,
                     text: 'Apply',
                     formBind: true, // only enabled if the form is valid
                     disabled: true,
@@ -6904,7 +10379,6 @@ AttributeEditWidget.prototype = {
                 {
                     xtype: 'button',
                     text: '<span style="font-size: 12px">Columns <span class="caret"></span></span>',
-                    cls: 'bootstrap',
                     handler: function (bt, e) {
                         var menu = _this.grid.headerCt.getMenu().down('menuitem[text=Columns]').menu;
                         menu.showBy(bt);
@@ -6916,7 +10390,8 @@ AttributeEditWidget.prototype = {
                     xtype: 'radiogroup',
                     id: this.id + 'selectMode',
                     fieldLabel: 'Show',
-                    labelWidth: 20,
+                    labelWidth: 30,
+                    width:230,
                     margin: '0 0 0 10',
                     defaults: {
                         margin: '0 0 0 10'
@@ -6948,15 +10423,21 @@ AttributeEditWidget.prototype = {
                 },
                 {
                     xtype: 'button',
-                    text: 'Download as file',
-                    href: 'none',
+                    text: '<i class="fa fa-download"></i> Download as file',
                     handler: function (bt, e) {
                         var a = bt.getEl();
                         var string = _this.attrMan.getAsFile();
-                        a.set({
-                            href: 'data:text/tsv,' + encodeURIComponent(string),
-                            download: _this.type+".attr"
+                        var blob = new Blob([string], {type: "data:text/tsv"});
+                        var url = URL.createObjectURL(blob);
+                        var link = document.createElement('a');
+                        link.href = url;
+                        link.download = _this.type + ".attr"
+                        var event = new MouseEvent('click', {
+                            'view': window,
+                            'bubbles': true,
+                            'cancelable': true
                         });
+                        link.dispatchEvent(event);
                     }
                 }
             ]
@@ -6993,15 +10474,15 @@ AttributeEditWidget.prototype = {
 
         this.accordionPanel = Ext.create('Ext.container.Container', {
             layout: {
-                type:'vbox',
-                align:'stretch'
+                type: 'vbox',
+                align: 'stretch'
             },
-            width: 200,
+            width: 230,
             border: '0 1 0 0',
             style: {
                 borderColor: 'lightgray',
                 borderStyle: 'solid',
-                backgroundColor:'#ffffff'
+                backgroundColor: '#ffffff'
             },
             items: [
                 modifyRowsFormPanel,
@@ -7014,10 +10495,11 @@ AttributeEditWidget.prototype = {
         this.window = Ext.create('Ext.window.Window', {
             id: "edit" + this.type + "AttrWindow",
             title: "Edit " + this.type.toLowerCase() + " attributes",
-            width: 800,
+            width: 850,
             height: 600,
             closable: false,
             minimizable: true,
+            maximizable: true,
             constrain: true,
             collapsible: true,
             layout: {
@@ -7052,7 +10534,6 @@ AttributeEditWidget.prototype = {
 //        this.reconfigureComponents();
 //    },
     reconfigureComponents: function () {
-        console.log('refresh ' + this.id);
         this.grid.reconfigure(this.attrMan.store, this.attrMan.columnsGrid);
 
         this.reloadComboStore();
@@ -7061,10 +10542,10 @@ AttributeEditWidget.prototype = {
         this.comboStore.loadData(this.attrMan.attributes);
     },
     checkSelectedFilter: function () {
-        this.attrMan.store.removeFilter(this.selectedFilter);
+        this.attrMan.store.clearFilter();
         var value = Ext.getCmp(this.id + 'selectMode').getValue();
         if (value[this.id + 'selection'] === 'selected') {
-            this.attrMan.store.addFilter(this.selectedFilter);
+            this.attrMan.store.setFilters(this.selectedFilter);
         }
     },
 
@@ -7076,10 +10557,8 @@ AttributeEditWidget.prototype = {
             store: this.comboStore,
             displayField: 'name',
             valueField: 'name',
-            width: 170,
             allowBlank: false,
             fieldLabel: 'Attribute',
-            labelWidth: 50,
             editable: false,
             queryMode: 'local'
         }
@@ -7087,9 +10566,7 @@ AttributeEditWidget.prototype = {
     createValueField: function () {
         return {
             xtype: 'textfield',
-            width: 170,
             fieldLabel: 'Value',
-            labelWidth: 50,
             allowBlank: false
         }
     }
@@ -7785,7 +11262,7 @@ function LayoutConfigureWidget(args) {
     _.extend(this, Backbone.Events);
     this.id = Utils.genId('LayoutConfigureWidget');
 
-    this.width = 400;
+    this.width = 450;
     this.height = 300;
     this.window;
     this.networkViewer;
@@ -7931,144 +11408,152 @@ LayoutConfigureWidget.prototype = {
         this.window = Ext.create('Ext.window.Window', {
             id: this.id + 'window',
             title: 'Force directed layout configuration',
-            bodyStyle: {
-                backgroundColor: 'white',
-                fontFamily: 'Oxygen'
-            },
-            bodyPadding: 10,
-            width: this.width,
             closable: false,
             minimizable: true,
             constrain: true,
             collapsible: true,
-            layout: {
-                type: 'vbox',
-                align: 'stretch'
-            },
-            items: [
-                {
-                    xtype: 'box',
-                    style: {
-                        textAlign: 'right'
-                    },
-                    html: '<a target="_blank" href="https://github.com/mbostock/d3/wiki/Force-Layout">About force directed layout </a>'
+            layout: 'fit',
+            items: {
+                layout: {
+                    type: 'vbox',
+                    align: 'stretch'
                 },
-                {
-                    xtype: 'box',
-                    style: {
-                        fontSize: '13px',
-                        fontWeight: 'bold',
-                        borderBottom: '1px solid lightgray',
-                        marginBottom: '10px'
+                width: this.width,
+                bodyPadding: 10,
+                border: false,
+                items: [
+                    {
+                        xtype: 'box',
+                        style: {
+                            textAlign: 'right'
+                        },
+                        html: '<a target="_blank" href="https://github.com/mbostock/d3/wiki/Force-Layout">About force directed layout </a>'
                     },
-                    html: 'Node related settings'
-                },
-                {
-                    xtype: 'container',
-                    style: {
-                        marginBottom: '20px'
+                    {
+                        xtype: 'box',
+                        style: {
+                            fontSize: '13px',
+                            fontWeight: 'bold',
+                            borderBottom: '1px solid lightgray',
+                            marginBottom: '10px'
+                        },
+                        html: 'Node related settings'
                     },
-                    layout: {
-                        type: 'vbox',
-                        align: 'stretch'
+                    {
+                        xtype: 'container',
+                        style: {
+                            marginBottom: '20px'
+                        },
+                        layout: {
+                            type: 'vbox',
+                            align: 'stretch'
+                        },
+                        defaults: { margin: '1 0 1 0' },
+                        items: [
+                            nodeChargeAttributeCombo
+                        ]
                     },
-                    defaults: { margin: '1 0 1 0' },
-                    items: [
-                        nodeChargeAttributeCombo
-                    ]
-                },
-                {
-                    xtype: 'box',
-                    style: {
-                        fontSize: '13px',
-                        fontWeight: 'bold',
-                        borderBottom: '1px solid lightgray',
-                        marginBottom: '10px'
+                    {
+                        xtype: 'box',
+                        style: {
+                            fontSize: '13px',
+                            fontWeight: 'bold',
+                            borderBottom: '1px solid lightgray',
+                            marginBottom: '10px'
+                        },
+                        html: 'Edge related settings'
                     },
-                    html: 'Edge related settings'
-                },
-                {
-                    xtype: 'container',
-                    layout: {
-                        type: 'vbox',
-                        align: 'stretch'
+                    {
+                        xtype: 'container',
+                        layout: {
+                            type: 'vbox',
+                            align: 'stretch'
+                        },
+                        defaults: { margin: '1 0 1 0' },
+                        items: [
+                            edgeDistanceAttributeCombo,
+                            edgeStrengthAttributeCombo
+                        ]
                     },
-                    defaults: { margin: '1 0 1 0' },
-                    items: [
-                        edgeDistanceAttributeCombo,
-                        edgeStrengthAttributeCombo
-                    ]
-                },
-                {
-                    xtype: 'box',
-                    style: {
-                        fontSize: '13px',
-                        fontWeight: 'bold',
-                        borderBottom: '1px solid lightgray',
-                        marginBottom: '10px',
-                        marginTop: '20px'
+                    {
+                        xtype: 'box',
+                        style: {
+                            fontSize: '13px',
+                            fontWeight: 'bold',
+                            borderBottom: '1px solid lightgray',
+                            marginBottom: '10px',
+                            marginTop: '20px'
+                        },
+                        html: 'Global settings'
                     },
-                    html: 'Global settings'
-                },
-                {
-                    xtype: 'container',
-                    layout: {
-                        type: 'vbox',
-                        align: 'stretch'
-                    },
-                    defaults: { margin: '1 0 1 0' },
-                    items: [
-                        frictionField,
-                        gravityField,
-                        chargeDistanceField
+                    {
+                        xtype: 'container',
+                        layout: {
+                            type: 'vbox',
+                            align: 'stretch'
+                        },
+                        defaults: { margin: '1 0 1 0' },
+                        items: [
+                            frictionField,
+                            gravityField,
+                            chargeDistanceField
 
-                    ]
-                }
-            ],
-            buttons: [
-                {
-                    text: 'Apply',
-                    handler: function () {
-
-                        var linkDistanceValue = edgeDistanceAttributeCombo.down('combo').getValue();
-                        var linkStrengthValue = edgeStrengthAttributeCombo.down('combo').getValue();
-                        var chargeValue = nodeChargeAttributeCombo.down('combo').getValue();
-
-                        var linkDistanceDefaultValue = edgeDistanceAttributeCombo.down('numberfield').getValue();
-                        var linkStrengthDefaultValue = edgeStrengthAttributeCombo.down('numberfield').getValue();
-                        var chargeDefaultValue = nodeChargeAttributeCombo.down('numberfield').getValue();
-
-                        linkDistanceValue = linkDistanceValue === 'Non weighted' ? linkDistanceDefaultValue : linkDistanceValue;
-                        linkStrengthValue = linkStrengthValue === 'Non weighted' ? linkStrengthDefaultValue : linkStrengthValue;
-                        chargeValue = chargeValue === 'Non weighted' ? chargeDefaultValue : chargeValue;
-
-                        GraphLayout.force({
-                            network: _this.network,
-                            width: _this.networkViewer.networkSvgLayout.getWidth(),
-                            height: _this.networkViewer.networkSvgLayout.getHeight(),
-                            linkDistance: linkDistanceValue,
-                            linkStrength: linkStrengthValue,
-                            charge: chargeValue,
-                            multipliers: {
-                                linkDistance: linkDistanceDefaultValue,
-                                linkStrength: linkStrengthDefaultValue,
-                                charge: chargeDefaultValue
-                            },
-                            friction: frictionField.getValue(),
-                            gravity: gravityField.getValue(),
-                            chargeDistance: chargeDistanceField.getValue(),
-
-                            simulation: false,
-                            end: function (verticesArray) {
-                                for (var i = 0, l = verticesArray.length; i < l; i++) {
-                                    var v = verticesArray[i];
-                                    _this.networkViewer.setVertexCoords(v.id, v.x, v.y);
-                                }
-                            }
-                        });
+                        ]
                     }
+                ],
+                bbar: {
+                    layout: {
+                        pack: 'end'
+                    },
+                    defaults: {
+                        width: 100
+                    },
+                    items: [
+                        {
+                            text: 'Apply',
+                            handler: function () {
+
+                                var linkDistanceValue = edgeDistanceAttributeCombo.down('combo').getValue();
+                                var linkStrengthValue = edgeStrengthAttributeCombo.down('combo').getValue();
+                                var chargeValue = nodeChargeAttributeCombo.down('combo').getValue();
+
+                                var linkDistanceDefaultValue = edgeDistanceAttributeCombo.down('numberfield').getValue();
+                                var linkStrengthDefaultValue = edgeStrengthAttributeCombo.down('numberfield').getValue();
+                                var chargeDefaultValue = nodeChargeAttributeCombo.down('numberfield').getValue();
+
+                                linkDistanceValue = linkDistanceValue === 'Non weighted' ? linkDistanceDefaultValue : linkDistanceValue;
+                                linkStrengthValue = linkStrengthValue === 'Non weighted' ? linkStrengthDefaultValue : linkStrengthValue;
+                                chargeValue = chargeValue === 'Non weighted' ? chargeDefaultValue : chargeValue;
+
+                                GraphLayout.force({
+                                    network: _this.network,
+                                    width: _this.networkViewer.networkSvgLayout.getWidth(),
+                                    height: _this.networkViewer.networkSvgLayout.getHeight(),
+                                    linkDistance: linkDistanceValue,
+                                    linkStrength: linkStrengthValue,
+                                    charge: chargeValue,
+                                    multipliers: {
+                                        linkDistance: linkDistanceDefaultValue,
+                                        linkStrength: linkStrengthDefaultValue,
+                                        charge: chargeDefaultValue
+                                    },
+                                    friction: frictionField.getValue(),
+                                    gravity: gravityField.getValue(),
+                                    chargeDistance: chargeDistanceField.getValue(),
+
+                                    simulation: false,
+                                    end: function (verticesArray) {
+                                        for (var i = 0, l = verticesArray.length; i < l; i++) {
+                                            var v = verticesArray[i];
+                                            _this.networkViewer.setVertexCoords(v.id, v.x, v.y);
+                                        }
+                                    }
+                                });
+                            }
+                        }
+                    ]
                 }
-            ],
+            },
             listeners: {
                 minimize: function () {
                     this.hide();
@@ -8189,13 +11674,10 @@ NetworkEditWidget.prototype = {
                 type: 'memory'
             },
             fields: [
-                {name: 'relation', type: 'string'},
-                {name: 'source.id', type: 'string'},
-                {name: 'target.id', type: 'string'}
+                {name: 'relation', type: 'string'}
             ],
             data: this.getElements()
         });
-//
 
         this.network.on('add:vertex add:edge remove:vertex remove:edge remove:vertices load:json clean draw batch:end', function () {
             _this.store.loadRawData(_this.getElements());
@@ -8230,9 +11712,9 @@ NetworkEditWidget.prototype = {
             id: this.id + 'grid',
             store: this.store,
             columns: [
-                {"header": "Source node", "dataIndex": "source.id", flex: 1, editor: {allowBlank: false}},
+                {"header": "Source node", xtype: 'templatecolumn', tpl: '{source.id}', flex: 1, editor: {allowBlank: false}},
                 {"header": "Relation", "dataIndex": "relation", flex: 1, editor: {allowBlank: false}},
-                {"header": "Target node", "dataIndex": "target.id", flex: 1, editor: {allowBlank: false}}
+                {"header": "Target node", xtype: 'templatecolumn', tpl: '{target.id}', flex: 1, editor: {allowBlank: false}}
             ],
             flex: 1,
             border: 0,
@@ -8275,39 +11757,48 @@ NetworkEditWidget.prototype = {
                                 _this.network.batchStart();
                                 for (var i = 0; i < selectedRecords.length; i++) {
                                     var record = selectedRecords[i];
-                                    var edgeId = record.raw.id;
-                                    if (typeof edgeId !== 'undefined') {
-                                        var edge = _this.network.getEdgeById(record.raw.id);
+                                    var edge = _this.network.getEdgeById(record.get('id'));
+                                    if (typeof edge !== 'undefined') {
                                         _this.network.removeEdge(edge);
+                                        _this.network.removeVertex(_this.network.getVertexById(record.get('source').id));
+                                        _this.network.removeVertex(_this.network.getVertexById(record.get('target').id));
                                     } else {
-                                        var vertex = _this.network.getVertexById(record.raw.source.id);
+                                        var vertex = _this.network.getVertexById(record.get('source').id);
                                         _this.network.removeVertex(vertex);
                                     }
                                 }
-                                var vertices = _this.network.graph.vertices;
-                                for (var i = 0; i < vertices.length; i++) {
-                                    var vertex = vertices[i];
-                                    if (typeof vertex !== 'undefined') {
-                                        if (vertex.edges.length == 0) {
-                                            _this.network.removeVertex(vertex);
-                                        }
-                                    }
-                                }
+//                                var vertices = _this.network.graph.vertices;
+//                                for (var i = 0; i < vertices.length; i++) {
+//                                    var vertex = vertices[i];
+//                                    if (typeof vertex !== 'undefined') {
+//                                        if (vertex.edges.length == 0) {
+//                                            _this.network.removeVertex(vertex);
+//                                        }
+//                                    }
+//                                }
                                 _this.network.batchEnd();
+                                _this.network.vertexAttributeManager.trigger('change:data', {sender: this});
+                                _this.network.edgeAttributeManager.trigger('change:data', {sender: this});
                             }
                         },
                         '->',
                         {
                             xtype: 'button',
                             text: 'Download as SIF file',
-                            href: 'none',
                             handler: function (bt, e) {
                                 var a = bt.getEl();
                                 var string = _this.network.graph.getAsSIF();
-                                a.set({
-                                    href: 'data:text/tsv,' + encodeURIComponent(string),
-                                    download: "network.sif"
+                                var blob = new Blob([string], {type: "data:text/tsv"});
+                                var url = URL.createObjectURL(blob);
+                                var link = document.createElement('a');
+                                link.href = url;
+                                link.download = "network.sif";
+                                var event = new MouseEvent('click', {
+                                    'view': window,
+                                    'bubbles': true,
+                                    'cancelable': true
                                 });
+                                link.dispatchEvent(event);
                             }
                         }
                     ]
@@ -8332,11 +11823,15 @@ NetworkEditWidget.prototype = {
                 {
                     xtype: 'panel',
                     title: 'Add interaction',
-                    width: 170,
+                    width: 200,
                     border: 0,
                     bodyPadding: 10,
                     style: {
                         borderRight: '1px solid lightgray'
+                    },
+                    defaults: {
+                        width: '100%',
+                        labelWidth: 55
                     },
                     items: [
                         this.sourceTextfield,
@@ -8359,7 +11854,9 @@ NetworkEditWidget.prototype = {
                                         });
                                         _this.network.addVertex({
                                             vertex: sourceVertex,
-                                            vertexConfig: new VertexConfig({})
+                                            vertexConfig: new VertexConfig({
+                                                rendererConfig: _this.networkViewer.session.getVertexDefaults()
+                                            })
                                         }, true);
                                     }
                                     var targetVertex = _this.network.getVertexById(targetId);
@@ -8369,7 +11866,9 @@ NetworkEditWidget.prototype = {
                                         });
                                         _this.network.addVertex({
                                             vertex: targetVertex,
-                                            vertexConfig: new VertexConfig({})
+                                            vertexConfig: new VertexConfig({
+                                                rendererConfig: _this.networkViewer.session.getVertexDefaults()
+                                            })
                                         }, true);
                                     }
                                     var edge = new Edge({
@@ -8382,7 +11881,9 @@ NetworkEditWidget.prototype = {
                                     });
                                     _this.network.addEdge({
                                         edge: edge,
-                                        edgeConfig: new EdgeConfig({})
+                                        edgeConfig: new EdgeConfig({
+                                            rendererConfig: _this.networkViewer.session.getEdgeDefaults()
+                                        })
                                     });
 
                                     _this.networkViewer.refreshNetwork();
@@ -8629,17 +12130,15 @@ TextNetworkFileWidget.prototype.addCustomComponents = function () {
         fieldLabel: 'Choose relation column',
         emptyText: 'Choose column',
         store: this.columnsNumberStore,
-        allowBlank: false,
-        editable: false,
         displayField: 'name',
+        allowBlank: false,
         valueField: 'num',
         queryMode: 'local',
-        forceSelection: true,
+        value: 'none',
         listeners: {
             change: function (field, e) {
                 var value = field.getValue();
-                console.log(value);
-                if (value != null) {
+                if (value !== null) {
                     _this.relationColumnIndex = value;
                     _this.processColumnNumbers();
                 }
@@ -8712,6 +12211,7 @@ TextNetworkFileWidget.prototype.addCustomComponents = function () {
     this.parsePanel = Ext.create('Ext.panel.Panel', {
         dock: 'top',
         hidden: true,
+        border: false,
 //        title: 'Parse options',
         layout: {
             type: 'vbox',
@@ -8748,7 +12248,7 @@ TextNetworkFileWidget.prototype.addCustomComponents = function () {
         ]
     });
 
-    this.panel.addDocked(this.parsePanel);
+    this.panel.down().addDocked(this.parsePanel);
 };
 
 
@@ -8776,9 +12276,18 @@ TextNetworkFileWidget.prototype._processColumns = function (adapter) {
 TextNetworkFileWidget.prototype.processColumnNumbers = function () {
     var _this = this;
 
-    if (typeof this.sourceColumnIndex !== 'undefined' && typeof this.relationColumnIndex !== 'undefined' && typeof this.targetColumnIndex !== 'undefined') {
+    if (typeof this.sourceColumnIndex !== 'undefined' && typeof this.targetColumnIndex !== 'undefined') {
         this.panel.setLoading(true);
-        var graph = this.dataAdapter.parseColumns(this.sourceColumnIndex - 1, this.relationColumnIndex - 1, this.targetColumnIndex - 1);
+        var relationDefaultName = this.relationCombo.getValue();
+        if (isNaN(this.relationColumnIndex) || this.relationColumnIndex == '') {
+            this.relationColumnIndex = -1;
+        } else {
+            this.relationColumnIndex -= 1;
+        }
+        if (relationDefaultName === '') {
+            relationDefaultName = 'none';
+        }
+        var graph = this.dataAdapter.parseColumns(this.sourceColumnIndex - 1, this.targetColumnIndex - 1, this.relationColumnIndex, relationDefaultName);
         this.processData(graph);
     }
 
@@ -9161,550 +12670,6 @@ XLSXNetworkFileWidget.prototype.processData = function (graph) {
  * along with JS Common Libs. If not, see <http://www.gnu.org/licenses/>.
  */
 
-function UserListWidget (args){
-	var _this = this;
-	this.id = "UserListWidget_"+ Math.round(Math.random()*10000000);
-	this.data = new Array();
-	
-	this.args = new Object();
-	this.timeout = 4000;
-	this.pagedViewList = args.pagedViewList;
-	this.suiteId=-1;
-	this.tools = [];
-	
-	if (args != null){
-        if (args.timeout != null && args.timeout > 4000){
-        	this.timeout = args.timeout;
-        }
-        if (args.suiteId != null){
-        	this.suiteId = args.suiteId;
-        }
-        if (args.tools != null){
-        	this.tools = args.tools;
-        }
-    }
-//	console.warn(this.id+' Minimum period is 4000 milliseconds, smaller values will be ignored');
-};
-
-UserListWidget.prototype.draw =  function (){
-	var _this = this;
-	
-	this.getResponse();
-	this.interval = setInterval(function () {_this.getResponse(); }, this.timeout);
-};
-
-
-UserListWidget.prototype.getData =  function (){
-	return this.data;
-};
-
-UserListWidget.prototype.getCount = function() {
-	return this.data.length;
-};
-
-UserListWidget.prototype.getResponse = function(){
-	/**Que cada clase hija llame a la funcion de WumDataAdapter que necesite**/
-	throw "abstract method must be implemented in child classes";
-};
-
-UserListWidget.prototype.render =  function (data){
-	/**Que cada clase hija renderize como quiera los datos, ya sea con sencha o con sencho**/
-	throw "abstract method must be implemented in child classes";
-};
-
-/*
- * Copyright (c) 2012 Francisco Salavert (ICM-CIPF)
- * Copyright (c) 2012 Ruben Sanchez (ICM-CIPF)
- * Copyright (c) 2012 Ignacio Medina (ICM-CIPF)
- *
- * This file is part of JS Common Libs.
- *
- * JS Common Libs is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 2 of the License, or
- * (at your option) any later version.
- *
- * JS Common Libs is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with JS Common Libs. If not, see <http://www.gnu.org/licenses/>.
- */
-
-function ChartWidget(args) {
-	var this_ = this;
-	this.id = "ChartWidget_" + Math.round(Math.random() * 10000000);
-
-	this.title = null;
-	this.width = 750;
-	this.height = 300;
-
-	if (args != null) {
-		if (args.title != null) {
-			this.title = args.title;
-		}
-		if (args.width != null) {
-			this.width = args.width;
-		}
-		if (args.height != null) {
-			this.height = args.height;
-		}
-	}
-};
-
-ChartWidget.prototype.getStore = function() {
-	return this.store;
-};
-
-ChartWidget.prototype.getChart = function(fields) {
-	
-	Ext.define('ChromosomeChart', {
-	    extend: 'Ext.data.Model',
-	    fields: fields
-	});
-	
-	this.store = Ext.create('Ext.data.Store', {
-		 model: 'ChromosomeChart',
-		 autoLoad : false
-	});
-	
-	var dibujo = Ext.create('Ext.chart.Chart', {
-		animate : true,
-		shadow : true,
-		store : this.store,
-		width : this.width,
-		height : this.height,
-		axes : [{
-					position : 'left',
-					fields : [fields[0]],
-					title : fields[0],
-					grid:true,
-					type : 'Numeric',
-	                minimum: 0 //si no se pone, peta
-				}, {
-					title : fields[1],
-					type : 'category',
-					position : 'bottom',
-					fields : [fields[1]],
-//					width : 10,
-					label : {
-						rotate : {
-							degrees : 270
-						}
-					}
-				}],
-		series : [{
-					type : 'column',
-					axis: 'left',
-					gutter: 10,
-					yField : fields[0],
-					xField : fields[1],
-	                style: {
-	                    fill: '#38B8BF'
-	                }
-				}]
-	});
-	return dibujo;
-};
-function VariantEffectPanelWidget(args) {
-    _.extend(this, Backbone.Events);
-    this.id = Utils.genId("VariantEffectPanelWidget");
-
-    this.storeConfig = {};
-    this.gridConfig = {};
-    this.filterEffect = true;
-
-    _.extend(this, args);
-
-    this.on(this.handlers);
-
-    this.rendered = false;
-
-    if (this.autoRender) {
-        this.render(this.targetId);
-    }
-}
-
-VariantEffectPanelWidget.prototype = {
-    render: function (targetId) {
-        var _this = this;
-
-        _this.targetId = (targetId) ? targetId : this.targetId;
-
-        var storeArgs = {
-            storeId: "EffectStore",
-            groupField: 'featureId',
-            fields: [
-                {name: "featureId"           , type: "String" },
-                {name: "featureName"         , type: "String" },
-                {name: "featureType"         , type: "String" },
-                {name: "featureBiotype"      , type: "String" },
-                {name: "featureChromosome"   , type: "String" },
-                {name: "featureStart"        , type: "int"    },
-                {name: "featureEnd"          , type: "int"    },
-                {name: "featureStrand"       , type: "String" },
-                {name: "snpId"               , type: "String" },
-                {name: "ancestral"           , type: "String" },
-                {name: "alternative"         , type: "String" },
-                {name: "geneId"              , type: "String" },
-                {name: "transcriptId"        , type: "String" },
-                {name: "geneName"            , type: "String" },
-                {name: "consequenceType"     , type: "String" },
-                {name: "consequenceTypeObo"  , type: "String" },
-                {name: "consequenceTypeDesc" , type: "String" },
-                {name: "consequenceTypeType" , type: "String" },
-                {name: "aaPosition"          , type: "int"    },
-                {name: "aminoacidChange"     , type: "String" },
-                {name: "codonChange"         , type: "String" },
-                {name: "polyphenScore"       , type: "float"  },
-                {name: "polyphenEfect"       , type: "float"  },
-                {name: "siftScore"           , type: "float"  },
-                {name: "siftEffect"          , type: "float"  },
-            ],
-            data: [],
-            autoLoad: false,
-            proxy: {type: 'memory'}
-        }
-
-        _.extend(storeArgs, _this.storeConfig);
-
-        _this.store = Ext.create("Ext.data.Store", storeArgs);
-
-
-        var gridArgs = {
-            targetId: _this.targetId,
-            title: "Variant Effect",
-            width: '100%',
-            flex: 2,
-            store: this.store,
-            loadMask: true,
-            border: 1,
-            margin: '0 5 5 5',
-            columns: [
-                {xtype: 'rownumberer'},
-                {
-                    text: "Position chr:start:end (strand)",
-                    dataIndex: "featureChromosome",
-                    xtype: "templatecolumn",
-                    tpl: '{featureChromosome}:{featureStart}-{featureEnd} <tpl if="featureStrand == 1">(+)<tpl elseif="featureStrand == -1">(-)</tpl>',
-                    flex: 1
-                },
-                {
-                    text: "SNP Id",
-                    dataIndex: "snpId",
-                    flex: 1
-                },
-                {
-                    text: "Conseq. Type",
-                    dataIndex: "consequenceTypeObo",
-                    xtype: "templatecolumn",
-                    tpl: '{consequenceTypeObo} (<a href="http://www.sequenceontology.org/browser/current_svn/term/{consequenceType}" target="_blank">{consequenceType}</a>)',
-                    flex: 1
-                },
-                {
-                    text: "Aminoacid Change",
-                    xtype: "templatecolumn",
-                    tpl: '<tpl if="aminoacidChange">{aminoacidChange} - {codonChange} ({aaPosition}) <tpl else>.</tpl>  ',
-                    flex: 1
-                },
-                {
-                    text: "Gene (EnsemblId)",
-                    dataIndex: "geneName",
-                    xtype: 'templatecolumn',
-                    tpl: '<tpl if="geneName">{geneName} (<a href="http://www.ensembl.org/Homo_sapiens/Location/View?g={geneId}" target="_blank">{geneId}</a>)<tpl else>.</tpl>',
-                    flex: 1
-                },
-                {
-                    text: "Transcript Id",
-                    dataIndex: "transcriptId",
-                    xtype: 'templatecolumn',
-                    tpl: '<a href="http://www.ensembl.org/Homo_sapiens/Location/View?t={transcriptId}" target="_blank">{transcriptId}</a>',
-                    flex: 1
-                },
-                {
-                    text: "Feature Id",
-                    dataIndex: "featureId",
-                    flex: 1
-
-                },
-                {
-                    text: "Feature Name",
-                    dataIndex: "featureName",
-                    flex: 1
-
-                },
-                {
-                    text: "Feature Type",
-                    dataIndex: "featureType",
-                    flex: 1
-
-                },
-                {
-                    text: "Feature Biotype",
-                    dataIndex: "featureBiotype",
-                    flex: 1
-
-                },
-                {
-                    text: "Ancestral",
-                    dataIndex: "ancestral",
-                    hidden: true,
-                    flex: 1
-                },
-                {
-                    text: "Alternative",
-                    dataIndex: "alternative",
-                    hidden: true,
-                    flex: 1
-                }
-            ],
-            viewConfig: {
-                emptyText: 'No records to display'
-            },
-            dockedItems: [
-                {
-                    xtype: 'toolbar',
-                    dock: 'bottom',
-                    items: [
-                        {
-                            xtype: 'tbtext',
-                            id: _this.id + "numRowsLabelEffect"
-                        }
-                    ]
-                }
-            ]
-        }
-
-        _.extend(gridArgs, _this.gridConfig);
-
-        _this.grid = Ext.create('Ext.grid.Panel', gridArgs);
-
-    },
-    draw: function () {
-
-
-    },
-    getPanel: function () {
-        return this.grid;
-    },
-    clear: function () {
-        this.store.removeAll();
-    },
-    load: function (chr, pos, ref, alt) {
-
-        var _this = this;
-        var req = chr + ":" + pos + ":" + ref + ":" + alt;
-
-        _this.grid.setLoading(true);
-        _this.clear();
-
-        CellbaseManager.get({
-            species:'hsa',
-            category: 'genomic',
-            subCategory:'variant',
-            query: req,
-            resource: 'consequence_type',
-            success: function(response){
-                var data = (_this.filterEffect) ? _this._filterEffectData(response): response;
-
-                _this.store.loadData(data);
-                _this.grid.setTitle(_this.gridName + ' - <span class="info">' + chr + ':' + pos + ' ' + ref + '>' + alt + '</span>');
-                Ext.getCmp(_this.id + "numRowsLabelEffect").setText(data.length + " effects");
-        
-                _this.grid.setLoading(true);
-            },
-            error: function (jqXHR, textStatus, errorThrown) {
-                console.log('Error loading Effect');
-                _this.grid.setLoading(false);
-            }
-        });
-    },
-    _filterEffectData: function (data) {
-        var _this = this;
-        var res = [];
-
-        var regulatory = {};
-
-        for (var i = 0; i < data.length; i++) {
-            var elem = data[i];
-            if (elem.consequenceTypeObo == "coding_sequence_variant" || elem.consequenceTypeObo == "exon_variant" || elem.consequenceTypeObo == "intron_variant") {
-                continue;
-            } else if (elem.consequenceTypeObo == "regulatory_region_variant") {
-                if (!(elem.featureId in regulatory)) {
-                    regulatory[elem.featureId] = elem;
-                }
-                continue;
-            }
-
-            res.push(elem);
-        }
-
-        for (var elem in regulatory) {
-            res.push(regulatory[elem]);
-        }
-
-        return res;
-    }
-}
-
-/*
- * Copyright (c) 2012 Francisco Salavert (ICM-CIPF)
- * Copyright (c) 2012 Ruben Sanchez (ICM-CIPF)
- * Copyright (c) 2012 Ignacio Medina (ICM-CIPF)
- *
- * This file is part of JS Common Libs.
- *
- * JS Common Libs is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 2 of the License, or
- * (at your option) any later version.
- *
- * JS Common Libs is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with JS Common Libs. If not, see <http://www.gnu.org/licenses/>.
- */
-
-function InputListWidget(args) {
-	this.id = "InputListWidget" + Math.round(Math.random()*10000000);
-		
-	this.title = "List";
-	this.width = 500;
-	this.height = 350;
-	this.headerInfo = 'Write a list separated only by lines';
-	
-	this.args=args;
-	
-	if (args != null){
-        if (args.title!= null){
-        	this.title = args.title;       
-        }
-        if (args.width!= null){
-        	this.width = args.width;       
-        }
-        if (args.height!= null){
-        	this.height = args.height;       
-        }
-        if (args.headerInfo!= null){
-        	this.headerInfo = args.headerInfo;       
-        }
-        if (args.viewer!= null){
-        	this.viewer = args.viewer;       
-        }
-    }
-	this.onOk = new Event(this);
-};
-
-
-InputListWidget.prototype.draw = function(text){
-	var _this = this;
-	
-	if (text == null){
-		text = new String();
-	}
-	
-	if (this.panel == null){
-		this.infobar = Ext.create('Ext.toolbar.Toolbar',{cls:"bio-border-false"});
-		this.infoLabel = Ext.create('Ext.toolbar.TextItem', {
-				text:this.headerInfo
-		});
-		this.infobar.add(this.infoLabel);
-		this.editor = Ext.create('Ext.form.field.TextArea', {
-				id:this.id + "genelist_preview",
-	       	 	xtype: 'textarea',
-	        	name: 'file',
-	        	margin:"-1",
-				width : this.width,
-				height : this.height,
-	        	enableKeyEvents:true,
-	        	cls: 'dis',
-	        	style:'normal 6px tahoma, arial, verdana, sans-serif',
-	        	value: text,
-	        	listeners: {
-				       scope: this,
-				       change: function(){
-//				       			var re = /\n/g;
-//				       			for( var i = 1; re.exec(this.editor.getValue()); ++i );
-//				       			this.infoLabel.setText('<span class="ok">'+i+'</span> <span class="info"> Features detected</span>',false);
-				       			this.validate();
-				       }
-				       
-		        }
-		});
-		var form = Ext.create('Ext.panel.Panel', {
-			border : false,
-			items : [this.infobar,this.editor]
-		});
-		
-		this.okButton = Ext.create('Ext.button.Button', {
-			 text: 'Ok',
-			 disabled:true,
-			 listeners: {
-			       scope: this,
-			       click: function(){
-			       			var geneNames = Ext.getCmp(this.id + "genelist_preview").getValue().split("\n");
-							this.onOk.notify(geneNames);
-							_this.panel.close();
-			       		}
-	        }
-		});  
-		
-		this.panel = Ext.create('Ext.ux.Window', {
-			title : this.title,
-			taskbar:Ext.getCmp(this.viewer.id+'uxTaskbar'),
-			layout: 'fit',
-			resizable: false,
-			collapsible:true,
-			constrain:true,
-			closable:true,
-			items : [ form ],
-			buttons : [ this.okButton, {text : 'Cancel',handler : function() {_this.panel.close();}} ],
-			listeners: {
-				       scope: this,
-				       destroy: function(){
-				       		delete this.panel;
-				       }
-		        }
-		});
-	}
-	this.panel.show();
-	
-};
-
-InputListWidget.prototype.validate = function (){
-	if (this.editor.getValue()!="") {
-		this.okButton.enable();
-	}else{
-		this.okButton.disable();
-	}
-};
-
-/*
- * Copyright (c) 2012 Francisco Salavert (ICM-CIPF)
- * Copyright (c) 2012 Ruben Sanchez (ICM-CIPF)
- * Copyright (c) 2012 Ignacio Medina (ICM-CIPF)
- *
- * This file is part of JS Common Libs.
- *
- * JS Common Libs is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 2 of the License, or
- * (at your option) any later version.
- *
- * JS Common Libs is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with JS Common Libs. If not, see <http://www.gnu.org/licenses/>.
- */
-
 function CheckBrowser(appName){
 
     if(Ext.isIE){
@@ -9848,11 +12813,13 @@ function GenericFormPanel(args) {
     this.labelWidth = 150;
 
     this.type;
+    this.style;
     this.title;
     this.resizable;
     this.width = 500;
     this.height;
     this.border = true;
+    this.formBorder = true;
     this.taskbar;
     this.bodyPadding;
     this.headerConfig;
@@ -9864,8 +12831,6 @@ function GenericFormPanel(args) {
     _.extend(this, args);
 
 
-    this.panelId = this.analysis + "-FormPanel";
-
     this.runAnalysisSuccess = function (response) {
         if (response.errorMsg !== '') {
             Ext.Msg.show({
@@ -9875,7 +12840,10 @@ function GenericFormPanel(args) {
                 icon: Ext.Msg.ERROR
             });
         } else {
-            Ext.example.msg('Job Launched', 'It will be listed soon');
+            Utils.msg('Job Launched', 'It will be listed soon');
+            if (!_this.testing) {
+                _this.clean();
+            }
             console.log(response);
             if (_this.type == "window") {
                 _this.panel.hide();
@@ -9892,17 +12860,23 @@ GenericFormPanel.prototype.draw = function () {
     if (this.panel == null) {
         if (this.type == "window") {
             this.panel = Ext.create('Ext.window.Window', {
-                id: this.panelId,
                 title: this.title,
                 closable: this.closable,
                 minimizable: this.minimizable,
                 resizable: this.resizable,
-                bodyStyle: 'background:white;',
-                overflowY: 'auto',
+//                bodyStyle: 'background:white;',
+//                overflowY: 'auto',
 //                taskbar: this.taskbar,
-                items: [this.getForm()],
+                layout: 'fit',
+                items: {
+                    border: 0,
+                    items: [this.getForm()]
+                },
                 listeners: {
                     minimize: function () {
+                        this.hide();
+                    },
+                    close: function () {
                         this.hide();
                     }
                 }
@@ -9910,14 +12884,13 @@ GenericFormPanel.prototype.draw = function () {
         }
         else {
             this.panel = Ext.create('Ext.panel.Panel', {
-                id: this.panelId,
                 title: this.title,
                 closable: this.closable,
 //                defaults: {margin: 30},
                 style: this.style,
                 overflowY: 'auto',
                 items: [this.getForm()],
-                border: 0,
+                border: this.border,
                 bodyPadding: this.bodyPadding,
                 header: this.headerConfig,
                 listeners: {
@@ -9929,6 +12902,7 @@ GenericFormPanel.prototype.draw = function () {
                 }
             });
         }
+        this.panelId = this.panel.getId();
     }
     return this.panel;
 };
@@ -9954,13 +12928,21 @@ GenericFormPanel.prototype.getForm = function () {
         this.form = Ext.create('Ext.form.Panel', {
             border: 0,
             width: this.width,
+            trackResetOnLoad: true,
             padding: 5,
             layout: {
                 type: 'vbox',
                 align: 'stretch'
             },
             items: items,
-            buttons: [this.getRunButton()]
+            bbar: {
+                layout: {
+                    pack: 'end'
+                },
+                items: [
+                    this.getRunButton()
+                ]
+            }
         });
     }
 
@@ -9973,7 +12955,7 @@ GenericFormPanel.prototype.getPanels = function () {
 
 GenericFormPanel.prototype.getJobPanel = function () {
     var _this = this;
-    var jobNameField = Ext.create('Ext.form.field.Text', {
+    this.jobNameField = Ext.create('Ext.form.field.Text', {
         id: this.id + "jobname",
         name: "jobname",
         fieldLabel: 'Name',
@@ -9982,7 +12964,7 @@ GenericFormPanel.prototype.getJobPanel = function () {
         allowBlank: false
     });
 
-    var jobDescriptionField = Ext.create('Ext.form.field.TextArea', {
+    this.jobDescriptionField = Ext.create('Ext.form.field.TextArea', {
         id: this.id + "jobdescription",
         name: "jobdescription",
         labelWidth: this.labelWidth,
@@ -10009,11 +12991,11 @@ GenericFormPanel.prototype.getJobPanel = function () {
     var jobPanel = Ext.create('Ext.panel.Panel', {
         title: 'Job information',
         header: this.headerFormConfig,
-        border: this.border,
-        bodyPadding: 5,
-        width: '100%',
+        border: this.formBorder,
+        bodyPadding: 10,
+        defaults: {margin: '5 0 0 0'},
         buttonAlign: 'center',
-        items: [jobNameField, jobDescriptionField/*, jobFolder*/] //TODO Job folder is not fully supported,
+        items: [this.jobNameField, this.jobDescriptionField/*, jobFolder*/] //TODO Job folder is not fully supported,
     });
 
     return jobPanel;
@@ -10029,6 +13011,7 @@ GenericFormPanel.prototype.getRunButton = function () {
         cls: 'btn btn-default',
         formBind: true, // only enabled if the form is valid
         handler: function () {
+            _this.paramsWS = {};
             var formParams = _this.getForm().getForm().getValues();
             for (var param in formParams) {
                 _this.paramsWS[param] = formParams[param];
@@ -10050,8 +13033,14 @@ GenericFormPanel.prototype.beforeRun = function () {
 };
 
 GenericFormPanel.prototype.run = function () {
+
+    delete this.paramsWS['browseFieldLabel'];
+
     this.setAccountParams();
-    (this.paramsWS['outdir'] === '') ? delete this.paramsWS['outdir'] : console.log(this.paramsWS['outdir']);
+
+    if (this.paramsWS['outdir'] === '') {
+        delete this.paramsWS['outdir']
+    }
 
     if (!this.testing) {
         OpencgaManager.runAnalysis({
@@ -10059,10 +13048,22 @@ GenericFormPanel.prototype.run = function () {
             paramsWS: this.paramsWS,
             success: this.runAnalysisSuccess
         });
+        this.trigger('after:run', {sender: this});
+    } else {
+        console.log("@@ Watch out!!! testing flag is on, so job will not launched.")
     }
     //debug
+    console.log("@@ Form paramsWS")
     console.log(this.paramsWS);
-    this.trigger('after:run', {sender: this});
+
+};
+
+GenericFormPanel.prototype.clean = function () {
+    var items = this.form.query('field');
+    for (var i = 0; i < items.length; i++) {
+        var item = items[i];
+        item.reset();
+    }
 };
 
 
@@ -10132,53 +13133,48 @@ GenericFormPanel.prototype.createTextFields = function (name) {
 
 GenericFormPanel.prototype.createOpencgaBrowserCmp = function (args) {//fieldLabel, dataParamName, mode, btnMargin, defaultFileLabel
     var _this = this;
-    var btnBrowse = Ext.create('Ext.button.Button', {
-        text: 'Browse...',
-        width: 150,
-        handler: function () {
-            if (args.beforeClick != null) {
-                args.beforeClick(args);
-            }
-            _this.opencgaBrowserWidget.once('select', function (response) {
-                if (typeof response !== 'undefined') {
-                    var value = 'buckets:' + response.bucketId + ':' + response.id.replace(/\//g, ":");
-                    fileSelectedLabel.update('<span class="emph">' + response.id + '</span>', false);
-                    hiddenField.setValue(value);//this is send to the ws
-                }
-            });
-            _this.opencgaBrowserWidget.show({mode: args.mode, allowedTypes: args.allowedTypes});
-        }
-    });
 
-    var fileSelectedLabel = Ext.create('Ext.Component', {
+    var field = Ext.create('Ext.form.field.Text', {
         id: args.id,
-        width: _this.labelWidth,
-        margin: '5 10',
-        html: args.defaultFileLabel || "No file selected"
+        fieldLabel: args.fieldLabel,
+        labelWidth: _this.labelWidth,
+        editable: false,
+        name: 'browseFieldLabel',
+        value: args.defaultFileLabel || "browse file...",
+        allowBlank: (args.allowBlank || false),
+        listeners: {
+            focus: function () {
+                if (args.beforeClick != null) {
+                    args.beforeClick(args);
+                }
+                _this.opencgaBrowserWidget.once('select', function (response) {
+                    if (typeof response !== 'undefined') {
+                        field.setValue(response.id);
+                        hiddenField.setValue(response.pathQuery);//this is send to the ws
+                        if (args.onSelect) {
+                            args.onSelect(response);
+                        }
+                    }
+                });
+                _this.opencgaBrowserWidget.show({mode: args.mode, allowedTypes: args.allowedTypes});
+            }
+        }
     });
 
     //not shown, just for validation
     var hiddenField = Ext.create('Ext.form.field.Text', {
         id: args.id + 'hidden',
-        name: args.dataParamName,
+        editable: false,
         hidden: true,
+        name: args.dataParamName,
+        value: "",
         allowBlank: (args.allowBlank || false)
     });
 
-    return Ext.create('Ext.container.Container', {
-//		bodyPadding:10,
-//		defaults:{margin:'5 0 0 5'},
+    return Ext.create('Ext.form.FieldContainer', {
         hidden: args.hidden,
-        layout: 'hbox',
         items: [
-            {
-                xtype: 'box',
-                html: args.fieldLabel + ':',
-                width: 154,
-                margin: '5 0'
-            },
-            btnBrowse,
-            fileSelectedLabel,
+            field,
             hiddenField
         ]
     });
@@ -10213,44 +13209,182 @@ function HeaderWidget(args) {
     this.id = Utils.genId("HeaderWidget");
 
 
-    this.targetId;
-    this.height = 67;
+    this.target;
     this.accountData;
 
     this.appname = "My new App";
     this.description = '';
     this.suiteId = -1;
-    this.news = '';
     this.checkTimeInterval = 4000;
     this.version = '';
     this.allowLogin = true;
     this.width;
-    this.height;
+    this.height = 60;
     this.chunkedUpload = false;
     this.enableTextModeUW = true; // Enable Text Mode in the Upload Widget
+
+    this.applicationMenuEl;
+
+    this.homeLink = ".";
+    this.helpLink = ".";
+    this.tutorialLink = ".";
+    this.aboutHTML = ".";
+
 
     //set instantiation args, must be last
     _.extend(this, args);
 
+    this.els = {};
 
     this.on(this.handlers);
 
     this.rendered = false;
     if (this.autoRender) {
-        this.render(this.targetId);
+        this.render();
     }
 }
 
 HeaderWidget.prototype = {
-    render: function (targetId) {
+    render: function () {
         var _this = this;
-        this.targetId = (targetId) ? targetId : this.targetId;
-        if ($('#' + this.targetId).length < 1) {
-            console.log('targetId not found in DOM');
-            return;
+
+        var appLi = '';
+        if (this.applicationMenuEl) {
+//            appLi = '<li id="appMenu" class="menu"> &#9776; </li>';
+            appLi = '<li id="appMenu" class="menu">&nbsp;<i class="fa fa-chevron-right"></i>&nbsp; <span class="">Menu</span></li>';
+        }
+        var navgationHtml = '' +
+            '<div>' +
+            '   <ul class="ocb-header">' +
+            appLi +
+            '       <li class="title"> &nbsp; ' + this.appname +
+            '       </li>' +
+            '       <li id="description" class="description">' + this.description +
+            '       </li>' +
+            '       <li id="support" class="right"><i class="fa fa-support"></i> &nbsp;support ' +
+            '       </li>' +
+            '       <li id="signin" class="right"><i class="fa fa-sign-in"></i> &nbsp;sign in' +
+            '       </li>' +
+            '       <li id="jobs" class="right hidden"><i class="fa fa-tasks"></i> &nbsp;jobs' +
+            '       </li>' +
+            '       <li id="profile" class="right hidden"><i class="fa fa-user"></i> &nbsp;profile' +
+            '       </li>' +
+            '       <li id="upload" class="right hidden"><i class="fa fa-cloud-upload"></i> &nbsp;upload & manage' +
+            '       </li>' +
+            '       <li id="logout" class="right hidden"><i class="fa fa-sign-out"></i> &nbsp;logout' +
+            '       </li>' +
+            '       <li id="user" class="right hidden text">' +
+            '       </li>' +
+            '   </ul>'
+        '</div>' +
+        '';
+
+        var menuHtml = '' +
+            '   <ul class="ocb-help-menu unselectable">' +
+            '       <li id="homeHelp" class="right"><i class="fa fa-home"></i> &nbsp;home' +
+            '       </li>' +
+            '       <li id="documentation" class="right"><i class="fa fa-book"></i> &nbsp;documentation' +
+            '       </li>' +
+            '       <li id="tutorial" class="right"><i class="fa fa-list-alt"></i> &nbsp;tutorial' +
+            '       </li>' +
+            '       <li id="about" class="right"><i class="fa fa-info"></i> &nbsp; about' +
+            '       </li>' +
+            '   </ul>'
+        '';
+
+
+        this.div = $('<div class="unselectable">' + navgationHtml + '</div>')[0];
+        $(this.div).css({
+            height: this.height + 'px',
+            position: 'relative'
+        });
+
+        this.supportMenuEl = $(menuHtml)[0];
+        $(this.div).append(this.supportMenuEl);
+//        $(this.supportMenuEl).mouseleave(function(){
+//            $(_this.supportMenuEl).removeClass('ocb-help-menu-shown');
+//        });
+
+        if (this.applicationMenuEl) {
+            $(this.div).append(this.applicationMenuEl);
+//            $(this.applicationMenuDiv).mouseleave(function(){
+//                $(_this.applicationMenuDiv).removeClass('ocb-app-menu-shown');
+//            });
+
         }
 
+        var els = $(this.div).find('ul').children();
+        for (var i = 0; i < els.length; i++) {
+            var elid = els[i].getAttribute('id');
+            if (elid) {
+                this.els[elid] = els[i];
+            }
+        }
 
+        $(this.div).mouseleave(function () {
+            _this.toogleSupportMenu(false);
+        });
+        $(this.div).click(function (e) {
+            if ($(e.target).attr('id') !== $(_this.els.support).attr('id')) {
+                _this.toogleSupportMenu(false);
+            }else{
+                _this.toogleSupportMenu();
+            }
+        });
+
+        $(this.els.appMenu).click(function () {
+            _this.toogleAppMenu();
+        });
+
+        $(this.els.homeHelp).click(function () {
+            window.location.href = _this.homeLink;
+        });
+        $(this.els.documentation).click(function () {
+            window.open(_this.helpLink);
+        });
+        $(this.els.tutorial).click(function () {
+            window.open(_this.tutorialLink);
+        });
+        $(this.els.about).click(function () {
+            _this.trigger('about:click', {sender: _this});
+
+//            Ext.create('Ext.window.Window', {
+//                id: _this.id + "aboutWindow",
+//                bodyStyle: 'background:#fff; color:#333;',
+//                bodyPadding: 10,
+//                title: 'About',
+//                height: 340,
+//                width: 500,
+//                modal: true,
+//                layout: 'fit',
+//                html: _this.aboutText
+//            }).show();
+        });
+
+
+        /* Element handlers */
+        //TODO check !this.allowLogin,
+        $(this.els.signin).click(function () {
+            _this.loginWidget.show();
+        });
+        $(this.els.logout).click(function () {
+            OpencgaManager.logout({
+                accountId: $.cookie('bioinfo_account'),
+                sessionId: $.cookie('bioinfo_sid'),
+                success: _this.logoutSuccess,
+                error: _this.logoutSuccess
+            });
+        });
+        $(this.els.profile).click(function () {
+            _this.profileWidget.show();
+        });
+        $(this.els.upload).click(function () {
+            _this.opencgaBrowserWidget.show({mode: "manager"});
+        });
+        $(this.els.jobs).click(function () {
+            _this.trigger('jobs:click', {sender: _this});
+//            $(_this.els.jobs).toggleClass('active');
+        });
         /****************************************/
         this.logoutSuccess = function (data) {
             console.log(data);
@@ -10272,18 +13406,6 @@ HeaderWidget.prototype = {
         };
         /****************************************/
 
-
-
-
-        this.rendered = true;
-    },
-    draw: function () {
-        var _this = this;
-        if (!this.rendered) {
-            console.info('Header Widget is not rendered yet');
-            return;
-        }
-
         /* Login Widget */
         this.loginWidget = this._createLoginWidget();
 
@@ -10293,8 +13415,21 @@ HeaderWidget.prototype = {
         /* Opencga Browser Widget */
         this.opencgaBrowserWidget = this._createOpencgaBrowserWidget();
 
-        /* Panel */
-        this.panel = this._createPanel(this.targetId);
+        this.rendered = true;
+    },
+    draw: function () {
+        var _this = this;
+        this.targetDiv = (this.target instanceof HTMLElement ) ? this.target : document.querySelector('#' + this.target);
+        if (!this.targetDiv) {
+            console.log('target not found');
+            return;
+        }
+
+        this.targetDiv.appendChild(this.div);
+
+        this.loginWidget.draw();
+        this.profileWidget.draw();
+        this.opencgaBrowserWidget.draw();
 
         if ($.cookie('bioinfo_sid') != null) {
             this.sessionInitiated();
@@ -10302,7 +13437,39 @@ HeaderWidget.prototype = {
             this.sessionFinished();
         }
 
+    },
+    getHeight: function () {
+        return this.height;
+    },
+    toogleAppMenu: function (value) {
+        if (this.applicationMenuEl) {
+            if (value === true) {
+                $(this.applicationMenuEl).addClass('ocb-app-menu-shown');
+                $(this.els.appMenu).children('i').removeClass('fa-chevron-right');
+                $(this.els.appMenu).children('i').addClass('fa-chevron-left');
+            } else if (value === false) {
+                $(this.applicationMenuEl).removeClass('ocb-app-menu-shown');
+                $(this.els.appMenu).children('i').addClass('fa-chevron-right');
+                $(this.els.appMenu).children('i').removeClass('fa-chevron-left');
+            } else {
+                $(this.applicationMenuEl).toggleClass('ocb-app-menu-shown');
+                $(this.els.appMenu).children('i').toggleClass('fa-chevron-right');
+                $(this.els.appMenu).children('i').toggleClass('fa-chevron-left');
+            }
 
+        }
+    },
+    toogleSupportMenu: function (value) {
+        if (this.supportMenuEl) {
+            if (value === true) {
+                $(this.supportMenuEl).addClass('ocb-help-menu-shown');
+            } else if (value === false) {
+                $(this.supportMenuEl).removeClass('ocb-help-menu-shown');
+            } else {
+                $(this.supportMenuEl).toggleClass('ocb-help-menu-shown');
+            }
+
+        }
     },
     _createLoginWidget: function () {
         var _this = this;
@@ -10316,14 +13483,12 @@ HeaderWidget.prototype = {
                 }
             }
         });
-        loginWidget.draw();
         return loginWidget;
     },
     _createProfileWidget: function () {
         var profileWidget = new ProfileWidget({
             autoRender: true
         });
-        profileWidget.draw();
         return profileWidget;
     },
     _createOpencgaBrowserWidget: function () {
@@ -10339,275 +13504,274 @@ HeaderWidget.prototype = {
                 }
             }
         });
-        opencgaBrowserWidget.draw();
         return opencgaBrowserWidget;
     },
 
-    _createPanel: function (targetId) {
-        var _this = this;
-        switch (this.suiteId) {
-            case 11://Renato
-                this.homeLink = "http://renato.bioinfo.cipf.es";
-                this.helpLink = "http://bioinfo.cipf.es/docs/renato/";
-                this.tutorialLink = "http://bioinfo.cipf.es/docs/renato/tutorial";
-                this.aboutText = '';
-                break;
-            case 6://Variant
-                this.homeLink = "http://variant.bioinfo.cipf.es";
-                this.helpLink = "http://docs.bioinfo.cipf.es/projects/variant";
-                this.tutorialLink = "http://docs.bioinfo.cipf.es/projects/variant/wiki/Tutorial";
-                this.aboutText = '';
-                break;
-            case 9://GenomeMaps
-                this.homeLink = "http://www.genomemaps.org";
-                this.helpLink = "http://wiki.opencb.org/projects/visualization/doku.php?id=genome-maps:overview";
-                this.tutorialLink = "http://wiki.opencb.org/projects/visualization/doku.php?id=genome-maps:tutorial";
-                this.aboutText = 'Genome Maps is built with open and free technologies like HTML5 and SVG inline, ' +
-                    'so no plug-in is needed in modern internet browsers. We’ve focused on providing the ' +
-                    'best user experience possible with a modern drag navigation and many features included.<br><br>' +
-                    'Genome Maps project has been developed in the <b>Computational Biology Unit</b> led by <b>Ignacio Medina</b>, at <b>Computational Genomic' +
-                    ' Institute</b> led by <b>Joaquin Dopazo</b> at CIPF. Two people from my lab deserve special mention for their fantastic job done: ' +
-                    '<br><b>Franscisco Salavert</b> and <b>Alejandro de Maria</b>.<br><br>' +
-                    'Genome Maps has been designed to be easily be embedded in any project with a couple of lines of code,' +
-                    ' and it has been implemented as a plugin framework to extend the standard features.<br><br>' +
-                    'Supported browsers include: Google Chrome 14+, Apple Safari 5+, Opera 12+ and Mozilla Firefox 14+ ' +
-                    '(works slower than in the other browsers). Internet Explorer 10 is under RC and seems to work properly.<br><br>' +
-                    'For more information or suggestions about Genome Maps please contact <br><b>Ignacio Medina</b>:  <span class="info">imedina@cipf.es</span>'
-                break;
-            case 10://CellBrowser
-                this.homeLink = "http://www.cellbrowser.org";
-                this.helpLink = "http://docs.bioinfo.cipf.es/projects/cellbrowser";
-                this.tutorialLink = "http://docs.bioinfo.cipf.es/projects/cellbrowser/wiki/Tutorial";
-                this.aboutText = '';
-                break;
-            case 12://UNTBgen
-                this.homeLink = "http://bioinfo.cipf.es/apps/untbgen";
-                this.helpLink = "http://bioinfo.cipf.es/ecolopy/";
-                this.tutorialLink = "http://bioinfo.cipf.es/ecolopy/";
-                this.aboutText = '';
-                break;
-            case 22://Pathiways
-                this.homeLink = "http://pathiways.bioinfo.cipf.es";
-                this.helpLink = "http://bioinfo.cipf.es/pathiways";
-                this.tutorialLink = "http://bioinfo.cipf.es/pathiways/tutorial";
-                this.aboutText = 'PATHiWAYS is built with open and free technologies like HTML5 and SVG inline, ' +
-                    'so no plug-in is needed in modern internet browsers<br><br>' +
-                    'PATHiWAYS project has been developed in the <b>Computational Biology Unit</b>, at <b>Computational Medicine' +
-                    ' Institute</b> at CIPF in Valencia, Spain.<br><br>' +
-                    'For more information please visit our web page  <span class="info"><a target="_blank" href="http://bioinfo.cipf.es">bioinfo.cipf.es</a></span>';
-                break;
-            case 85: //BierApp
-                this.homeLink = "http://bioinfo.cipf.es/apps/bierapp/";
-                this.helpLink = "https://github.com/babelomics/bierapp/wiki";
-                this.tutorialLink = "https://github.com/babelomics/bierapp/wiki/Tutorial";
-                this.aboutText = 'BiERApp is an interactive tool that allows finding genes affected by deleterious variants that segregate along family pedigrees, case-controls or sporadic samples. BiERApp has built with open and free technologies like HTML5 and Javascript.<br><br>' +
-                    'BierApp project is a joint development of the <b>BiER</b> and the <b>Computational Biology Unit</b>, in the <b>Computational Genomics Department</b> at CIPF in Valencia, Spain.<br><br>' + 'For more information please visit our web page  <span class="info"><a target="_blank" href="http://bioinfo.cipf.es">bioinfo.cipf.es</a></span> <br><br>' +
-                    '<img width="25%" src="http://bioinfo.cipf.es/bierwiki/lib/tpl/arctic/images/logobier.jpg">'
-                ;
-                break;
-
-            case 86: // TEAM
-                this.homeLink = "http://bioinfo.cipf.es/apps/team/";
-                this.helpLink = "https://github.com/babelomics/team/wiki";
-                this.tutorialLink = "https://github.com/babelomics/team/wiki/Tutorial";
-                this.aboutText = 'TEAM (Targeted Enrichment Analysis and Management) is an open web-based tool for the design and management of panels of genes for targeted enrichment and massive sequencing for diagnostic applications. <br> TEAM has been built with open and free technologies like HTML5 and Javascript.<br><br>' +
-                    'TEAM project is a joint development of the <b>BiER</b> and the <b>Computational Biology Unit</b>, in the <b>Computational Genomics Department</b> at CIPF in Valencia, Spain.<br><br>' + 'For more information please visit our web page  <span class="info"><a target="_blank" href="http://bioinfo.cipf.es">bioinfo.cipf.es</a></span> <br><br>' +
-                    '<img width="25%" src="http://bioinfo.cipf.es/bierwiki/lib/tpl/arctic/images/logobier.jpg">'
-                ;
-                break;
-
-            default:
-                this.homeLink = "http://docs.bioinfo.cipf.es";
-                this.helpLink = "http://docs.bioinfo.cipf.es";
-                this.tutorialLink = "http://docs.bioinfo.cipf.es";
-                this.aboutText = '';
-        }
-
-        if (typeof HEADER_HOME_LINK !== 'undefined') {
-            this.homeLink = HEADER_HOME_LINK;
-        }
-        if (typeof HEADER_HELP_LINK !== 'undefined') {
-            this.helpLink = HEADER_HELP_LINK;
-        }
-        if (typeof HEADER_TUTORIAL_LINK !== 'undefined') {
-            this.tutorialLink = HEADER_TUTORIAL_LINK;
-        }
-        if (typeof HEADER_ABOUT_HTML !== 'undefined') {
-            this.aboutText = HEADER_ABOUT_HTML;
-        }
-
-        var linkbar = new Ext.create('Ext.toolbar.Toolbar', {
-            id: this.id + 'linkbar',
-            dock: 'top',
-            cls: 'bio-linkbar',
-            height: 40,
-            minHeight: 40,
-            maxHeight: 40,
-            items: [
-                {
-                    xtype: 'tbtext',
-                    id: this.id + "speciesTextItem",
-                    text: ''
-                },
-                {
-                    xtype: 'tbtext',
-                    id: this.id + "assemblyTextItem",
-                    text: ''
-                },
-                '->',
-                {
-                    id: this.id + "homeButton",
-                    text: 'home',
-                    handler: function () {
-                        window.location.href = _this.homeLink;
-                    }
-                },
-                {
-                    id: this.id + "helpButton",
-                    text: 'documentation',
-                    handler: function () {
-                        window.open(_this.helpLink);
-                    }
-                },
-                {
-                    id: this.id + "tutorialButton",
-                    text: 'tutorial',
-                    handler: function () {
-                        window.open(_this.tutorialLink);
-                    }
-                },
-                {
-                    id: this.id + "aboutButton",
-                    text: 'about',
-                    handler: function () {
-                        Ext.create('Ext.window.Window', {
-                            id: _this.id + "aboutWindow",
-                            bodyStyle: 'background:#fff; color:#333;',
-                            bodyPadding: 10,
-                            title: 'About',
-                            height: 340,
-                            width: 500,
-                            modal: true,
-                            layout: 'fit',
-                            html: _this.aboutText
-                        }).show();
-                    }
-                }
-            ]
-        });
-
-        var userbar = new Ext.create('Ext.toolbar.Toolbar', {
-            id: this.id + 'userbar',
-            dock: 'top',
-            border: false,
-//                cls:'bio-userbar',
-            cls: 'gm-login-bar',
-            height: 27,
-            minHeight: 27,
-            maxHeight: 27,
-            layout: 'hbox',
-            items: [
-                {
-                    xtype: 'tbtext',
-                    id: this.id + 'textNews',
-                    text: this.news
-                },
-                '->',
-                {
-                    xtype: 'tbtext',
-                    id: this.id + 'textUser',
-                    text: ''
-                },
-                {
-                    id: this.id + 'btnOpencga',
-                    text: '<span class="emph">Upload & Manage</span>',
-                    iconCls: 'icon-project-manager',
-                    handler: function () {
-                        _this.opencgaBrowserWidget.show({mode: "manager"});
-                    }
-                },
-                {
-                    id: this.id + 'btnSignin',
-                    disabled: !this.allowLogin,
-                    text: '<span class="emph">sign in</span>',
-                    handler: function () {
-                        _this.loginWidget.show();
-                    }
-                },
-                {
-                    id: this.id + 'btnEdit',
-                    text: '<span class="emph">profile</span>',
-                    handler: function () {
-                        _this.profileWidget.show();
-                    }
-                },
-                {
-                    id: this.id + 'btnLogout',
-                    text: '<span class="emph">logout</span>',
-                    handler: function () {
-                        OpencgaManager.logout({
-                            accountId: $.cookie('bioinfo_account'),
-                            sessionId: $.cookie('bioinfo_sid'),
-                            success: _this.logoutSuccess,
-                            error: _this.logoutSuccess
-                        });
-                    }
-                }
-            ]
-        });
-
-        var panel = Ext.create('Ext.panel.Panel', {
-            id: this.id + "panel",
-            region: 'north',
-            border: false,
-            renderTo: targetId,
-            height: this.height,
-            minHeight: this.height,
-            maxHeigth: this.height,
-            width: this.width,
-            layout: 'hbox',
-            items: [
-                {
-                    xtype: 'container',
-//                    flex:1,
-                    items: [
-                        {
-                            id: this.id + "appTextItem",
-                            xtype: 'tbtext',
-                            margin: '25 0 0 20',
-                            //		        	html: '<span class="appName">Vitis vinifera&nbsp; '+this.args.appname +'</span> <span class="appDesc">'+this.args.description+'</span>&nbsp;&nbsp;&nbsp;&nbsp;<span><img height="30" src="http://www.demeter.es/imagenes/l_demeter.gif"></span>',
-                            text: '<span class="appName">' + this.appname + '</span> ' +
-                                '<span id="' + this.id + 'description" class="appDesc">' + this.description + '</span>' +
-                                '<span id="' + this.id + 'version" class="appVersion"></span>' +
-                                '',
-                            padding: '0 0 0 10',
-                            listeners: {
-                                afterrender: function () {
-                                    $("#" + _this.id + "appTextItem").qtip({
-                                        content: '<span class="info">' + _this.version + '</span>',
-                                        position: {my: "bottom center", at: "top center", adjust: { y: 12, x: -25 }}
-
-                                    });
-                                }
-                            }
-                        }
-                    ]
-                },
-                {
-                    xtype: 'container',
-                    flex: 2,
-                    layout: {type: 'vbox', align: 'right'},
-                    items: [userbar, linkbar]
-                }
-            ]
-        });
-        return panel;
-    },
+//    _createPanel: function (targetId) {
+//        var _this = this;
+//        switch (this.suiteId) {
+//            case 11://Renato
+//                this.homeLink = "http://renato.bioinfo.cipf.es";
+//                this.helpLink = "http://bioinfo.cipf.es/docs/renato/";
+//                this.tutorialLink = "http://bioinfo.cipf.es/docs/renato/tutorial";
+//                this.aboutText = '';
+//                break;
+//            case 6://Variant
+//                this.homeLink = "http://variant.bioinfo.cipf.es";
+//                this.helpLink = "http://docs.bioinfo.cipf.es/projects/variant";
+//                this.tutorialLink = "http://docs.bioinfo.cipf.es/projects/variant/wiki/Tutorial";
+//                this.aboutText = '';
+//                break;
+//            case 9://GenomeMaps
+//                this.homeLink = "http://www.genomemaps.org";
+//                this.helpLink = "http://wiki.opencb.org/projects/visualization/doku.php?id=genome-maps:overview";
+//                this.tutorialLink = "http://wiki.opencb.org/projects/visualization/doku.php?id=genome-maps:tutorial";
+//                this.aboutText = 'Genome Maps is built with open and free technologies like HTML5 and SVG inline, ' +
+//                    'so no plug-in is needed in modern internet browsers. We’ve focused on providing the ' +
+//                    'best user experience possible with a modern drag navigation and many features included.<br><br>' +
+//                    'Genome Maps project has been developed in the <b>Computational Biology Unit</b> led by <b>Ignacio Medina</b>, at <b>Computational Genomic' +
+//                    ' Institute</b> led by <b>Joaquin Dopazo</b> at CIPF. Two people from my lab deserve special mention for their fantastic job done: ' +
+//                    '<br><b>Franscisco Salavert</b> and <b>Alejandro de Maria</b>.<br><br>' +
+//                    'Genome Maps has been designed to be easily be embedded in any project with a couple of lines of code,' +
+//                    ' and it has been implemented as a plugin framework to extend the standard features.<br><br>' +
+//                    'Supported browsers include: Google Chrome 14+, Apple Safari 5+, Opera 12+ and Mozilla Firefox 14+ ' +
+//                    '(works slower than in the other browsers). Internet Explorer 10 is under RC and seems to work properly.<br><br>' +
+//                    'For more information or suggestions about Genome Maps please contact <br><b>Ignacio Medina</b>:  <span class="info">imedina@cipf.es</span>'
+//                break;
+//            case 10://CellBrowser
+//                this.homeLink = "http://www.cellbrowser.org";
+//                this.helpLink = "http://docs.bioinfo.cipf.es/projects/cellbrowser";
+//                this.tutorialLink = "http://docs.bioinfo.cipf.es/projects/cellbrowser/wiki/Tutorial";
+//                this.aboutText = '';
+//                break;
+//            case 12://UNTBgen
+//                this.homeLink = "http://bioinfo.cipf.es/apps/untbgen";
+//                this.helpLink = "http://bioinfo.cipf.es/ecolopy/";
+//                this.tutorialLink = "http://bioinfo.cipf.es/ecolopy/";
+//                this.aboutText = '';
+//                break;
+//            case 22://Pathiways
+//                this.homeLink = "http://pathiways.bioinfo.cipf.es";
+//                this.helpLink = "http://bioinfo.cipf.es/pathiways";
+//                this.tutorialLink = "http://bioinfo.cipf.es/pathiways/tutorial";
+//                this.aboutText = 'PATHiWAYS is built with open and free technologies like HTML5 and SVG inline, ' +
+//                    'so no plug-in is needed in modern internet browsers<br><br>' +
+//                    'PATHiWAYS project has been developed in the <b>Computational Biology Unit</b>, at <b>Computational Medicine' +
+//                    ' Institute</b> at CIPF in Valencia, Spain.<br><br>' +
+//                    'For more information please visit our web page  <span class="info"><a target="_blank" href="http://bioinfo.cipf.es">bioinfo.cipf.es</a></span>';
+//                break;
+//            case 85: //BierApp
+//                this.homeLink = "http://bioinfo.cipf.es/apps/bierapp/";
+//                this.helpLink = "https://github.com/babelomics/bierapp/wiki";
+//                this.tutorialLink = "https://github.com/babelomics/bierapp/wiki/Tutorial";
+//                this.aboutText = 'BiERApp is an interactive tool that allows finding genes affected by deleterious variants that segregate along family pedigrees, case-controls or sporadic samples. BiERApp has built with open and free technologies like HTML5 and Javascript.<br><br>' +
+//                    'BierApp project is a joint development of the <b>BiER</b> and the <b>Computational Biology Unit</b>, in the <b>Computational Genomics Department</b> at CIPF in Valencia, Spain.<br><br>' + 'For more information please visit our web page  <span class="info"><a target="_blank" href="http://bioinfo.cipf.es">bioinfo.cipf.es</a></span> <br><br>' +
+//                    '<img width="25%" src="http://bioinfo.cipf.es/bierwiki/lib/tpl/arctic/images/logobier.jpg">'
+//                ;
+//                break;
+//
+//            case 86: // TEAM
+//                this.homeLink = "http://bioinfo.cipf.es/apps/team/";
+//                this.helpLink = "https://github.com/babelomics/team/wiki";
+//                this.tutorialLink = "https://github.com/babelomics/team/wiki/Tutorial";
+//                this.aboutText = 'TEAM (Targeted Enrichment Analysis and Management) is an open web-based tool for the design and management of panels of genes for targeted enrichment and massive sequencing for diagnostic applications. <br> TEAM has been built with open and free technologies like HTML5 and Javascript.<br><br>' +
+//                    'TEAM project is a joint development of the <b>BiER</b> and the <b>Computational Biology Unit</b>, in the <b>Computational Genomics Department</b> at CIPF in Valencia, Spain.<br><br>' + 'For more information please visit our web page  <span class="info"><a target="_blank" href="http://bioinfo.cipf.es">bioinfo.cipf.es</a></span> <br><br>' +
+//                    '<img width="25%" src="http://bioinfo.cipf.es/bierwiki/lib/tpl/arctic/images/logobier.jpg">'
+//                ;
+//                break;
+//
+//            default:
+//                this.homeLink = "http://docs.bioinfo.cipf.es";
+//                this.helpLink = "http://docs.bioinfo.cipf.es";
+//                this.tutorialLink = "http://docs.bioinfo.cipf.es";
+//                this.aboutText = '';
+//        }
+//
+//        if (typeof HEADER_HOME_LINK !== 'undefined') {
+//            this.homeLink = HEADER_HOME_LINK;
+//        }
+//        if (typeof HEADER_HELP_LINK !== 'undefined') {
+//            this.helpLink = HEADER_HELP_LINK;
+//        }
+//        if (typeof HEADER_TUTORIAL_LINK !== 'undefined') {
+//            this.tutorialLink = HEADER_TUTORIAL_LINK;
+//        }
+//        if (typeof HEADER_ABOUT_HTML !== 'undefined') {
+//            this.aboutText = HEADER_ABOUT_HTML;
+//        }
+//
+//        var linkbar = new Ext.create('Ext.toolbar.Toolbar', {
+//            id: this.id + 'linkbar',
+//            dock: 'top',
+//            cls: 'bio-linkbar',
+//            height: 40,
+//            minHeight: 40,
+//            maxHeight: 40,
+//            items: [
+//                {
+//                    xtype: 'tbtext',
+//                    id: this.id + "speciesTextItem",
+//                    text: ''
+//                },
+//                {
+//                    xtype: 'tbtext',
+//                    id: this.id + "assemblyTextItem",
+//                    text: ''
+//                },
+//                '->',
+////                {
+////                    id: this.id + "homeButton",
+////                    text: 'home',
+////                    handler: function () {
+////                        window.location.href = _this.homeLink;
+////                    }
+////                },
+////                {
+////                    id: this.id + "helpButton",
+////                    text: 'documentation',
+////                    handler: function () {
+////                        window.open(_this.helpLink);
+////                    }
+////                },
+////                {
+////                    id: this.id + "tutorialButton",
+////                    text: 'tutorial',
+////                    handler: function () {
+////                        window.open(_this.tutorialLink);
+////                    }
+////                },
+////                {
+////                    id: this.id + "aboutButton",
+////                    text: 'about',
+////                    handler: function () {
+////                        Ext.create('Ext.window.Window', {
+////                            id: _this.id + "aboutWindow",
+////                            bodyStyle: 'background:#fff; color:#333;',
+////                            bodyPadding: 10,
+////                            title: 'About',
+////                            height: 340,
+////                            width: 500,
+////                            modal: true,
+////                            layout: 'fit',
+////                            html: _this.aboutText
+////                        }).show();
+////                    }
+////                }
+//            ]
+//        });
+//
+//        var userbar = new Ext.create('Ext.toolbar.Toolbar', {
+//            id: this.id + 'userbar',
+//            dock: 'top',
+//            border: false,
+////                cls:'bio-userbar',
+//            cls: 'gm-login-bar',
+//            height: 27,
+//            minHeight: 27,
+//            maxHeight: 27,
+//            layout: 'hbox',
+//            items: [
+//                {
+//                    xtype: 'tbtext',
+//                    id: this.id + 'textNews',
+//                    text: this.news
+//                },
+//                '->',
+//                {
+//                    xtype: 'tbtext',
+//                    id: this.id + 'textUser',
+//                    text: ''
+//                },
+////                    {
+////                        id: this.id + 'btnOpencga',
+////                        text: '<span class="emph">Upload & Manage</span>',
+////                        iconCls: 'icon-project-manager',
+////                        handler: function () {
+////                            _this.opencgaBrowserWidget.show({mode: "manager"});
+////                        }
+////                    },
+////                {
+////                    id: this.id + 'btnSignin',
+////                    disabled: !this.allowLogin,
+////                    text: '<span class="emph">sign in</span>',
+////                    handler: function () {
+////                        _this.loginWidget.show();
+////                    }
+////                },
+////                    {
+////                        id: this.id + 'btnEdit',
+////                        text: '<span class="emph">profile</span>',
+////                        handler: function () {
+////                            _this.profileWidget.show();
+////                        }
+////                    },
+////                {
+////                    id: this.id + 'btnLogout',
+////                    text: '<span class="emph">logout</span>',
+////                    handler: function () {
+////                        OpencgaManager.logout({
+////                            accountId: $.cookie('bioinfo_account'),
+////                            sessionId: $.cookie('bioinfo_sid'),
+////                            success: _this.logoutSuccess,
+////                            error: _this.logoutSuccess
+////                        });
+////                    }
+////                }
+//            ]
+//        });
+//
+//        var panel = Ext.create('Ext.panel.Panel', {
+//            id: this.id + "panel",
+//            region: 'north',
+//            border: false,
+//            renderTo: targetId,
+//            height: this.height,
+//            minHeight: this.height,
+//            maxHeigth: this.height,
+//            width: this.width,
+//            layout: 'hbox',
+//            items: [
+//                {
+//                    xtype: 'container',
+////                    flex:1,
+//                    items: [
+//                        {
+//                            id: this.id + "appTextItem",
+//                            xtype: 'tbtext',
+//                            margin: '25 0 0 20',
+//                            //		        	html: '<span class="appName">Vitis vinifera&nbsp; '+this.args.appname +'</span> <span class="appDesc">'+this.args.description+'</span>&nbsp;&nbsp;&nbsp;&nbsp;<span><img height="30" src="http://www.demeter.es/imagenes/l_demeter.gif"></span>',
+//                            text: '<span class="appName">' + this.appname + '</span> ' +
+//                                '<span id="' + this.id + 'description" class="appDesc">' + this.description + '</span>' +
+//                                '<span id="' + this.id + 'version" class="appVersion"></span>' +
+//                                '',
+//                            padding: '0 0 0 10',
+//                            listeners: {
+//                                afterrender: function () {
+//                                    $("#" + _this.id + "appTextItem").qtip({
+//                                        content: '<span class="info">' + _this.version + '</span>',
+//                                        position: {my: "bottom center", at: "top center", adjust: { y: 12, x: -25 }}
+//
+//                                    });
+//                                }
+//                            }
+//                        }
+//                    ]
+//                },
+//                {
+//                    xtype: 'container',
+//                    flex: 2,
+//                    layout: {type: 'vbox', align: 'right'},
+//                    items: [userbar, linkbar]
+//                }
+//            ]
+//        });
+//        return panel;
+//    },
 
     setAccountData: function (data) {
         this.accountData = data;
         this.opencgaBrowserWidget.setAccountData(data);
-        Ext.getCmp(this.id + 'textUser').setText(this._getAccountText());
+        $(this.els.user).html(this._getAccountText());
     },
     getAccountInfo: function () {
         var lastActivity = null;
@@ -10638,13 +13802,15 @@ HeaderWidget.prototype = {
     },
     sessionInitiated: function () {
         var _this = this;
-        /**HIDE**/
+//        /**HIDE**/
         this.loginWidget.hide();
-        Ext.getCmp(this.id + 'btnSignin').hide();
-        /**SHOW**/
-        Ext.getCmp(this.id + 'btnLogout').show();
-        Ext.getCmp(this.id + 'btnEdit').show();
-        Ext.getCmp(this.id + 'btnOpencga').show();
+        $(this.els.signin).addClass('hidden');
+//        /**SHOW**/
+        $(this.els.logout).removeClass('hidden');
+        $(this.els.profile).removeClass('hidden');
+        $(this.els.upload).removeClass('hidden');
+        $(this.els.user).removeClass('hidden');
+        $(this.els.jobs).removeClass('hidden');
 
         /**START OPENCGA CHECK**/
         if (!this.accountInfoInterval) {
@@ -10655,15 +13821,17 @@ HeaderWidget.prototype = {
         }
     },
     sessionFinished: function () {
-        /**HIDE**/
-        Ext.getCmp(this.id + 'btnOpencga').hide();
-        Ext.getCmp(this.id + 'btnLogout').hide();
-        Ext.getCmp(this.id + 'btnEdit').hide();
-        /**SHOW**/
-        Ext.getCmp(this.id + 'btnSignin').show();
-
-        Ext.getCmp(this.id + 'textUser').setText('');
-        /**CLEAR OPENCGA**/
+//        /**HIDE**/
+        $(this.els.logout).addClass('hidden');
+        $(this.els.profile).addClass('hidden');
+        $(this.els.upload).addClass('hidden');
+        $(this.els.user).addClass('hidden');
+        $(this.els.jobs).addClass('hidden');
+//        /**SHOW**/
+        $(this.els.signin).removeClass('hidden');
+        $(this.els.user).html('');
+        $(this.els.user).removeClass('hidden');
+//        /**CLEAR OPENCGA**/
         clearInterval(this.accountInfoInterval);
         delete this.accountInfoInterval;
 
@@ -10672,11 +13840,10 @@ HeaderWidget.prototype = {
         this.opencgaBrowserWidget.removeAccountData();
     },
     setDescription: function (text) {
-        $("#" + this.id + 'description').html(text);
+        $(this.els.description).html(text);
     },
     setWidth: function (width) {
         this.width = width;
-        this.panel.setWidth(width);
     }
 
 };
@@ -10704,62 +13871,450 @@ HeaderWidget.prototype = {
  * along with JS Common Libs. If not, see <http://www.gnu.org/licenses/>.
  */
 
-JobListWidget.prototype.draw = UserListWidget.prototype.draw;
-JobListWidget.prototype.getData = UserListWidget.prototype.getData;
-JobListWidget.prototype.getCount = UserListWidget.prototype.getCount;
-
 function JobListWidget(args) {
     var _this = this;
-    UserListWidget.prototype.constructor.call(this, args);
-    this.counter = null;
-    var jobstpl = [
-        '<tpl for=".">',
-        '<div class="joblist-item s120">',
+    _.extend(this, Backbone.Events);
 
-        '<div style="color:#596F8F">{name}</div>',
-        '<div class="{[ this.getClass(values) ]}">{toolName}{execution}</div>',
-        '<div style="color: dimgray">{date}</div>',
+    this.id = Utils.genId("JobListWidget");
 
-        '<div style="color:grey">',
-        '<span style="color:' +
-            '<tpl if="visites == 0">#298c63</tpl>' +
-            '<tpl if="visites &gt; 0">#0068cc</tpl>' +
-            '<tpl if="visites == -1">#b30000</tpl>' +
-            '<tpl if="visites == -2">Darkorange</tpl>' +
-            '">{status}</span>',
-        '<tpl if="visites &gt; -1"> - {visites} views</tpl>',
-//                        '  - {id}' +
-        '</div>',
+    this.target;
+    this.autoRender = true;
 
-        '</div>',
-        '</tpl>',
-        {
-            getClass: function (item) {
-                return item.toolName.replace('.', ' ');
+    this.RUNING_COLOR = '#298c63';
+    this.QUEUED_COLOR = 'Darkorange';
+    this.FINISHED_COLOR = '#0068cc';
+    this.ERROR_COLOR = '#b30000';
+
+    //set instantiation args, must be last
+    _.extend(this, args);
+
+    this.on(this.handlers);
+
+    this.buttonFilterFunction = null;
+    this.textFilterFunction = function (item) {
+        var str = Ext.getCmp(_this.id + "searchField").getValue().toLowerCase();
+        if (item.data.name.toLowerCase().indexOf(str) < 0) {
+            return false;
+        }
+        return true;
+    };
+
+    this.rendered = false;
+    if (this.autoRender) {
+        this.render();
+    }
+};
+
+
+JobListWidget.prototype = {
+    render: function () {
+        var _this = this;
+        this.div = $('<div></div>')[0];
+
+        this.panel = this._createPanel();
+
+    },
+    draw: function () {
+        this.targetDiv = (this.target instanceof HTMLElement ) ? this.target : document.querySelector('#' + this.target);
+        if (!this.targetDiv) {
+            console.log('target not found');
+            return;
+        }
+        this.targetDiv.appendChild(this.div);
+
+        this.panel.render(this.div);
+    },
+    show: function () {
+        this.panel.show()
+    },
+    hide: function () {
+        this.panel.hide();
+    },
+    toggle: function () {
+        if (this.panel.isVisible()) {
+            this.panel.hide();
+        } else {
+            this.panel.show();
+        }
+    },
+    setAccountData: function (data) {
+        this.accountData = data;
+        var jobs = [];
+        var job;
+        for (var i = 0; i < this.accountData.projects.length; i++) {
+            for (var j = 0; j < this.accountData.projects[i].jobs.length; j++) {
+                job = this.accountData.projects[i].jobs[j];
+                if (typeof this.tools[job.toolName] !== 'undefined') {
+                    job.date = Utils.parseDate(job.date);
+                    jobs.push(job);
+                }
+
             }
         }
-    ];
+        this.store.loadData(jobs);
+        this._updateButtons(jobs);
+    },
+    _createPanel: function () {
+        var _this = this;
+        var tpl = new Ext.XTemplate([
+            '<tpl for=".">',
+            '<div class="ocb-job-list-widget-item">',
 
-    var jobsfields = ['commandLine', 'date', 'description', 'diskUsage', 'status', 'finishTime', 'inputData', 'jobId', 'message', 'name', 'outputData', 'ownerId', 'percentage', 'projectId', 'toolName', 'visites'];
+            '<div style="color:#596F8F">{[ this.getNewIcon(values) ]} {name}</div>',
+                '<div> ' +
+                '<span class="{[ this.getClass(values) ]}">{toolName}{execution} </span> ' +
+                '</div>',
+                '<div>' +
+                '<span style="color: {[ this.getStatusColor(values) ]};">{status}</span> ' +
+                '<span style="color: dimgray;font-size:12px;"> &nbsp; &nbsp; {date} </span> ' +
+                '</div>',
+            '</div>',
+            '</tpl>',
+            {
+                getStatusColor: function (item) {
+                    var color = '#000000';
+                    switch (item.status) {
+                        case 'running':
+                            color = _this.RUNING_COLOR;
+                            break;
+                        case 'finished':
+                            color = _this.FINISHED_COLOR;
+                            break;
+                        case 'queued':
+                            color = _this.QUEUED_COLOR;
+                            break;
+                        case 'execution_error':
+                        case 'queue_error':
+                            color = _this.ERROR_COLOR;
+                            break;
+                    }
+                    return color;
+                }
+            },
+            {
+                getNewIcon: function (item) {
+                    var html = '';
+                    if (item.visites === 0) {
+                        html += '<i style="color:' + _this.FINISHED_COLOR + '" class="fa fa-exclamation-circle"></i> ';
+                    }
+                    switch (item.status) {
+                        case 'running':
+                            html += '<i style="color:' + _this.RUNING_COLOR + '" class="fa fa-cog"></i>';
+                            break;
+                        case 'queued':
+                            html += '<i style="color:' + _this.QUEUED_COLOR + '" class="fa fa-clock-o"></i>';
+                            break;
+                        case 'finished':
+                            html += '<i style="color:' + _this.FINISHED_COLOR + '" class="fa fa-check-circle"></i>';
+                            break;
+                        case 'execution_error':
+                        case 'queue_error':
+                            html += '<i style="color:' + _this.ERROR_COLOR + '" class="fa fa-times-circle"></i>';
+                            break;
+                    }
+                    return html;
+                }
+            },
+            {
+                getClass: function (item) {
+                    return item.toolName.replace('.', '_');
+                }
+            }
+        ]);
 
-    this.pagedViewList.storeFields = jobsfields;
-    this.pagedViewList.template = jobstpl;
+        this.store = Ext.create('Ext.data.Store', {
+            fields: ['commandLine', 'date', 'description', 'diskUsage', 'status', 'finishTime', 'inputData', 'jobId', 'message', 'name', 'outputData', 'ownerId', 'percentage', 'projectId', 'toolName', 'visites'],
+            sorters: [
+                { property: 'date', direction: 'DESC'}
+            ],
+            autoLoad: false
+        });
+
+        var view = Ext.create('Ext.view.View', {
+            padding: 15,
+            store: this.store,
+            tpl: tpl,
+            trackOver: true,
+            autoScroll: true,
+            overItemCls: 'ocb-job-list-widget-item-hover',
+            itemSelector: '.ocb-job-list-widget-item',
+            listeners: {
+                itemclick: function (este, record) {
+                    console.log(record.data);
+                    console.log(record.data.id);
+                    _this.trigger('item:click', {sender: _this, item: record});
+                },
+                itemcontextmenu: function (este, record, item, index, e) {
+                    e.stopEvent();
+                    var event = {sender: _this, record: record, originalEvent: e};
+                    _this._itemContextMenuHandler(event);
+                    _this.trigger('item:contextmenu', event);
+                    return false;
+                }
+            }
+        });
+
+        /**TEXT SEARCH FILTER**/
+        this.searchField = Ext.create('Ext.form.field.Text', {
+            id: this.id + "searchField",
+            emptyText: 'enter search term',
+            enableKeyEvents: true,
+            flex: 1,
+            listeners: {
+                change: function () {
+                    _this._setFilters();
+                }
+            }
+        });
 
 
-    if (args.pagedViewList != null) {
-        if (args.pagedViewList.storeFields != null) {
-            this.pagedViewList.storeFields = args.pagedViewList.storeFields;
+        //    this.projectFilterButton = Ext.create("Ext.button.Button", {
+//        id: this.btnActivePrjId,
+//        iconCls: 'icon-project-all',
+//        tooltip: 'Toggle jobs from all projects or active project',
+//        enableToggle: true,
+//        pressed: false,
+//        listeners: {
+//            toggle: function () {
+//                //_this.selectProjectData();
+//                _this.render();
+//            }
+//        }
+//    });
+
+
+        this.btnAllId = this.id + "_btnAll";
+//        this.btnActivePrjId = this.id + "_btnActivePrj";
+        this.btnFinishedId = this.id + "_btnFinished";
+        this.btnVisitedId = this.id + "_btnVisited";
+        this.btnRunningId = this.id + "_btnRunning";
+        this.btnQueuedId = this.id + "_btnQueued";
+        this.btnErrorId = this.id + "_btnError";
+
+        var panel = Ext.create('Ext.panel.Panel', {
+            height: this.height,
+            width: this.width,
+            layout: 'fit',
+            items: [
+                view
+            ],
+            dockedItems: [
+                {
+                    xtype: 'toolbar',
+                    dock: 'top',
+                    height: 39,
+                    items: [
+                        {
+                            xtype: 'button',
+                            id: this.id + 'btnSort',
+                            tooltip: 'Change order',
+                            margin: '0 15 0 0',
+                            text: '<i class="fa fa-sort"></i>',
+                            handler: function () {
+                                if (_this.sort == "DESC") {
+                                    _this.sort = "ASC";
+                                    _this.store.sort('date', 'ASC');
+                                }
+                                else {
+                                    _this.sort = "DESC";
+                                    _this.store.sort('date', 'DESC');
+                                }
+                            }
+                        },
+                        this.searchField,
+                        {
+                            xtype: 'button',
+                            id: this.id + 'btnClear',
+//							    iconCls: 'icon-delete',
+                            text: 'Clear',
+                            tooltip: 'Clear search box',
+                            handler: function () {
+                                _this.searchField.reset();
+                            }
+                        }
+
+                    ]
+                },
+                {
+                    xtype: 'toolbar',
+                    docked: 'top',
+                    height: 39,
+                    items: [
+                        //this.projectFilterButton,
+                        {
+                            id: this.btnAllId,
+                            text: ' ',
+                            tooltip: 'Total jobs',
+                            handler: function () {
+                                _this._setButtonFilterFunction(this);
+                            }
+                        },
+                        {
+                            id: this.btnFinishedId,
+                            text: ' ',
+                            tooltip: 'Finished jobs',
+                            handler: function () {
+                                _this._setButtonFilterFunction(this);
+                            }
+                        },
+                        {
+                            id: this.btnVisitedId,
+                            text: ' ',
+                            tooltip: 'Visited jobs',
+                            handler: function () {
+                                _this._setButtonFilterFunction(this);
+                            }
+                        },
+                        {
+                            id: this.btnRunningId,
+                            text: ' ',
+                            tooltip: 'Running jobs',
+                            handler: function () {
+                                _this._setButtonFilterFunction(this);
+                            }
+                        },
+                        {
+                            id: this.btnQueuedId,
+                            text: ' ',
+                            tooltip: 'Queued jobs',
+                            handler: function () {
+                                _this._setButtonFilterFunction(this);
+                            }
+                        },
+                        {
+                            id: this.btnErrorId,
+                            text: ' ',
+                            tooltip: 'Error jobs',
+                            handler: function () {
+                                _this._setButtonFilterFunction(this);
+                            }
+                        }
+                    ]
+                }
+            ]
+        });
+
+        return panel;
+    },
+    _setButtonFilterFunction: function (button) {
+        switch (button.id) {
+            case this.btnFinishedId:
+                this.buttonFilterFunction = function (item) {
+                    return item.data.visites == 0;
+                };
+                break;
+            case this.btnVisitedId:
+                this.buttonFilterFunction = function (item) {
+                    return item.data.visites > 0 && item.data.status.indexOf('error') === -1;
+                };
+                break;
+            case this.btnRunningId:
+                this.buttonFilterFunction = function (item) {
+                    return item.data.visites == -1;
+                };
+                break;
+            case this.btnQueuedId:
+                this.buttonFilterFunction = function (item) {
+                    return item.data.visites == -2;
+                };
+                break;
+            case this.btnErrorId:
+                this.buttonFilterFunction = function (item) {
+                    return item.data.status.indexOf('error') != -1;
+                };
+                break;
+            default:
+                this.buttonFilterFunction = null;
+                break;
         }
-        if (args.pagedViewList.template != null) {
-            this.pagedViewList.template = args.pagedViewList.template;
+        this._setFilters();
+    },
+    _setFilters: function () {
+        this.store.clearFilter();
+        if (typeof this.buttonFilterFunction === 'function') {
+            this.store.addFilter([this.buttonFilterFunction, this.textFilterFunction]);
+        } else {
+            this.store.addFilter(this.textFilterFunction);
         }
-    }
+    },
+    _updateButtons: function (jobs) {
+        var jobcount = this._getJobCounter(jobs);
 
-    this.pagedListViewWidget = new PagedViewListWidget(this.pagedViewList);
+        if (jobcount.all == 0) {
+            Ext.getCmp(this.btnAllId).hide();
+        } else {
+            Ext.getCmp(this.btnAllId).show();
+        }
+        if (jobcount.finished == 0) {
+            Ext.getCmp(this.btnFinishedId).hide();
+        } else {
+            Ext.getCmp(this.btnFinishedId).show();
+        }
+        if (jobcount.visited == 0) {
+            Ext.getCmp(this.btnVisitedId).hide();
+        } else {
+            Ext.getCmp(this.btnVisitedId).show();
+        }
+        if (jobcount.running == 0) {
+            Ext.getCmp(this.btnRunningId).hide();
+        } else {
+            Ext.getCmp(this.btnRunningId).show();
+        }
+        if (jobcount.queued == 0) {
+            Ext.getCmp(this.btnQueuedId).hide();
+        } else {
+            Ext.getCmp(this.btnQueuedId).show();
+        }
+        if (jobcount.error == 0) {
+            Ext.getCmp(this.btnErrorId).hide();
+        } else {
+            Ext.getCmp(this.btnErrorId).show();
+        }
 
-    this.pagedListViewWidget.on('item:contextmenu', function (event) {
-        var record = event.record;
+        Ext.getCmp(this.btnAllId).setText(jobcount.all);
+        Ext.getCmp(this.btnFinishedId).setText('<i style="color:' + this.FINISHED_COLOR + '" class="fa fa-exclamation-circle"></i> ' + jobcount.finished);
+        Ext.getCmp(this.btnVisitedId).setText('<i style="color:' + this.FINISHED_COLOR + '" class="fa fa-check-circle"></i> ' + jobcount.visited);
+        Ext.getCmp(this.btnRunningId).setText('<i style="color:' + this.RUNING_COLOR + '" class="fa fa-cog"></i> ' + jobcount.running);
+        Ext.getCmp(this.btnQueuedId).setText('<i style="color:' + this.QUEUED_COLOR + '" class="fa fa-clock-o"></i> ' + jobcount.queued);
+        Ext.getCmp(this.btnErrorId).setText('<i style="color:' + this.ERROR_COLOR + '" class="fa fa-times-circle"></i> ' + jobcount.error);
+    },
+    _getJobCounter: function (jobs) {
+        var finished = 0;
+        var visited = 0;
+        var running = 0;
+        var queued = 0;
+        var error = 0;
+
+        for (var i = 0; i < jobs.length; i++) {
+            var job = jobs[i];
+            if (job.visites > 0) {
+                if (job.status.indexOf('error') != -1) {
+                    error++;
+                } else {
+                    visited++;
+                }
+            } else {
+                if (job.visites == 0) {
+                    if (job.status.indexOf('error') != -1) {
+                        error++;
+                    } else {
+                        finished++;
+                    }
+                }
+                if (job.visites == -1) {
+                    running++;
+                }
+                if (job.visites == -2) {
+                    queued++;
+                }
+            }
+        }
+        return {all: jobs.length, visited: visited, finished: finished, running: running, queued: queued, error: error};
+    },
+    _itemContextMenuHandler: function (e) {
+        var record = e.record;
         var contextMenu = Ext.create('Ext.menu.Menu', {
+            plain: true,
             items: [
                 {
                     text: 'Delete Job',
@@ -10771,10 +14326,10 @@ function JobListWidget(args) {
                                     OpencgaManager.deleteJob({
                                         accountId: $.cookie('bioinfo_account'),
                                         sessionId: $.cookie('bioinfo_sid'),
-                                        jobId: record.raw.id,
+                                        jobId: record.data.id,
                                         success: function (response) {
                                             if (response.errorMsg === '') {
-                                                Ext.example.msg('Delete job', '</span class="emph">' + response.result[0].msg + '</span>');
+                                                Utils.msg('Delete job', '</span class="emph">' + response.result[0].msg + '</span>');
                                             } else {
                                                 Ext.Msg.alert('Delete job, try again later.', response.errorMsg);
                                             }
@@ -10787,267 +14342,58 @@ function JobListWidget(args) {
                 }
             ]
         });
-        contextMenu.showAt(event.originalEvent.getXY());
-    });
-
-
-    this.btnAllId = this.id + "_btnAll";
-    this.btnActivePrjId = this.id + "_btnActivePrj";
-    this.btnFinishedId = this.id + "_btnFinished";
-    this.btnVisitedId = this.id + "_btnVisited";
-    this.btnRunningId = this.id + "_btnRunning";
-    this.btnQueuedId = this.id + "_btnQueued";
-
-    this.projectFilterButton = Ext.create("Ext.button.Button", {
-        id: this.btnActivePrjId,
-        iconCls: 'icon-project-all',
-        tooltip: 'Toggle jobs from all projects or active project',
-        enableToggle: true,
-        pressed: false,
-        listeners: {
-            toggle: function () {
-                //_this.selectProjectData();
-                _this.render();
-            }
-        }
-    });
-
-
-    this.bar = new Ext.create('Ext.toolbar.Toolbar', {
-//		vertical : true,
-        id: this.id + "jobsFilterBar",
-        dock: 'top',
-        cls: 'smokeback',
-        items: [
-            //this.projectFilterButton,
-            {
-                id: this.btnAllId,
-                text: ' ',
-                tooltip: 'Total jobs'
-            },
-            {
-                id: this.btnFinishedId,
-                text: ' ',
-                tooltip: 'Finished jobs'
-            },
-            {
-                id: this.btnVisitedId,
-                text: ' ',
-                tooltip: 'Visited jobs'
-            },
-            {
-                id: this.btnRunningId,
-                text: ' ',
-                tooltip: 'Running jobs'
-            },
-            {
-                id: this.btnQueuedId,
-                text: ' ',
-                tooltip: 'Queued jobs'
-            }
-        ]
-    });
-
-    Ext.getCmp(this.btnAllId).on('click', this.filter, this);
-    Ext.getCmp(this.btnFinishedId).on('click', this.filter, this);
-    Ext.getCmp(this.btnVisitedId).on('click', this.filter, this);
-    Ext.getCmp(this.btnRunningId).on('click', this.filter, this);
-    Ext.getCmp(this.btnQueuedId).on('click', this.filter, this);
-
-    this.allData = [];
-
-
-///*HARDCODED check job status*/
-//	var checkJobsStatus = function(){
-//		if(_this.accountData != null){
-//			var opencgaManager = new OpencgaManager();
-//			for ( var i = 0; i < _this.accountData.jobs.length; i++) {
-//				if(_this.tools.indexOf(_this.accountData.jobs[i].toolName) != -1){
-//					if(_this.accountData.jobs[i].visites<0){
-//						opencgaManager.jobStatus($.cookie("bioinfo_account"), $.cookie("bioinfo_sid"), _this.accountData.jobs[i].id);
-//					}
-//				}
-//			}
-//		}
-//	}
-//
-//	this.accountInfoInterval = setInterval(function(){checkJobsStatus();}, 4000);
-//
-///*HARDCODED check job status*/
-
-
-}
-;
-
-JobListWidget.prototype.show = function () {
-    this.pagedListViewWidget.show();
-};
-JobListWidget.prototype.hide = function () {
-    this.pagedListViewWidget.hide();
+        contextMenu.showAt(e.originalEvent.getXY());
+    }
 };
 
-//override
-JobListWidget.prototype.draw = function () {
-    this.render();
-//
-};
+/////*HARDCODED check job status*/
+////	var checkJobsStatus = function(){
+////		if(_this.accountData != null){
+////			var opencgaManager = new OpencgaManager();
+////			for ( var i = 0; i < _this.accountData.jobs.length; i++) {
+////				if(_this.tools.indexOf(_this.accountData.jobs[i].toolName) != -1){
+////					if(_this.accountData.jobs[i].visites<0){
+////						opencgaManager.jobStatus($.cookie("bioinfo_account"), $.cookie("bioinfo_sid"), _this.accountData.jobs[i].id);
+////					}
+////				}
+////			}
+////		}
+////	}
+////
+////	this.accountInfoInterval = setInterval(function(){checkJobsStatus();}, 4000);
+////
+/////*HARDCODED check job status*/
 
-JobListWidget.prototype.clean = function () {
-    clearInterval(this.interval);
-    if (this.bar.isDescendantOf(Ext.getCmp(this.pagedListViewWidget.panelId)) == true) {
-        Ext.getCmp(this.pagedListViewWidget.panelId).removeDocked(this.bar, false);
-    }
-    this.pagedListViewWidget.clean();
-};
-
-//JobListWidget.prototype.getResponse = function (){
-//this.adapter.listProject($.cookie("bioinfo_sid"), this.suiteId);
-//};
-
-JobListWidget.prototype.setAccountData = function (data) {
-
-    this.accountData = data;
-//    console.log("joblistwidget");
-    var jobs = [];
-    var job;
-    for (var i = 0; i < this.accountData.projects.length; i++) {
-        for (var j = 0; j < this.accountData.projects[i].jobs.length; j++) {
-            job = this.accountData.projects[i].jobs[j];
-            if (this.tools.indexOf(job.toolName) != -1) {
-                job.date = Utils.parseDate(job.date);
-                jobs.push(job);
-            }
-        }
-    }
-    this.data = jobs;
-    this.render();
-};
-
-
-JobListWidget.prototype.render = function () {
-    this.pagedListViewWidget.draw(this.getData());
-    if (this.bar.isDescendantOf(Ext.getCmp(this.pagedListViewWidget.panelId)) == false) {
-        Ext.getCmp(this.pagedListViewWidget.panelId).addDocked(this.bar);
-    }
-
-    var jobcount = this.getJobCounter();
-
-    if (jobcount.all == 0) {
-        Ext.getCmp(this.btnAllId).hide();
-    } else {
-        Ext.getCmp(this.btnAllId).show();
-    }
-    if (jobcount.finished == 0) {
-        Ext.getCmp(this.btnFinishedId).hide();
-    } else {
-        Ext.getCmp(this.btnFinishedId).show();
-    }
-    if (jobcount.visited == 0) {
-        Ext.getCmp(this.btnVisitedId).hide();
-    } else {
-        Ext.getCmp(this.btnVisitedId).show();
-    }
-    if (jobcount.running == 0) {
-        Ext.getCmp(this.btnRunningId).hide();
-    } else {
-        Ext.getCmp(this.btnRunningId).show();
-    }
-    if (jobcount.queued == 0) {
-        Ext.getCmp(this.btnQueuedId).hide();
-    } else {
-        Ext.getCmp(this.btnQueuedId).show();
-    }
-    Ext.getCmp(this.btnAllId).setText('<b style="color:black;font-size: 1.3em;">' + jobcount.all + '</b>');
-    Ext.getCmp(this.btnFinishedId).setText('<b style="color:#298c63;font-size: 1.3em;">' + jobcount.finished + '</b>');
-    Ext.getCmp(this.btnVisitedId).setText('<b style="color:#0068cc;font-size: 1.3em;">' + jobcount.visited + '</b>');
-    Ext.getCmp(this.btnRunningId).setText('<b style="color:#b30000;font-size: 1.3em;">' + jobcount.running + '</b>');
-    Ext.getCmp(this.btnQueuedId).setText('<b style="color:Darkorange;font-size: 1.3em;">' + jobcount.queued + '</b>');
-};
-
-
-JobListWidget.prototype.getJobCounter = function () {
-    var finished = 0;
-    var visited = 0;
-    var running = 0;
-    var queued = 0;
-    for (var i = 0; i < this.getData().length; i++) {
-        if (this.getData()[i].visites > 0) {
-            visited++;
-        } else {
-            if (this.getData()[i].visites == 0) {
-                finished++;
-            }
-            if (this.getData()[i].visites == -1) {
-                running++;
-            }
-            if (this.getData()[i].visites == -2) {
-                queued++;
-            }
-        }
-    }
-    return {"all": this.getData().length, "visited": visited, "finished": finished, "running": running, "queued": queued};
-};
 
 /**Filters**/
 //var functionAssertion = function(item){return item.data.visites > 2;};
 
-JobListWidget.prototype.filter = function (button) {
-    switch (button.id) {
-        case this.btnFinishedId:
-            this.pagedListViewWidget.setFilter(function (item) {
-                return item.data.visites == 0;
-            });
-            break;
-        case this.btnVisitedId:
-            this.pagedListViewWidget.setFilter(function (item) {
-                return item.data.visites > 0;
-            });
-            break;
-        case this.btnRunningId:
-            this.pagedListViewWidget.setFilter(function (item) {
-                return item.data.visites == -1;
-            });
-            break;
-        case this.btnQueuedId:
-            this.pagedListViewWidget.setFilter(function (item) {
-                return item.data.visites == -2;
-            });
-            break;
-        default:
-            this.pagedListViewWidget.setFilter(function (item) {
-                return true;
-            });
-            break;
-    }
-    this.pagedListViewWidget.draw(this.getData());
-};
-
-JobListWidget.prototype.selectProjectData = function () {
-    if (!this.projectFilterButton.pressed) {
-        for (var i = 0; i < this.allData.length; i++) {
-            if (this.allData[i].active) {
-                this.data = this.allData[i].jobs;
-                break;
-            }
-        }
-    } else {
-        var allJobs = new Array();
-        for (var i = 0; i < this.allData.length; i++) {
-            if (this.allData[i].jobs != null) {
-                for (var j = 0; j < this.allData[i].jobs.length; j++) {
-
-                    //TODO care with date order
-                    allJobs.push(this.allData[i].jobs[j]);
-                }
-            }
-        }
-        this.data = allJobs;
-    }
-    if (this.data == null) {
-        this.data = [];
-    }
-    this.pagedListViewWidget.draw(this.getData());
-};
+//JobListWidget.prototype.selectProjectData = function () {
+//    if (!this.projectFilterButton.pressed) {
+//        for (var i = 0; i < this.allData.length; i++) {
+//            if (this.allData[i].active) {
+//                this.data = this.allData[i].jobs;
+//                break;
+//            }
+//        }
+//    } else {
+//        var allJobs = new Array();
+//        for (var i = 0; i < this.allData.length; i++) {
+//            if (this.allData[i].jobs != null) {
+//                for (var j = 0; j < this.allData[i].jobs.length; j++) {
+//
+//                    //TODO care with date order
+//                    allJobs.push(this.allData[i].jobs[j]);
+//                }
+//            }
+//        }
+//        this.data = allJobs;
+//    }
+//    if (this.data == null) {
+//        this.data = [];
+//    }
+//    this.pagedListViewWidget.draw(this.getData());
+//};
 
 /*
  * Copyright (c) 2012 Francisco Salavert (ICM-CIPF)
@@ -11191,9 +14537,9 @@ LoginWidget.prototype = {
         var pan = Ext.create('Ext.form.Panel', {
             id: this.id + "formPanel",
             bodyPadding: 20,
-            width: 350,
-            height: 145,
-            border: false,
+            height:225,
+            width:350,
+            border: 0,
             bbar: {items: [labelEmail]},
             items: [
                 {
@@ -11304,41 +14650,45 @@ LoginWidget.prototype = {
             constrain: true,
             closable: false,
             modal: true,
-            items: [pan],
-            buttonAlign: 'center',
-            buttons: [
-                {
-                    id: this.btnSignId,
-                    text: 'Sign in'
-                },
-                {
-                    id: this.btnForgotId,
-                    text: 'Forgot yout password?',
-                    width: 130,
-                    minWidth: 130
-                },
-                {
-                    id: this.btnNewaccId,
-                    text: 'New account',
-                    width: 100,
-                    minWidth: 100
-                },
-                {
-                    id: this.btnSendId,
-                    text: 'Send',
-                    hidden: true
-                },
-                {
-                    id: this.btnRegisterId,
-                    text: 'Register',
-                    hidden: true
-                },
-                {
-                    id: this.btnBackId,
-                    text: 'Back',
-                    hidden: true
+            items:{
+                border:0,
+                layout: { type: 'vbox', align: 'stretch'},
+                items:[pan],
+                bbar:{
+                    layout : {
+                        pack : 'center'
+                    },
+                    items:[
+                        {
+                            id: this.btnSignId,
+                            text: 'Sign in'
+                        },
+                        {
+                            id: this.btnForgotId,
+                            text: 'Forgot yout password?'
+                        },
+                        {
+                            id: this.btnNewaccId,
+                            text: 'New account'
+                        },
+                        {
+                            id: this.btnSendId,
+                            text: 'Send',
+                            hidden: true
+                        },
+                        {
+                            id: this.btnRegisterId,
+                            text: 'Register',
+                            hidden: true
+                        },
+                        {
+                            id: this.btnBackId,
+                            text: 'Back',
+                            hidden: true
+                        }
+                    ]
                 }
-            ],
+            },
             listeners: {
                 minimize: function () {
                     _this.panel.hide();
@@ -11461,7 +14811,6 @@ LoginWidget.prototype.ShowForgot = function () {
     Ext.getCmp(this.id + "accountName").hide();
 
     Ext.getCmp(this.labelEmailId).setText('<span class="info">Type your account ID and email to send a new password</span>', false);
-    Ext.getCmp(this.id + "formPanel").setHeight(145);
 
     Ext.getCmp(this.id + "accountId").setFieldLabel('account ID', false);
     Ext.getCmp(this.fldEmailId).setFieldLabel('e-mail', false);
@@ -11490,7 +14839,6 @@ LoginWidget.prototype.ShowBack = function () {
     Ext.getCmp(this.id + "accountName").hide();
 
     Ext.getCmp(this.labelEmailId).setText('<span class="info">Type your account ID and password</span>', false);
-    Ext.getCmp(this.id + "formPanel").setHeight(145);
 
     Ext.getCmp(this.id + "accountId").setFieldLabel('account ID', false);
 };
@@ -11521,7 +14869,6 @@ LoginWidget.prototype.ShowNewacc = function () {
     Ext.getCmp(this.id + "accountName").show();
 
     Ext.getCmp(this.labelEmailId).setText('&nbsp;', false);
-    Ext.getCmp(this.id + "formPanel").setHeight(200);
 
     Ext.getCmp(this.id + "accountName").setFieldLabel('name', false);
     Ext.getCmp(this.id + "accountId").setFieldLabel('account ID', false);
@@ -11665,16 +15012,6 @@ OpencgaBrowserWidget.prototype = {
         /**ID**/
         this.searchFieldId = this.id + "_searchField";
 
-        this.createBucketSuccess = function (response) {
-            if (response.errorMsg === '') {
-                _this.trigger('need:refresh', {sender: _this});
-            } else {
-                Ext.Msg.alert("Create project", response.errorMsg);
-            }
-            _this.panel.setLoading(false);
-            Ext.getBody().unmask();
-        };
-
         this.rendered = true;
     },
     draw: function () {
@@ -11711,52 +15048,25 @@ OpencgaBrowserWidget.prototype = {
     _createPanel: function (targetId) {
         var _this = this;
 
-
-        this.folderStore = Ext.create('Ext.data.TreeStore', {
-            id: this.id + 'folderStore',
-            fields: ['text', 'oid'],
-            root: {
-                expanded: true,
-                text: 'Drive',
-                children: []
-            },
-            listeners: {
-                beforeinsert: function (este, node) {
-                    if (node.isLeaf()) {
-//                        console.log(node.raw.oid + " is a file");
-                        return false; //cancel append because is leaf
-                    }
-                }
-            }
-        });
-        this.allStore = Ext.create('Ext.data.TreeStore', {
-            id: this.id + 'allStore',
-            fields: ['text', 'oid'],
-            root: {
-                expanded: true,
-                text: 'Drive',
-                children: []
-            }
-        });
         this.filesStore = Ext.create('Ext.data.Store', {
             fields: ['oid', 'fileBioType', 'fileType', 'fileFormat', 'fileName', 'multiple', 'diskUsage', 'creationTime', 'responsible', 'organization', 'date', 'description', 'status', 'statusMessage', 'members'],
             data: []
         });
 
-        var refreshBucketAction = Ext.create('Ext.Action', {
+        this.refreshBucketAction = Ext.create('Ext.Action', {
             icon: Utils.images.refresh,
             text: 'Refresh bucket',
             handler: function (widget, event) {
                 var record = _this.folderTree.getSelectionModel().getSelection()[0];
                 if (record) {
-                    if (record.raw.isBucket) {
+                    if (record.data.isBucket) {
                         OpencgaManager.refreshBucket({
                             accountId: $.cookie("bioinfo_account"),
-                            bucketId: record.raw.text,
+                            bucketId: record.data.text,
                             sessionId: $.cookie("bioinfo_sid"),
                             success: function (response) {
                                 if (response.errorMsg === '') {
-                                    Ext.example.msg('Refresh Bucket', '</span class="emph">' + response.result[0].msg + '</span>');
+                                    Utils.msg('Refresh Bucket', '</span class="emph">' + response.result[0].msg + '</span>');
                                     _this.trigger('need:refresh', {sender: _this});
                                 } else {
                                     Ext.Msg.alert("Refresh bucket", response.errorMsg);
@@ -11769,26 +15079,26 @@ OpencgaBrowserWidget.prototype = {
             }
         });
 
-        var renameBucketAction = Ext.create('Ext.Action', {
+        this.renameBucketAction = Ext.create('Ext.Action', {
 //            icon: Utils.images.refresh,
             text: 'Rename bucket',
             handler: function (widget, event) {
                 var record = _this.folderTree.getSelectionModel().getSelection()[0];
                 if (record) {
-                    if (record.raw.isBucket) {
+                    if (record.data.isBucket) {
                         Ext.Msg.prompt('Rename bucket', 'Please enter a new name:', function (btn, text) {
                             if (btn == 'ok') {
                                 text = text.replace(/[^a-z0-9-_.\/\s]/gi, '').trim();
 
                                 OpencgaManager.renameBucket({
                                     accountId: $.cookie("bioinfo_account"),
-                                    bucketId: record.raw.bucketId,
+                                    bucketId: record.data.bucketId,
                                     newBucketId: text,
                                     sessionId: $.cookie("bioinfo_sid"),
                                     success: function (response) {
                                         if (response.errorMsg === '') {
                                             _this.trigger('need:refresh', {sender: _this});
-                                            Ext.example.msg('Rename bucket', '</span class="emph">' + response.result[0].msg + '</span>');
+                                            Utils.msg('Rename bucket', '</span class="emph">' + response.result[0].msg + '</span>');
                                         } else {
                                             Ext.Msg.alert('Rename bucket', response.errorMsg);
                                         }
@@ -11800,173 +15110,6 @@ OpencgaBrowserWidget.prototype = {
                 }
             }
         });
-
-        this.folderTree = Ext.create('Ext.tree.Panel', {
-            //xtype:"treepanel",
-            id: this.id + "activeTracksTree",
-            title: "Upload & Manage",
-            bodyPadding: "5 0 0 0",
-            margin: "-1 0 0 0",
-            border: false,
-            autoScroll: true,
-            flex: 4,
-            useArrows: true,
-            rootVisible: false,
-            hideHeaders: true,
-//			selType: 'cellmodel',
-            //plugins: [Ext.create('Ext.grid.plugin.CellEditing', {clicksToEdit: 2,listeners:{
-            //edit:function(editor, e, eOpts){
-            //var record = e.record; //en la vista del cliente
-            /*todo, ahora q llame la servidor. y lo actualize*/
-            //}
-            //}})],
-            columns: [
-                {
-                    xtype: 'treecolumn',
-                    dataIndex: 'text',
-                    flex: 1,
-                    editor: {xtype: 'textfield', allowBlank: false}
-                }
-//                ,
-//                {
-//                    xtype: 'actioncolumn',
-//                    menuDisabled: true,
-//                    align: 'center',
-//                    width: 30,
-//                    renderer: function (value, metaData, record) {
-//                        if (record.raw.isBucket) {
-//                            this.icon = Utils.images.refresh;
-//                            this.tooltip = 'Refresh bucket to find new files';
-//                        } else {
-//                            this.tooltip = null;
-//                            this.icon = null;
-//                        }
-//                    },
-//                    handler: function (grid, rowIndex, colIndex, actionItem, event, record, row) {
-//                        if (record.raw.isBucket) {
-//                            var opencgaManager = new OpencgaManager();
-//                            opencgaManager.onRefreshBucket.addEventListener(function (sender, res) {
-//                                Ext.example.msg('Refresh Bucket', '</span class="emph">' + res + '</span>');
-//                                if (res.indexOf("ERROR") != -1) {
-//                                    console.log(res);
-//                                } else {
-//                                    _this.trigger('need:refresh',{sender:_this});
-//                                }
-//                            });
-//                            opencgaManager.refreshBucket($.cookie("bioinfo_account"), record.raw.text, $.cookie("bioinfo_sid"));
-//                        }
-//
-//                    }
-//                }
-            ],
-            viewConfig: {
-                markDirty: false,
-                plugins: {
-                    ptype: 'treeviewdragdrop'
-                },
-                listeners: {
-                    drop: function (node, data, overModel, dropPosition, eOpts) {
-                        var record = data.records[0];
-                        //check if is leaf and if the record has a new index
-                        if (record.isLeaf() && record.data.index != record.removedFrom && record.data.checked) {
-                            var id = record.data.trackId;
-                            _this.setTrackIndex(id, record.data.index);
-                        }
-                    },
-                    itemcontextmenu: function (este, record, item, index, e) {
-                        e.stopEvent();
-                        var items = [];
-                        console.log(record)
-                        if (record.raw.isBucket) {
-                            items.push(refreshBucketAction);
-                            items.push(renameBucketAction);
-                            var contextMenu = Ext.create('Ext.menu.Menu', {
-                                items: items
-                            });
-                            contextMenu.showAt(e.getXY());
-                        }
-                        return false;
-                    }
-                }
-            },
-            listeners: {
-                selectionchange: function (este, selected, eOpts) {
-                    var record = selected[0];
-                    if (typeof record != 'undefined') {//avoid deselection
-                        var field, deep;
-                        if (record.raw.isBucket != null) {//is a bucket
-                            field = 'text';
-                            deep = false;
-                        } else {
-                            field = 'oid';
-                            deep = true;
-                        }
-                        var node = _this.allStore.getRootNode().findChild(field, record.raw[field], deep);
-                        var childs = [];
-                        _this.selectedFolderNode = {value: node.data[field], field: field};
-                        node.eachChild(function (n) {
-                            childs.push(n.raw);
-                        });
-                        _this.filesGrid.setTitle(node.getPath("text", " / "));
-                        _this.filesStore.loadData(childs);
-                        if (_this.mode == "folderSelection") {
-                            _this.selectedFileNode = node.raw;
-                            _this.selectButton.enable();
-                        }
-                    }
-                },
-                viewready: function (este, eOpts) {//Fires when the grid view is available (use this for selecting a default row).
-                    setTimeout(function () { // forced to do this because some ExtJS 4.2.0 event problem
-                        var node = este.getRootNode().getChildAt(0);
-                        if (typeof node != 'undefined') {
-                            este.getSelectionModel().select(node);
-                        }
-                    }, 0);
-                },
-                checkchange: function (node, checked) {
-                },
-                itemmouseenter: function (este, record) {
-                },
-                itemmouseleave: function (este, record) {
-                }
-            },
-            store: this.folderStore
-        });
-
-
-        /*MANAGE BUCKETS*/
-        var newProjectButton = Ext.create('Ext.button.Button', {
-            text: 'OK',
-            handler: function () {
-                _this.createProject();
-                _this.folderTree.toggleCollapse();
-                //manageProjects.toggleCollapse();
-            }
-        });
-        var newProjectNameField = Ext.create('Ext.form.field.Text', {
-            id: this.id + "newProjectNameField",
-//        	width: 160,
-            emptyText: 'name',
-            allowBlank: false
-        });
-        var newProjectDescriptionField = Ext.create('Ext.form.field.TextArea', {
-            id: this.id + "newProjectDescriptionField",
-//        	width: 160,
-            emptyText: 'description'
-        });
-        var newProjectCont = Ext.create('Ext.container.Container', {
-            flex: 1,
-            layout: { type: 'hbox', align: 'stretch'},
-            items: [newProjectNameField, newProjectDescriptionField]
-        });
-        var manageProjects = Ext.create('Ext.panel.Panel', {
-            title: "Create bucket",
-            bodyPadding: 5,
-            border: false,
-            items: [newProjectNameField, newProjectDescriptionField, newProjectButton]
-        });
-        /*END MANAGE PROJECTS*/
-
 
         /*Files grid*/
         var indexAction = Ext.create('Ext.Action', {
@@ -11980,13 +15123,12 @@ OpencgaBrowserWidget.prototype = {
                     OpencgaManager.indexer({
                         accountId: $.cookie("bioinfo_account"),
                         sessionId: $.cookie("bioinfo_sid"),
-                        bucketId: record.raw.bucketId,
+                        bucketId: record.data.bucketId,
                         objectId: record.data.oid,
                         success: function (response) {
-                            debugger
                             console.log(response);
-                            Ext.example.msg("indexer", response);
-                            record.raw.indexerId = response;
+                            Utils.msg("indexer", response);
+                            record.data.indexerId = response;
 //                                if (response.indexOf("ERROR:") != -1){
 //                                }else{
 //                                    //delete complete
@@ -11997,12 +15139,12 @@ OpencgaBrowserWidget.prototype = {
                     });
 
 
-//                    console.log(record.raw.status);
-//                    if (record.raw.status.indexOf('indexer') == -1) {
+//                    console.log(record.data.status);
+//                    if (record.data.status.indexOf('indexer') == -1) {
 //                        opencgaManager.onIndexer.addEventListener(function (sender, response) {
 //                            console.log(response)
-//                            Ext.example.msg("indexer", response);
-//                            record.raw.indexerId = response;
+//                            Utils.msg("indexer", response);
+//                            record.data.indexerId = response;
 ////                                if (response.indexOf("ERROR:") != -1){
 ////                                }else{
 ////                                    //delete complete
@@ -12010,12 +15152,12 @@ OpencgaBrowserWidget.prototype = {
 ////                                    _this.trigger('need:refresh',{sender:_this});
 ////                                }
 //                        });
-//                        opencgaManager.indexer($.cookie("bioinfo_account"), $.cookie("bioinfo_sid"), record.raw.bucketId, record.data.oid);
+//                        opencgaManager.indexer($.cookie("bioinfo_account"), $.cookie("bioinfo_sid"), record.data.bucketId, record.data.oid);
 //                    } else {
-//                        Ext.example.msg('Indexer', 'The file is already being indexed');
+//                        Utils.msg('Indexer', 'The file is already being indexed');
 //                        opencgaManager.onIndexerStatus.addEventListener(function (sender, response) {
 //                            console.log(response)
-//                            Ext.example.msg("indexer status", response);
+//                            Utils.msg("indexer status", response);
 ////                                if (response.indexOf("ERROR:") != -1){
 ////                                }else{
 ////                                    //delete complete
@@ -12023,7 +15165,7 @@ OpencgaBrowserWidget.prototype = {
 ////                                    _this.trigger('need:refresh',{sender:_this});
 ////                                }
 //                        });
-//                        opencgaManager.indexerStatus($.cookie("bioinfo_account"), $.cookie("bioinfo_sid"), record.raw.bucketId, record.data.oid, record.raw.status);
+//                        opencgaManager.indexerStatus($.cookie("bioinfo_account"), $.cookie("bioinfo_sid"), record.data.bucketId, record.data.oid, record.data.status);
 //                    }
                 }
             }
@@ -12035,7 +15177,7 @@ OpencgaBrowserWidget.prototype = {
             handler: function (widget, event) {
                 var rec = _this.filesGrid.getSelectionModel().getSelection()[0];
                 if (rec) {
-                    Ext.example.msg('objectId', '' + rec.get('oid'));
+                    Utils.msg('objectId', '' + rec.get('oid'));
                 }
             }
         });
@@ -12054,11 +15196,11 @@ OpencgaBrowserWidget.prototype = {
                             OpencgaManager.deleteObjectFromBucket({
                                 accountId: $.cookie("bioinfo_account"),
                                 sessionId: $.cookie("bioinfo_sid"),
-                                bucketId: record.raw.bucketId,
+                                bucketId: record.data.bucketId,
                                 objectId: record.data.oid,
                                 success: function (response) {
                                     if (response.errorMsg === '') {
-                                        Ext.example.msg('Deleting', '</span class="emph">' + response.result[0].msg + '</span>');
+                                        Utils.msg('Deleting', '</span class="emph">' + response.result[0].msg + '</span>');
                                         _this.filesGrid.store.remove(record);
                                     } else {
                                         Ext.Msg.alert('Deleting', response.errorMsg);
@@ -12072,22 +15214,23 @@ OpencgaBrowserWidget.prototype = {
         });
 
         this.filesGrid = Ext.create('Ext.grid.Panel', {
-            title: this.allStore.getRootNode().getPath("text", " / "),
             store: this.filesStore,
-            flex: 4,
+            flex: 3,
             border: false,
             viewConfig: {
-                stripeRows: true,
+//                stripeRows: true,
                 listeners: {
                     itemcontextmenu: function (este, record, item, index, e) {
                         e.stopEvent();
-                        var items = [showName];
+//                        var items = [showName];
+                        var items = [];
                         console.log(record)
-                        if (record.raw.fileFormat == 'bam' || record.raw.fileFormat == 'vcf') {
+                        if (record.data.fileFormat == 'bam' || record.data.fileFormat == 'vcf') {
                             items.push(indexAction);
                         }
                         items.push(deleteAction);
                         var contextMenu = Ext.create('Ext.menu.Menu', {
+                            plain: true,
                             items: items
                         });
                         contextMenu.showAt(e.getXY());
@@ -12102,9 +15245,9 @@ OpencgaBrowserWidget.prototype = {
                     selectionchange: function (este, item) {
                         _this.selectButton.disable();
                         if (item.length > 0) {//se compr
-                            _this.selectedFileNode = item[0].raw;
-                            var type = item[0].raw.fileType;
-                            var fileFormat = item[0].raw.fileFormat;
+                            _this.selectedFileNode = item[0].data;
+                            var type = item[0].data.fileType;
+                            var fileFormat = item[0].data.fileFormat;
                             if (_this.mode === "fileSelection" && type === "dir") {
                                 return;
                             }
@@ -12141,21 +15284,31 @@ OpencgaBrowserWidget.prototype = {
         });
         /**/
 
-        this.panAccordion = Ext.create('Ext.panel.Panel', {
-            minWidth: 125,
-            minHeight: 250,
-            flex: 1,
-            cls: 'ocb-border-right-lightgrey',
+
+        this.container = Ext.create('Ext.panel.Panel', {
+            title: ' ',
             border: false,
-            layout: 'accordion',
-            items: [this.folderTree, manageProjects /*, panFilter*/]
+            minWidth: 125,
+            flex: 3,
+            layout: {
+                type: 'hbox',
+                align: 'stretch'
+            },
+            items: [this.folderTree, this.filesGrid]
         });
 
         this.selectButton = Ext.create('Ext.button.Button', {
             text: 'Ok',
             disabled: true,
             handler: function () {
-                _this.trigger('select', {id: _this.selectedFileNode.oid, bucketId: _this.selectedFileNode.bucketId});
+                var idQuery = _this.selectedFileNode.oid.replace(/\//g, ":");
+                _this.trigger('select', {
+                    id: _this.selectedFileNode.oid,
+                    idQuery: idQuery,
+                    pathQuery: 'buckets:' + _this.selectedFileNode.bucketId + ':' + idQuery,
+                    path: 'buckets/' + _this.selectedFileNode.bucketId + '/' + _this.selectedFileNode.oid,
+                    bucketId: _this.selectedFileNode.bucketId
+                });
                 _this.panel.hide();
             }
         });
@@ -12181,12 +15334,11 @@ OpencgaBrowserWidget.prototype = {
             case "folderSelection" :
                 var item;
                 item = {text: 'New folder', handler: function () {
-                    _this.folderTree.expand();
                     _this.createFolder();
                 }};
                 tbarObj.items.splice(0, 0, item);
                 item = {text: 'New bucket', handler: function () {
-                    manageProjects.expand();
+                    _this.createBucket();
                 }};
                 tbarObj.items.splice(0, 0, item);
                 this.filesStore.filter("fileType", /dir/);
@@ -12198,12 +15350,11 @@ OpencgaBrowserWidget.prototype = {
                 }};
                 tbarObj.items.splice(0, 0, item);
                 item = {text: 'New folder', handler: function () {
-                    _this.folderTree.expand();
                     _this.createFolder();
                 }};
                 tbarObj.items.splice(0, 0, item);
                 item = {text: 'New bucket', handler: function () {
-                    manageProjects.expand();
+                    _this.createBucket();
                 }};
                 tbarObj.items.splice(0, 0, item);
                 this.selectButton.hide();
@@ -12211,18 +15362,16 @@ OpencgaBrowserWidget.prototype = {
 
             default :
                 var item;
-                item = {text: '<span class="info">Upload local file</span>',handler: function () {
+                item = {text: 'Upload local file', handler: function () {
                     _this.drawUploadWidget();
                 }};
                 tbarObj.items.push(item);
-                tbarObj.items.push('-');
                 item = {text: 'New folder', handler: function () {
-                    _this.folderTree.expand();
                     _this.createFolder();
                 }};
                 tbarObj.items.push(item);
                 item = {text: 'New bucket', handler: function () {
-                    manageProjects.expand();
+                    _this.createBucket();
                 }};
                 tbarObj.items.push(item);
                 break;
@@ -12257,30 +15406,35 @@ OpencgaBrowserWidget.prototype = {
             width: this.width,
             minWidth: this.width,
             resizable: true,
-            layout: { type: 'vbox', align: 'stretch'},
-            tbar: tbarObj,
-            items: [
-                {
-                    xtype: 'container',
-                    flex: 3,
-                    minWidth: 125,
-                    layout: { type: 'hbox', align: 'stretch'},
-                    items: [this.panAccordion, this.filesGrid]
-                },
-                this.activeUploadsCont
-            ],
-            buttonAlign: 'right',
-            buttons: [
-                {
-                    text: 'Close',
-                    handler: function () {
-                        _this.filesGrid.getSelectionModel().deselectAll();
-                        _this.trigger('select');
-                        _this.panel.hide();
-                    }
-                },
-                this.selectButton
-            ],
+            layout: 'fit',
+            items: {
+                border: 0,
+                layout: { type: 'vbox', align: 'stretch'},
+                items: [
+                    this.container,
+                    this.activeUploadsCont
+                ],
+                tbar: tbarObj,
+                bbar: {
+                    layout: {
+                        pack: 'end'
+                    },
+                    defaults: {
+                        width: 100
+                    },
+                    items: [
+                        {
+                            text: 'Close',
+                            handler: function () {
+                                _this.filesGrid.getSelectionModel().deselectAll();
+                                _this.trigger('select');
+                                _this.panel.hide();
+                            }
+                        },
+                        this.selectButton
+                    ]
+                }
+            },
             listeners: {
                 scope: this,
                 minimize: function () {
@@ -12321,10 +15475,13 @@ OpencgaBrowserWidget.prototype = {
             return -1;
         };
 
+        var folderNodes = [];
+        var filesNodes = [];
+
         if (this.accountData != null && this.accountData.accountId != null) {
 //            console.log('generating tree..')
-            this.folderStore.getRootNode().removeAll();
-            this.allStore.getRootNode().removeAll();
+//            this.folderStore.getRootNode().removeAll();
+//            this.allStore.getRootNode().removeAll();
             this.filesStore.removeAll();
 //            this.folderTree.getSelectionModel().deselectAll();
             for (var i = 0; i < this.accountData.buckets.length; i++) {
@@ -12393,29 +15550,29 @@ OpencgaBrowserWidget.prototype = {
                     }
                 }
 
-                this.allStore.getRootNode().appendChild({
+                filesNodes.push({
                     text: this.accountData.buckets[i].name,
                     bucketId: this.accountData.buckets[i].name,
-                    oid: "", icon: Utils.images.bucket,
+                    oid: "",
+//                    icon: Utils.images.bucket,
                     expanded: true,
                     isBucket: true,
                     children: files
-                });
-                this.folderStore.getRootNode().appendChild({
+                })
+//                this.allStore.getRootNode().appendChild();
+                folderNodes.push({
                     text: this.accountData.buckets[i].name,
                     bucketId: this.accountData.buckets[i].name,
-                    oid: "", icon: Utils.images.bucket,
+                    oid: "",
+//                    icon: Utils.images.bucket,
                     expanded: true,
                     isBucket: true,
                     children: folders
-                });
+                })
+//                this.folderStore.getRootNode().appendChild();
             }
         }
-
-//        //collapse and expand to update the view after append, possible ExtJS 4.2.0 bug
-//        this.folderStore.getRootNode().collapse();
-//        this.folderStore.getRootNode().expand();
-
+        this._createFolderTree(folderNodes, filesNodes);
 
         //reselect nodes after account update
         if (this.selectedFolderNode != null) { //devuelve el value y el field porque el bucket no tiene oid
@@ -12478,9 +15635,7 @@ OpencgaBrowserWidget.prototype = {
     viewBuckets: function () {
         var _this = this;
         _this.panel.removeAll(false);
-        _this.panel.add(_this.panAccordion);
-        _this.panel.add(_this.filesGrid);
-
+        _this.panel.add(_this.container);
     },
     viewUploads: function () {
         var _this = this;
@@ -12558,40 +15713,48 @@ OpencgaBrowserWidget.prototype.checkTags = function (tags) {
 };
 
 
-OpencgaBrowserWidget.prototype.createProject = function () {
+OpencgaBrowserWidget.prototype.createBucket = function () {
     var _this = this;
-    var name = Ext.getCmp(this.id + "newProjectNameField").getValue();
-    var desc = Ext.getCmp(this.id + "newProjectDescriptionField").getValue();
-    if (name != "") {
-        Ext.getBody().mask();
-        _this.panel.setLoading("Creating project");
+    Ext.Msg.prompt('New Bucket', 'Please enter a name and description for the new bucket:', function (btn, text) {
+        if (btn == 'ok') {
+            text = text.replace(/[^a-z0-9-_.\s]/gi, '').trim();
 
-        OpencgaManager.createBucket({
-            bucketId: name,
-            description: desc,
-            accountId: $.cookie("bioinfo_account"),
-            sessionId: $.cookie("bioinfo_sid"),
-            success: this.createBucketSuccess
-        });
-    }
+            OpencgaManager.createBucket({
+                bucketId: text,
+                description: '',
+                accountId: $.cookie("bioinfo_account"),
+                sessionId: $.cookie("bioinfo_sid"),
+                success: function (response) {
+                    if (response.errorMsg === '') {
+                        _this.trigger('need:refresh', {sender: _this});
+                    } else {
+                        Utils.msg("Create project", response.errorMsg);
+                    }
+                    _this.panel.setLoading(false);
+                    Ext.getBody().unmask();
+                }
+            });
+
+        }
+    }, null, null, "New bucket");
 };
 
 OpencgaBrowserWidget.prototype._getFolderTreeSelection = function () {
     var selectedBuckets = this.folderTree.getSelectionModel().getSelection();
     if (selectedBuckets.length < 1) {
-        Ext.example.msg('No folder selected', 'Please select a bucket or a folder.');
+        Utils.msg('No folder selected', 'Please select a bucket or a folder.');
         return null;
     } else {
         var record = selectedBuckets[0];
         var bucketName;
         var parent = '';
-        if (record.raw.fileType != null && record.raw.fileType == "dir") {
+        if (record.data.fileType != null && record.data.fileType == "dir") {
             var path = record.getPath("text", "/").substr(1);
             var pathArr = path.split("/", 2);
             parent = path.replace(pathArr.join("/"), "").substr(1) + "/";
             bucketName = pathArr[1];
         } else {
-            bucketName = record.raw.text;
+            bucketName = record.data.text;
         }
         return {bucketId: bucketName, directory: parent};
     }
@@ -12624,7 +15787,7 @@ OpencgaBrowserWidget.prototype.createFolder = function () {
                         objectId: folderSelection.directory + text,
                         success: function (response) {
                             if (response.errorMsg === '') {
-                                Ext.example.msg('Create folder', '</span class="emph">' + response.result[0].msg + '</span>');
+                                Utils.msg('Create folder', '</span class="emph">' + response.result[0].msg + '</span>');
                                 _this.trigger('need:refresh', {sender: _this});
                             } else {
                                 Ext.Msg.alert('Create folder', response.errorMsg);
@@ -12638,366 +15801,172 @@ OpencgaBrowserWidget.prototype.createFolder = function () {
     }
 };
 
-/*
- * Copyright (c) 2012 Francisco Salavert (ICM-CIPF)
- * Copyright (c) 2012 Ruben Sanchez (ICM-CIPF)
- * Copyright (c) 2012 Ignacio Medina (ICM-CIPF)
- *
- * This file is part of JS Common Libs.
- *
- * JS Common Libs is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 2 of the License, or
- * (at your option) any later version.
- *
- * JS Common Libs is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with JS Common Libs. If not, see <http://www.gnu.org/licenses/>.
- */
 
-function PagedViewListWidget(args) {
+OpencgaBrowserWidget.prototype._createFolderTree = function (data, allData) {
     var _this = this;
-    _.extend(this, Backbone.Events);
-    this.id = Utils.genId("PagedViewListWidget");
 
-    this._data = null;
-    this.targetId = null;
 
-    this.pageSize = 6;
-    this.storeFields = {};
-    this.template = {};
-    this.width = 280;
-    this.height = 550;
-    this.title = "";
-    this.order = 0;
-    this.border = 0;
-    this.mode = "view";
-    this.sort = 'DESC';
-    this.headerConfig;
+    if (this.container) {
 
-    _.extend(this, args);
-
-    this.currentPage = 1;
-    this.pageFieldId = this.id + '_pageField';
-    this.pageLabelId = this.id + '_pageLabel';
-    this.pagbarId = this.id + '_pagbar';
-    this.panelId = this.id + '_panel';
-
-    /**Events i send**/
-
-    this.textFilterFunction = function (item) {
-        var str = Ext.getCmp(_this.id + "searchField").getValue().toLowerCase();
-        if (item.data.name.toLowerCase().indexOf(str) < 0) {
-            return false;
+        var tree = this.container.child('treepanel');
+        if (tree) {
+            this.container.remove(tree, false).destroy();
         }
-        return true;
-    };
-
-    this.on(this.handlers);
-
-};
-
-PagedViewListWidget.prototype.getData = function () {
-    return this._data;
-};
-
-PagedViewListWidget.prototype._setData = function (data) {
-    this._data = data;
-};
-
-//PagedViewListWidget.prototype.getPageSize = function (){
-//	return this.pageSize;
-//};
-
-//PagedViewListWidget.prototype.getItemsCount = function (){
-//	return this.getData().length;
-//};
-
-//PagedViewListWidget.prototype.getPageCount = function (){
-//	return Math.ceil(this.getItemsCount() / this.getPageSize());
-//};
-
-/**FILTER **/
-PagedViewListWidget.prototype.setFilter = function (filterFunction) {
-    this.store.clearFilter();
-
-    if (filterFunction != null) {
-        this.filterFunction = filterFunction;
-        this.store.filter([filterFunction, this.textFilterFunction]);
-    } else {
-        this.store.filter([this.textFilterFunction]);
-    }
-
-};
-
-/** DRAW **/
-PagedViewListWidget.prototype.draw = function (data) {
-
-    this._setData(data);
-//	this.changeOrder();
-    this.render();
-
-    this.store.loadData(this.getData());
-    if (this.filterFunction != null) {
-        this.setFilter(this.filterFunction);
-//		this._setData(this.store.data.items);
-    }
-//	this.changePage(this.currentPage, this.getData(), true);
-
-};
-/** CLEAN **/
-PagedViewListWidget.prototype.clean = function () {
-    if (this.panel != null) {
-        this.panel.destroy();
-        delete this.panel;
-    }
-};
 
 
-//PagedViewListWidget.prototype.changePage = function (numberPage, data, restUpdated){
-//	if((data != null) && (data.length > 0)){
-//		if ((numberPage > 0) && (numberPage <= this.getPageCount())){
-//			this.currentPage = numberPage;
-//			Ext.getCmp(this.pageLabelId).setText(numberPage+' of '+ this.getPageCount());
-//			if (restUpdated != true){				
-//				Ext.getCmp(this.pageFieldId).setValue(numberPage);
-//			} 
-//			var dataPage = new Array(); 
-//			for ( var i = (this.getPageSize() * numberPage)- this.getPageSize(); i < this.getPageSize() * numberPage; i++) {
-//				if (data[i] != null){
-//					dataPage.push(data[i]);
-//				}
-//			}
-//			this.store.loadData(dataPage, false);
-//			}
-//	}
-//	else{
-//		this.store.removeAll();
-//		this.currentPage=1;
-//		Ext.getCmp(this.pageFieldId).setValue(this.currentPage);
-//		Ext.getCmp(this.pageLabelId).setText('No data found');
-//		
-//	}	
-//};
-
-//PagedViewListWidget.prototype.changeOrder = function (){
-////	console.log(this.id+": "+this.sort);
-//	if(this.sort == "desc"){
-//		var aux = new Array();
-//		var data = this.getData();
-//		if(data != null){		
-//			for ( var i = data.length-1; i >= 0; i--) {
-//				aux.push(data[i]);
-//			}
-//		}
-//		this._setData(aux);
-//	}
-//};
-
-PagedViewListWidget.prototype.render = function () {
-    var _this = this;
-    if (this.panel == null) {
-        this.tpl = new Ext.XTemplate(this.template);
-
-        this.store = Ext.create('Ext.data.Store', {
-            fields: this.storeFields,
-            sorters: [
-                { property: 'date', direction: 'DESC'}
-            ],
-            autoLoad: false
+        this.allStore = Ext.create('Ext.data.TreeStore', {
+            id: this.id + 'allStore',
+            fields: ['text', 'oid'],
+            root: {
+                expanded: true,
+                text: 'Drive',
+                children: allData
+            }
         });
 
-        var pan = null;
+        var folderStore = Ext.create('Ext.data.TreeStore', {
+            fields: ['text', 'oid'],
+            root: {
+                expanded: true,
+                text: 'Drive',
+                children: data
+            },
+            listeners: {
+                beforeinsert: function (este, node) {
+                    if (node.isLeaf()) {
+//                        console.log(node.data.oid + " is a file");
+                        return false; //cancel append because is leaf
+                    }
+                }
+            }
+        });
+        this.folderStore = folderStore;
 
-        if (this.mode == "view") {
-            this.view = Ext.create('Ext.view.View', {
-                id: this.id + "view",
-                padding: 15,
-                store: this.store,
-                tpl: this.tpl,
-                height: this.height,
-                trackOver: true,
-                autoScroll: true,
-                overItemCls: 'list-item-hover',
-                itemSelector: '.joblist-item',
+
+        var folderTree = Ext.create('Ext.tree.Panel', {
+            //xtype:"treepanel",
+//            title: "Folders",
+//            bodyPadding: 2,
+            border: false,
+            autoScroll: true,
+            useArrows: true,
+            rootVisible: false,
+            hideHeaders: true,
+            expanded: true,
+            flex: 1,
+            style: {
+                borderColor: 'lightgray',
+                borderStyle: 'solid',
+                borderWidth: '0px 1px 0 0'
+
+            },
+//			selType: 'cellmodel',
+            //plugins: [Ext.create('Ext.grid.plugin.CellEditing', {clicksToEdit: 2,listeners:{
+            //edit:function(editor, e, eOpts){
+            //var record = e.record; //en la vista del cliente
+            /*todo, ahora q llame la servidor. y lo actualize*/
+            //}
+            //}})],
+            columns: [
+                {
+                    xtype: 'treecolumn',
+                    dataIndex: 'text',
+                    flex: 1,
+                    editor: {xtype: 'textfield', allowBlank: false}
+                }
+            ],
+            viewConfig: {
+                markDirty: false,
+                plugins: {
+                    ptype: 'treeviewdragdrop'
+                },
                 listeners: {
-                    itemclick: function (este, record) {
-                        console.log(record.data);
-                        console.log(record.data.id);
-                        _this.trigger('item:click', {sender: _this, item: record});
+                    drop: function (node, data, overModel, dropPosition, eOpts) {
+                        var record = data.records[0];
+                        //check if is leaf and if the record has a new index
+                        if (record.isLeaf() && record.data.index != record.removedFrom && record.data.checked) {
+                            var id = record.data.trackId;
+                            _this.setTrackIndex(id, record.data.index);
+                        }
                     },
                     itemcontextmenu: function (este, record, item, index, e) {
                         e.stopEvent();
-                        _this.trigger('item:contextmenu', {sender: _this, record: record, originalEvent:e});
+                        var items = [];
+                        console.log(record)
+                        if (record.data.isBucket) {
+                            items.push(_this.refreshBucketAction);
+                            items.push(_this.renameBucketAction);
+                            var contextMenu = Ext.create('Ext.menu.Menu', {
+                                plain: true,
+                                items: items
+                            });
+                            contextMenu.showAt(e.getXY());
+                        }
                         return false;
                     }
                 }
-            });
-
-            pan = this.view;
-        }
-
-
-        if (this.mode == "grid") {
-            var columns = [];
-            for (var j = 0; j < this.storeFields.length; j++) {
-                columns.push({header: this.storeFields[j], dataIndex: this.storeFields[j], flex: 1});
-            }
-            this.grid = Ext.create('Ext.grid.Panel', {
-                store: this.store,
-                columns: columns,
-                border: 0
-            });
-            pan = this.grid;
-        }
-
-        /**TEXT SEARCH FILTER**/
-        var searchField = Ext.create('Ext.form.field.Text', {
-            id: this.id + "searchField",
-            flex: 1,
-            margin: "0 1 0 0",
-            emptyText: 'enter search term',
-            enableKeyEvents: true,
+            },
             listeners: {
-                change: function () {
-                    _this.setFilter(null);
-                }
-            }
-        });
-
-        this.pagBar = Ext.create('Ext.toolbar.Toolbar', {
-            id: this.pagbarId,
-            style: 'border: ' + this.border,
-            cls:'smokeback',
-            items: [
-//							{
-//							    id : this.id+'btnPrev',
-//							    iconCls: Ext.baseCSSPrefix + 'tbar-page-prev',
-//							    tooltip:'Previous Page',
-//							    listeners: {
-//							        scope: this,
-//							        click: this.onPrevClick
-//							    }
-//							},
-//							'-',
-//							{	
-//							    xtype: 'numberfield',
-//							    id: this.pageFieldId,
-//							    cls: Ext.baseCSSPrefix + 'tbar-page-number',
-//							    allowDecimals: false,
-//							    minValue: 1,
-//							    value:1,
-//							    hideTrigger: true,
-//							    enableKeyEvents: true,
-//							    selectOnFocus: true,
-//							    submitValue: false,
-//							    width: 30,
-//							    margins: '-1 2 3 2',
-//							    listeners: {
-//							        scope: this,
-//							        keyup: this.onPageChange
-//							    }
-//							},
-//							'-',
-//							{
-//							    id : this.id+'btnNext',
-//							    iconCls: Ext.baseCSSPrefix + 'tbar-page-next',
-//							    tooltip:'Next Page',
-//							    listeners: {
-//							        scope: this,
-//							        click: this.onNextClick
-//							    }
-//							},
-//			//				'-',
-//							{
-//							    xtype: 'label',
-//							    id: this.pageLabelId,
-//							    text: '',
-//							    margins: '5 0 0 5'
-//							},
-                {
-                    id: this.id + 'btnSort',
-                    iconCls: 'icon-order-desc',
-                    tooltip: 'Change order',
-                    handler: function () {
-                        if (_this.sort == "DESC") {
-                            _this.sort = "ASC";
-                            _this.store.sort('date', 'ASC');
-                            this.setIconCls('icon-order-asc');
+                selectionchange: function (este, selected, eOpts) {
+                    var record = selected[0];
+                    if (typeof record != 'undefined') {//avoid deselection
+                        var field, deep;
+                        if (record.data.isBucket != null) {//is a bucket
+                            field = 'text';
+                            deep = false;
+                        } else {
+                            field = 'oid';
+                            deep = true;
                         }
-                        else {
-                            _this.sort = "DESC";
-                            _this.store.sort('date', 'DESC');
-                            this.setIconCls('icon-order-desc');
+                        var node = _this.allStore.getRootNode().findChild(field, record.data[field], deep);
+                        var childs = [];
+                        _this.selectedFolderNode = {value: node.data[field], field: field};
+
+                        for (var index in node.data.children) {
+                            childs.push(node.data.children[index]);
+                        }
+
+//                        node.eachChild(function (n) {
+//                            childs.push(n.data);
+//                        });
+                        _this.container.setTitle(node.getPath("text", " / "));
+                        _this.filesStore.loadData(childs);
+                        if (_this.mode == "folderSelection") {
+                            _this.selectedFileNode = node.data;
+                            _this.selectButton.enable();
                         }
                     }
                 },
-                searchField,
-                {
-                    id: this.id + 'btnClear',
-//							    iconCls: 'icon-delete',
-                    text: 'Clear',
-                    margin: "0 2 0 0",
-                    tooltip: 'Clear search box',
-                    handler: function () {
-                        searchField.reset();
+                viewready: function (este, eOpts) {//Fires when the grid view is available (use this for selecting a default row).
+                    if (typeof _this.selectedFolderNode === 'undefined') {
+//                        setTimeout(function () { // forced to do this because some ExtJS 4.2.0 event problem
+                        var node = este.getRootNode().getChildAt(0);
+                        if (typeof node != 'undefined') {
+                            este.getSelectionModel().select(node);
+                        }
+//                        }, 0);
                     }
+                },
+                checkchange: function (node, checked) {
+                },
+                itemmouseenter: function (este, record) {
+                },
+                itemmouseleave: function (este, record) {
                 }
-
-            ]
-        });
-//				this.currentPage = Ext.getCmp(this.pageFieldId).getValue();
-
-        this.panel = Ext.create('Ext.panel.Panel', {
-            id: this.panelId,
-            title: this.title,
-            header:this.headerConfig,
-            border: this.border,
-            width: this.width,
-            tbar: this.pagBar,
-            items: [pan]
+            },
+            store: folderStore
         });
 
-//				this.view.setHeight(this.panel.getHeight());
-        var target = Ext.getCmp(this.targetId);
-        if (target instanceof Ext.panel.Panel) {
-            target.insert(this.order, this.panel);
-            //target.setActiveTab(1);//si no se pone el active da un error de EXT
-            //target.setActiveTab(0);//si no se pone el active da un error de EXT
-            //pan.setHeight = this.panel.getHeight();
-        } else {
-            this.panel.render(this.targetId);
-        }
+        this.folderTree = folderTree;
+    }
+
+    if (this.container) {
+        this.container.getLayout().animate = false;
+        this.container.insert(0, folderTree);
+        folderTree.expand();
+        this.container.getLayout().animate = true;
     }
 };
-
-PagedViewListWidget.prototype.show = function () {
-    if (this.panel != null) {
-        this.panel.show();
-    }
-};
-PagedViewListWidget.prototype.hide = function () {
-    if (this.panel != null) {
-        this.panel.hide();
-    }
-};
-
-/** Paging bar Events **/
-//PagedViewListWidget.prototype.onPageChange = function (object, event, option){
-//	this.changePage(Ext.getCmp(this.pageFieldId).getValue(), this.getData());
-//};
-//PagedViewListWidget.prototype.onPrevClick = function () {
-//	this.changePage(this.currentPage - 1, this.getData());
-//};
-//PagedViewListWidget.prototype.onNextClick = function () {
-//	this.changePage(this.currentPage + 1, this.getData());
-//};
-/** END Paging bar Events **/
-
 /*
  * Copyright (c) 2012 Francisco Salavert (ICM-CIPF)
  * Copyright (c) 2012 Ruben Sanchez (ICM-CIPF)
@@ -13054,9 +16023,9 @@ ProfileWidget.prototype = {
                 Ext.getCmp(_this.id + 'fldOld').setValue(null);
                 Ext.getCmp(_this.id + 'fldNew1').setValue(null);
                 Ext.getCmp(_this.id + 'fldNew2').setValue(null);
-                Ext.getCmp(_this.id + 'labelPass').setText('<span class="info">' + data.result[0].msg + '</span>', false);
-            }else{
-                Ext.getCmp(_this.id + 'labelPass').setText('<span class="err">' + data.errorMsg + '</span>', false);
+                Ext.getCmp(_this.id + 'labelPass').update('<span class="info">' + data.result[0].msg + '</span>', false);
+            } else {
+                Ext.getCmp(_this.id + 'labelPass').update('<span class="err">' + data.errorMsg + '</span>', false);
             }
         };
         this.changeEmailSuccess = function (data) {
@@ -13064,9 +16033,9 @@ ProfileWidget.prototype = {
             if (data.errorMsg === '') {
                 Ext.getCmp(_this.id + 'fldEmail').setValue(null);
                 Ext.getCmp(_this.id + 'fldEmail').setFieldLabel('e-mail', false);
-                Ext.getCmp(_this.id + 'labelPass').setText('<span class="info">' + data.result[0].msg + '</span>', false);
-            }else{
-                Ext.getCmp(_this.id + 'labelPass').setText('<span class="err">' + data.errorMsg + '</span>', false);
+                Ext.getCmp(_this.id + 'labelPass').update('<span class="info">' + data.result[0].msg + '</span>', false);
+            } else {
+                Ext.getCmp(_this.id + 'labelPass').update('<span class="err">' + data.errorMsg + '</span>', false);
             }
         };
         /**************/
@@ -13088,15 +16057,15 @@ ProfileWidget.prototype = {
         var _this = this;
 //        console.log(this.id + ' CREATING PANEL');
 
-        var labelPass = Ext.create('Ext.toolbar.TextItem', {
+        var labelPass = Ext.create('Ext.Component', {
             id: this.id + 'labelPass',
-            text: 'Modify your password or email.'
+            margin: '10 0 10 105',
+            html: 'Modify your password or email.'
         });
         var changePasswordForm = Ext.create('Ext.form.Panel', {
             title: 'Change password',
             bodyPadding: 15,
             width: 350,
-            height: 155,
             border: false,
             items: [
                 {
@@ -13130,6 +16099,7 @@ ProfileWidget.prototype = {
                         change: this.checkpass
                     }
                 },
+                labelPass,
                 {
                     xtype: 'button',
                     text: 'Change', margin: '0 0 0 105',
@@ -13143,7 +16113,6 @@ ProfileWidget.prototype = {
             title: 'Change email',
             bodyPadding: 15,
             width: 350,
-            height: 155,
             border: false,
             items: [
                 {
@@ -13168,13 +16137,11 @@ ProfileWidget.prototype = {
                 }
             ]
         });
-        var profileTabPanel = Ext.create('Ext.panel.Panel', {
+        var profilePanel = Ext.create('Ext.panel.Panel', {
             width: 350,
-            height: 225,
             border: false,
-            tbar: {items: ['->', labelPass]},
             layout: 'accordion',
-            items: [changePasswordForm, changeEmailForm],
+            items: [ changePasswordForm, changeEmailForm],
             listeners: {
                 tabchange: function () {
                     _this.clearAllFields();
@@ -13186,17 +16153,28 @@ ProfileWidget.prototype = {
             resizable: false,
             minimizable: true,
             constrain: true,
+            height: 350,
+            layout: 'fit',
             closable: false,
             modal: true,
-            items: [profileTabPanel],
-            buttonAlign: 'center',
-            buttons: [
-                {
-                    text: 'Close', handler: function () {
-                    _this.panel.hide();
+            items: {
+                border: 0,
+                layout: 'fit',
+                items: [profilePanel],
+                bbar: {
+                    layout: {
+                        pack: 'center'
+                    },
+                    items: [
+                        {
+                            text: 'Close',
+                            handler: function () {
+                                _this.panel.hide();
+                            }
+                        }
+                    ]
                 }
-                }
-            ],
+            },
             listeners: {
                 minimize: function () {
                     _this.panel.hide();
@@ -13220,7 +16198,7 @@ ProfileWidget.prototype = {
         Ext.getCmp(this.id + 'fldNew1').setValue(null);
         Ext.getCmp(this.id + 'fldNew2').setValue(null);
         Ext.getCmp(this.id + 'fldEmail').setValue(null);
-        Ext.getCmp(this.id + 'labelPass').setText('&nbsp', false);
+        Ext.getCmp(this.id + 'labelPass').update('&nbsp', false);
     },
     changeEmail: function () {
         if (this.checkemail()) {
@@ -13255,18 +16233,18 @@ ProfileWidget.prototype = {
         if (oldPass != '') {
             if (!patt.test(passwd1) && passwd1.length > 3) {
                 if (passwd1 == passwd2) {
-                    Ext.getCmp(this.id + 'labelPass').setText('<span class="ok">Passwords match</span>', false);
+                    Ext.getCmp(this.id + 'labelPass').update('<span class="ok">Passwords match</span>', false);
                     return true;
                 } else {
-                    Ext.getCmp(this.id + 'labelPass').setText('<span class="err">Passwords does not match</span>', false);
+                    Ext.getCmp(this.id + 'labelPass').update('<span class="err">Passwords does not match</span>', false);
                     return false;
                 }
             } else {
-                Ext.getCmp(this.id + 'labelPass').setText('<span class="err">Password must be at least 4 characters</span>', false);
+                Ext.getCmp(this.id + 'labelPass').update('<span class="err">Password must be at least 4 characters</span>', false);
                 return false;
             }
         } else {
-            Ext.getCmp(this.id + 'labelPass').setText('<span class="err">Old password is empty</span>', false);
+            Ext.getCmp(this.id + 'labelPass').update('<span class="err">Old password is empty</span>', false);
             return false;
         }
 
@@ -13310,32 +16288,32 @@ ProfileWidget.prototype = {
  * along with JS Common Libs. If not, see <http://www.gnu.org/licenses/>.
  */
 
-function ResultTable(jobId, filename, tags, args){
-	var _this = this;
-	this.id = "ResultTable"+ Math.round(Math.random()*10000000);
-	this.targetId = null;
-	
-	this.jobId = jobId;
-	this.fileName=filename;
-	this.tags=tags;
-	this.numRows=10;
-	this.flex=null;
-	this.collapsible=true;
-	this.border=true;
-	this.cls=null;
+function ResultTable(jobId, filename, tags, args) {
+    var _this = this;
+    this.id = "ResultTable" + Math.round(Math.random() * 10000000);
+    this.targetId = null;
 
-    if(typeof args != 'undefined'){
+    this.jobId = jobId;
+    this.fileName = filename;
+    this.tags = tags;
+    this.numRows = 10;
+    this.flex = null;
+    this.collapsible = true;
+    this.border = true;
+    this.cls = null;
+
+    if (typeof args != 'undefined') {
         this.targetId = args.targetId || this.targetId;
         this.numRows = args.numRows || this.numRows;
-        this.flex  = args.flex  || this.flex;
-        this.collapsible  = args.collapsible  || this.collapsible;
-        this.border  = args.border  || this.border;
-        this.cls  = args.cls  || this.cls;
-        this.tableLayout  = args.tableLayout  || this.tableLayout;
+        this.flex = args.flex || this.flex;
+        this.collapsible = args.collapsible || this.collapsible;
+        this.border = args.border || this.border;
+        this.cls = args.cls || this.cls;
+        this.tableLayout = args.tableLayout || this.tableLayout;
     }
 
     this.table = null;
-    
+
 //    this.onRendered = new Event();
 //	this.onRendered.addEventListener(function (sender, targetId){
 //		_this.draw();
@@ -13343,18 +16321,17 @@ function ResultTable(jobId, filename, tags, args){
 };
 
 
-
-ResultTable.prototype.draw = function (){
-	this.render();
+ResultTable.prototype.draw = function () {
+    this.render();
 };
 
-ResultTable.prototype.render = function (){
-	var _this = this;
-	
-	var rows=null;
-	
-	var filteredGridNames = new Array();
-	var filteredColNames = new Array();
+ResultTable.prototype.render = function () {
+    var _this = this;
+
+    var rows = null;
+
+    var filteredGridNames = new Array();
+    var filteredColNames = new Array();
 //	for( var i =0; i < tables.length; i++){
 //		if (this.tags.indexOf(tables[i].name)!= -1){//me quedo con la primera que encuentro
 //			this.tableSkel = tables[i];
@@ -13382,1182 +16359,165 @@ ResultTable.prototype.render = function (){
 
     filteredGridNames = new Array();
     filteredColNames = new Array();
-    for (var j=0;j<this.colNames.length; j++){
-        if (this.colVisibilty[j]==1){
-            filteredGridNames.push({header:this.colNames[j],dataIndex:this.colNames[j], flex:1});
-            filteredColNames.push({name:this.colNames[j],type:this.colTypes[j]});
+    for (var j = 0; j < this.colNames.length; j++) {
+        if (this.colVisibilty[j] == 1) {
+            filteredGridNames.push({header: this.colNames[j], dataIndex: this.colNames[j], width: ((this.colNames[j].length * 10) + 30)});
+            filteredColNames.push({name: this.colNames[j], type: this.colTypes[j]});
         }
     }
 
 
-	if(this.tableSkel.type == "text"){
-		
-		var adapterPoll = new WumAdapter();
-		adapterPoll.onPoll.addEventListener(function(sender,data){
-			var altura = 75+22*2;
-			
-			var lines = _this.parse(data);
-			var items = [];
-			for ( var i = 0; i < lines.length; i++){
-				var cont = Ext.create('Ext.container.Container', {
-					data:lines[0],
-					tpl:_this.getTemplate(_this.tableSkel.colNames)
-				});
-				items.push(cont);
-			}
-			
-			this.table = Ext.create('Ext.container.Container', {
-				items:items,
-				margin:"0 0 0 50",
-				renderTo: _this.targetId
-			});
-			
-		});
-		adapterPoll.poll(this.jobId,this.fileName,false,$.cookie('bioinfo_sid'));
-		
-	}else{
-		//accountId, sessionId, bucketname, jobId, filename, colNames, colVisibilty, sessionId
-		//var url = this.adapter.tableurl(this.jobId,this.fileName,this.colNames,this.colVisibilty,$.cookie('bioinfo_sid'));
+    if (this.tableSkel.type == "text") {
 
+        var adapterPoll = new WumAdapter();
+        adapterPoll.onPoll.addEventListener(function (sender, data) {
+            var altura = 75 + 22 * 2;
 
-		var url = OpencgaManager.tableurl({
-            accountId:$.cookie("bioinfo_account"),
-            sessionId:$.cookie('bioinfo_sid'),
-            jobId:this.jobId,
-            filename:this.fileName,
-            colNames:this.colNames,
-            colVisibility:this.colVisibilty
+            var lines = _this.parse(data);
+            var items = [];
+            for (var i = 0; i < lines.length; i++) {
+                var cont = Ext.create('Ext.container.Container', {
+                    data: lines[0],
+                    tpl: _this.getTemplate(_this.tableSkel.colNames)
+                });
+                items.push(cont);
+            }
+
+            this.table = Ext.create('Ext.container.Container', {
+                items: items,
+                margin: "0 0 0 50",
+                renderTo: _this.targetId
+            });
+
         });
-		console.log(url);
-		
-		/*
-		http://ws.bioinfo.cipf.es/opencga/rest/job/86232/table?
-				sessionid=QtjXeeOwKsRdTcyCF1vOiM2xbIC57fhlNvXafCjZMXCAFH2M6iZPfEXETt1Lp7F4
-				&filename=significant_your_annotation_0.1.txt
-				&colNames=Term,Term%20size,Term%20size%20(in%20genome),List1%20annotateds,List1%20unannotateds,list1_per,List2%20annotateds,List2%20unannotateds,list2_per,List1%20annotated%20genes,List2%20annotated%20genes,Odds%20ratio%20(log%20e),pvalue,Adjusted%20pvalue,Term%20annotation%20%%20per%20list,Annotated%20ids
-				&colVisibility=1,0,0,1,1,0,1,1,0,0,0,1,1,1,0,0
-				&_dc=1326109874569
-				&page=1
-				&start=0
-				&limit=10
-				&sort=%5B%7B%22property%22%3A%22List1%20unannotateds%22%2C%22direction%22%3A%22DESC%22%7D%5D
-				&callback=Ext.data.JsonP.callback5
-		
-		http://ws.bioinfo.cipf.es/opencga-beta/rest/job/42/table?
-				sessionid=6tpGsjjphxDMkCG74E89qMZTYTU26WGTXXoDLApUYoOJL07WyM2NGd0SbMhKe2Ll
-				&filename=significant_your_annotation_0.1.txt
-				&colNames=Term,Term%20size,Term%20size%20(in%20genome),List1%20annotateds,List1%20unannotateds,list1_per,List2%20annotateds,List2%20unannotateds,list2_per,List1%20annotated%20genes,List2%20annotated%20genes,Odds%20ratio%20(log%20e),pvalue,Adjusted%20pvalue,Term%20annotation%20%%20per%20list,Annotated%20ids
-				&colVisibility=1,0,0,1,1,0,1,1,0,0,0,1,1,1,0,0
-				&_dc=1326278871739
-				&page=1
-				&start=0
-				&limit=5
-				&filter=%5B%7B%22property%22%3A%22Term%22%2C%22value%22%3Aundefined%7D%2C%7B%22property%22%3A%22Term%22%2C%22value%22%3Aundefined%7D%5D
-				&callback=Ext.data.JsonP.callback3
-		http://ws.bioinfo.cipf.es/opencga-beta/rest/job/42/table?sessionid=6tpGsjjphxDMkCG74E89qMZTYTU26WGTXXoDLApUYoOJL07WyM2NGd0SbMhKe2Ll&filename=significant_your_annotation_0.1.txt&colNames=Term,Term%20size,Term%20size%20(in%20genome),List1%20annotateds,List1%20unannotateds,list1_per,List2%20annotateds,List2%20unannotateds,list2_per,List1%20annotated%20genes,List2%20annotated%20genes,Odds%20ratio%20(log%20e),pvalue,Adjusted%20pvalue,Term%20annotation%20%%20per%20list,Annotated%20ids&colVisibility=1,0,0,1,1,0,1,1,0,0,0,1,1,1,0,0&_dc=1326279241960&page=1&start=0&limit=5
-		&filter=%5B%7B%22property%22%3A%22Term%22%2C%22value%22%3Aundefined%7D%5D
-		&callback=Ext.data.JsonP.callback7
-		http://ws.bioinfo.cipf.es/opencga-beta/rest/job/42/table?sessionid=6tpGsjjphxDMkCG74E89qMZTYTU26WGTXXoDLApUYoOJL07WyM2NGd0SbMhKe2Ll&filename=significant_your_annotation_0.1.txt&colNames=Term,Term%20size,Term%20size%20(in%20genome),List1%20annotateds,List1%20unannotateds,list1_per,List2%20annotateds,List2%20unannotateds,list2_per,List1%20annotated%20genes,List2%20annotated%20genes,Odds%20ratio%20(log%20e),pvalue,Adjusted%20pvalue,Term%20annotation%20%%20per%20list,Annotated%20ids&colVisibility=1,0,0,1,1,0,1,1,0,0,0,1,1,1,0,0&_dc=1326279394677&page=1&start=0&limit=5
-		&filter=%5B%7B%22property%22%3A%22Term%22%2C%22value%22%3Aundefined%7D%5D&callback=Ext.data.JsonP.callback2
-		*
-		*/
-		if(rows==null){
-			rows = this.numRows;
-		}
-		var itemsPerPage = rows; 
+        adapterPoll.poll(this.jobId, this.fileName, false, $.cookie('bioinfo_sid'));
 
-		this.st = Ext.create('Ext.data.Store', {
-			fields: filteredColNames, //las colNames no pueden tener el caracter "."
-	    	pageSize: itemsPerPage,
-		    remoteSort:true,
+    } else {
+        //accountId, sessionId, bucketname, jobId, filename, colNames, colVisibilty, sessionId
+        //var url = this.adapter.tableurl(this.jobId,this.fileName,this.colNames,this.colVisibilty,$.cookie('bioinfo_sid'));
+
+
+        var url = OpencgaManager.tableurl({
+            accountId: $.cookie("bioinfo_account"),
+            sessionId: $.cookie('bioinfo_sid'),
+            jobId: this.jobId,
+            filename: this.fileName
+//            colNames: this.colNames,
+//            colVisibility: this.colVisibilty
+        });
+        console.log(url);
+
+        /*
+         http://ws.bioinfo.cipf.es/opencga/rest/job/86232/table?
+         sessionid=QtjXeeOwKsRdTcyCF1vOiM2xbIC57fhlNvXafCjZMXCAFH2M6iZPfEXETt1Lp7F4
+         &filename=significant_your_annotation_0.1.txt
+         &colNames=Term,Term%20size,Term%20size%20(in%20genome),List1%20annotateds,List1%20unannotateds,list1_per,List2%20annotateds,List2%20unannotateds,list2_per,List1%20annotated%20genes,List2%20annotated%20genes,Odds%20ratio%20(log%20e),pvalue,Adjusted%20pvalue,Term%20annotation%20%%20per%20list,Annotated%20ids
+         &colVisibility=1,0,0,1,1,0,1,1,0,0,0,1,1,1,0,0
+         &_dc=1326109874569
+         &page=1
+         &start=0
+         &limit=10
+         &sort=%5B%7B%22property%22%3A%22List1%20unannotateds%22%2C%22direction%22%3A%22DESC%22%7D%5D
+         &callback=Ext.data.JsonP.callback5
+
+         http://ws.bioinfo.cipf.es/opencga-beta/rest/job/42/table?
+         sessionid=6tpGsjjphxDMkCG74E89qMZTYTU26WGTXXoDLApUYoOJL07WyM2NGd0SbMhKe2Ll
+         &filename=significant_your_annotation_0.1.txt
+         &colNames=Term,Term%20size,Term%20size%20(in%20genome),List1%20annotateds,List1%20unannotateds,list1_per,List2%20annotateds,List2%20unannotateds,list2_per,List1%20annotated%20genes,List2%20annotated%20genes,Odds%20ratio%20(log%20e),pvalue,Adjusted%20pvalue,Term%20annotation%20%%20per%20list,Annotated%20ids
+         &colVisibility=1,0,0,1,1,0,1,1,0,0,0,1,1,1,0,0
+         &_dc=1326278871739
+         &page=1
+         &start=0
+         &limit=5
+         &filter=%5B%7B%22property%22%3A%22Term%22%2C%22value%22%3Aundefined%7D%2C%7B%22property%22%3A%22Term%22%2C%22value%22%3Aundefined%7D%5D
+         &callback=Ext.data.JsonP.callback3
+         http://ws.bioinfo.cipf.es/opencga-beta/rest/job/42/table?sessionid=6tpGsjjphxDMkCG74E89qMZTYTU26WGTXXoDLApUYoOJL07WyM2NGd0SbMhKe2Ll&filename=significant_your_annotation_0.1.txt&colNames=Term,Term%20size,Term%20size%20(in%20genome),List1%20annotateds,List1%20unannotateds,list1_per,List2%20annotateds,List2%20unannotateds,list2_per,List1%20annotated%20genes,List2%20annotated%20genes,Odds%20ratio%20(log%20e),pvalue,Adjusted%20pvalue,Term%20annotation%20%%20per%20list,Annotated%20ids&colVisibility=1,0,0,1,1,0,1,1,0,0,0,1,1,1,0,0&_dc=1326279241960&page=1&start=0&limit=5
+         &filter=%5B%7B%22property%22%3A%22Term%22%2C%22value%22%3Aundefined%7D%5D
+         &callback=Ext.data.JsonP.callback7
+         http://ws.bioinfo.cipf.es/opencga-beta/rest/job/42/table?sessionid=6tpGsjjphxDMkCG74E89qMZTYTU26WGTXXoDLApUYoOJL07WyM2NGd0SbMhKe2Ll&filename=significant_your_annotation_0.1.txt&colNames=Term,Term%20size,Term%20size%20(in%20genome),List1%20annotateds,List1%20unannotateds,list1_per,List2%20annotateds,List2%20unannotateds,list2_per,List1%20annotated%20genes,List2%20annotated%20genes,Odds%20ratio%20(log%20e),pvalue,Adjusted%20pvalue,Term%20annotation%20%%20per%20list,Annotated%20ids&colVisibility=1,0,0,1,1,0,1,1,0,0,0,1,1,1,0,0&_dc=1326279394677&page=1&start=0&limit=5
+         &filter=%5B%7B%22property%22%3A%22Term%22%2C%22value%22%3Aundefined%7D%5D&callback=Ext.data.JsonP.callback2
+         *
+         */
+        if (rows == null) {
+            rows = this.numRows;
+        }
+        var itemsPerPage = rows;
+
+        this.st = Ext.create('Ext.data.Store', {
+            fields: filteredColNames, //las colNames no pueden tener el caracter "."
+            pageSize: itemsPerPage,
+            remoteSort: false,
 //		    remoteFilter:true,//TODO o no
-	    	proxy: {
-		        type: 'jsonp',
-		        url : url,
-		        reader: {
-		            type: 'json',
-		            root: 'items',
-	            	totalProperty: 'total'
-		        }
-	    	}
-		});
-		this.st.loadPage(1);
-		
-		var altura = 75+22*itemsPerPage;
-		this.table = Ext.create('Ext.grid.Panel', {
-			title: /*this.tableName+" - "+*/this.fileName,
-			collapsible:this.collapsible,
-			flex:this.flex,
-		    store: this.st,
-		    border:this.border,
-		    cls:this.cls,
-		    columns: filteredGridNames,
-		    height: altura,
+            proxy: {
+                url: url,
+                type: 'ajax',
+                reader: {
+                    type: 'json',
+                    root: 'items',
+                    totalProperty: 'total'
+                },
+                extraParams: {
+                    colNames: this.colNames.join(','),
+                    colVisibility: this.colVisibilty.join(',')
+                },
+                actionMethods: {
+                    read: 'POST'
+                }
+            }
+        });
+        this.st.loadPage(1);
+
+        var altura = 75 + 30 * itemsPerPage;
+        this.table = Ext.create('Ext.grid.Panel', {
+            title: /*this.tableName+" - "+*/this.fileName,
+            collapsible: this.collapsible,
+            flex: this.flex,
+            store: this.st,
+            border: this.border,
+            cls: this.cls,
+            columns: filteredGridNames,
+            height: altura,
 //			selType: 'cellmodel',
-			dockedItems: [{
-		        xtype: 'pagingtoolbar',
-		        store: this.st,   // same store GridPanel is using
-		        dock: 'top',
-		        displayInfo: true
-	    	}],
-		    renderTo: this.targetId
-		});	
-		
-	}
+            dockedItems: [
+                {
+                    xtype: 'pagingtoolbar',
+                    store: this.st,   // same store GridPanel is using
+                    dock: 'top',
+                    displayInfo: true
+                }
+            ],
+            renderTo: this.targetId
+        });
+
+    }
 };
 
 /***/
-ResultTable.prototype.parse = function (data){
-	var _this = this;
-	var lines = data.split("\n");
-	var objLines=[];
-	for ( var i = 0; i < lines.length; i++) {
-		if(lines[i].charAt(0)!="#" && lines[i]!=""){
-			var fields = lines[i].split("\t");
-			var obj = {};
-			for ( var j = 0; j < fields.length; j++) {
-				if(fields[j]!=""){
-					obj[_this.tableSkel.colNames[j].replace(/ /g,"_")]=fields[j];
-				}
-			}
-			objLines.push(obj); 
-		}
-	}
-	return objLines;
-};
-ResultTable.prototype.getTemplate = function (keys){
-	var str = "<p>";
-	for ( var i = 0; i < keys.length; i++) {
-		str+='<span class="dis s90">'+keys[i]+' </span> {'+keys[i].replace(/ /g,"_")+'} &nbsp; &nbsp; &nbsp;';
-	}
-	str +="</p>";
-	return  new Ext.XTemplate(	str);
-};
-
-/*
- * Copyright (c) 2012 Francisco Salavert (ICM-CIPF)
- * Copyright (c) 2012 Ruben Sanchez (ICM-CIPF)
- * Copyright (c) 2012 Ignacio Medina (ICM-CIPF)
- *
- * This file is part of JS Common Libs.
- *
- * JS Common Libs is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 2 of the License, or
- * (at your option) any later version.
- *
- * JS Common Libs is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with JS Common Libs. If not, see <http://www.gnu.org/licenses/>.
- */
-
-function ResultWidget(args){
-	var _this = this;
-	this.id = "ResultWidget"+ Math.round(Math.random()*10000);
-	this.targetId = null;
-	
-	if (args != null){
-		if (args.targetId!= null){
-        	this.targetId = args.targetId;       
-        }
-		if (args.application!= null){
-        	this.application = args.application;       
-        }
-		if (args.app!= null){
-        	this.app = args.app;       
+ResultTable.prototype.parse = function (data) {
+    var _this = this;
+    var lines = data.split("\n");
+    var objLines = [];
+    for (var i = 0; i < lines.length; i++) {
+        if (lines[i].charAt(0) != "#" && lines[i] != "") {
+            var fields = lines[i].split("\t");
+            var obj = {};
+            for (var j = 0; j < fields.length; j++) {
+                if (fields[j] != "") {
+                    obj[_this.tableSkel.colNames[j].replace(/ /g, "_")] = fields[j];
+                }
+            }
+            objLines.push(obj);
         }
     }
-	
-	this.adapter = new OpencgaManager();
-	
-	this.adapter.onJobResult.addEventListener(function (sender, data){
-//		console.log(data);
-		_this.data = JSON.parse(data);
-		Ext.getBody().unmask();
-		_this.panel.setLoading(false);
-		_this.render();
-	});
-
-	this.panelId=null;
-	this.networkViewerId = null;
-	this.genomeMapsId = null;
-	
-	this.resultTables = new Object();
-	this.resultHistograms = new Object();
-	this.resultGCharts = new Object();
-	this.variantFiles = new Object();
-	
-//	this.onRendered = new Event();
-	
-	this.onViewRendered = new Event();
-	this.onViewRendered.addEventListener(function (sender, targetId){
-		_this.drawTables();
-		_this.drawHistograms();
-		_this.drawGCharts();
-		_this.drawApplicationItems();
-	});
+    return objLines;
 };
-
-ResultWidget.prototype.draw = function (sid, record){
-//	console.log(record.data);
-	this.record = record;
-	this.jobId = this.record.data.id;
-	this.id = this.jobId+this.id;
-	this.panelId = "ResultWidget_"+this.jobId;
-	this.networkViewerId = this.panelId+"_CellBrowserId";
-	this.genomeMapsId = this.panelId+"_GenomeMapsId";
-	
-	
-		this.panel = Ext.getCmp(this.panelId);
-		if(this.panel==null){
-			this.panel = Ext.create('Ext.panel.Panel', {
-				id :this.panelId,
-				border: 0,
-			    title: this.record.data.name,
-			    closable:true,
-			    autoScroll:true
-		//		html: this.tpl.applyTemplate(outputItems)
-			});
-			
-			Ext.getCmp(this.targetId).add(this.panel);
-			Ext.getCmp(this.targetId).setActiveTab(this.panel);
-			this.panel.setLoading("Loading job info...");
-			Ext.getBody().mask();
-			
-			//this.adapter.jobResult(this.jobId, "json", sid);
-			//accountId, sessionId, bucketname, jobId, format
-			this.adapter.jobResult($.cookie("bioinfo_account"), sid, this.jobId, "json");
-			//this.adapter.jobResult(this.jobId, "json", sid);
-		}else{
-//			this.panel.setLoading(false);
-			Ext.getCmp(this.targetId).setActiveTab(this.panel);
-		}
-};
-
-ResultWidget.prototype.render = function (){
-	var _this=this;
-	
-	console.log(this.application);
-	debugger
-		if(this.data.outputItems.length != 0){
-			
-			var outputItems = this.data.inputItems.concat(this.data.outputItems);
-			
-			//obtener todos los grupos quitando los repetidos
-			var obj = {};
-			for(var i = 0; i < outputItems.length; i++){
-				var group = outputItems[i].group;
-				
-				if(group != "" ){ //no meter items con grupo distinto a ""
-					if(group.indexOf(".")!=-1){//comprobar si alguno tiene un subgrupo
-						var parent_group = group.split(".")[0];
-						var sub_group = group.split(".")[1];
-						if(obj[parent_group]==null) {
-							obj[parent_group]={};
-						}
-						if(obj[parent_group][sub_group]==null){
-							obj[parent_group][sub_group]=[];
-						}
-						
-						//ESTE if quita los resultados para los pvalue = 0.005, 0.01, 0.1, deja solo los 0.05
-						if(this.checkPValue(outputItems[i].title)){
-							obj[parent_group][sub_group].push(outputItems[i]);
-						}
-					}else {
-						if(obj[group]==null){
-							obj[group]={};
-							obj[group]["items"]=[];
-						}
-						
-						//QUITAR la cadena de texto ${pvalue} si existe y la sustituye por 0.05
-						this.renamePValue(outputItems[i]);
-						obj[group]["items"].push(outputItems[i]);			
-					}
-					
-
-				}
-			}
-
-			if(this.application == 'renato' || this.application == 'variant'){
-				obj["Interactive Results"]={items:[]};
-			}
-			console.log(obj);
-			
-			var topLink = Ext.create('Ext.container.Container', {html:'<a name="'+this.jobId+'top"></a>'});
-			var info = Ext.create('Ext.container.Container', {
-				margin: "15 0 5 15",
-				html:'<p >The job named <span class="info">'+this.record.data.name+' </span>'+
-				'was launched on <span class="err">'+this.record.data.date+' </span>'+
-				//'and has been visited <span class="dis">'+this.record.data.visites+' times</span></p>'+
-				//'You can download the job results by pressing the <b>download</b> button.'
-				'<br>'
-			});
-			
-			var result = [];
-			//Solo grupos juntos al principio
-			var i=1;
-			for (key in obj){
-				var groupId = this.jobId+key.replace(/\s/g, '_')+"group";
-				var groupBox = Ext.create('Ext.container.Container', {
-					padding:"0 0 2 15",
-					width:(key.length*14),
-					//html:'<p class="s110 emph">'+i+'. <a href="#'+key+'">'+key+'</a></p>'
-					groupId:groupId,
-					html:'<span class="s110 emph">'+i+'. '+key+'</span>',
-					listeners:{
-						afterrender:function(){
-							this.getEl().addClsOnOver("ssel u");
-							this.getEl().addCls("dedo");
-							var groupId = this.groupId;
-							//inlineblock
-							this.getEl().on("click",function(){
-								var pos = $('#'+groupId).position().top;
-								$(_this.panel.getEl().dom).children().scrollTop(pos);
-							});
-						}
-					}
-				});
-				result.push(groupBox);
-				i++;
-			}
-			
-			//Grupos con resultados a continuacion
-			var i=1;
-			for (key in obj){
-				//Grupo
-				var infoId = (this.jobId+key+"info").replace(/ /gi, "");
-				var groupId = this.jobId+key.replace(/\s/g, '_')+"group";
-				var groupBox = Ext.create('Ext.container.Container', {
-					infoId:infoId,
-					groupName:key,
-					padding:"60 15 5 15",
-					//html:'<p class="panel-border-bottom"><span class="s140 emph">'+i+'. <a name="'+key+'" href="#'+this.jobId+'top">'+key+'</a>'+
-						//' </span><span class="info" id="'+infoId+'"></span></p>',
-					html:'<p id="'+groupId+'" class="panel-border-bottom"><span class="s140 emph">'+i+'. '+key+' &nbsp;&nbsp; &uarr;'+
-						' </span><span class="info" id="'+infoId+'"></span></p>',
-					listeners:{
-						afterrender:function(){
-							this.getEl().addClsOnOver("ssel");
-							this.getEl().addCls("dedo");
-							this.getEl().on("click",function(){
-								$(_this.panel.getEl().dom).children().scrollTop(0);
-							});
-							
-							var text = _this.getInfo(this.groupName);
-							if(text!=""){
-								$("#"+this.infoId).html("+info");
-								var infoTip = Ext.create('Ext.tip.Tip',{
-									html:text,
-									listeners:{
-										show:function(){
-											var este = this;
-											this.getEl().on("mouseleave",function(){
-												este.hide();
-											});
-										}
-									}
-								});
-								$("#"+this.infoId).mouseover(function(ev){
-									$(this).css({cursor:"pointer"});
-									infoTip.showAt(ev.clientX,ev.clientY);
-								});
-								$("#"+this.infoId).click(function(){
-									infoTip.hide();
-								});
-							}
-							
-						}
-					}
-					
-				});
-				result.push(groupBox);
-				
-				//Resultados - se le pasa el array de items
-				result.push(this.getResults(obj[key].items));
-				
-				//Comprobamos si tiene subgrupos 1 - nivel solo
-				var c = 1;
-				for(clave in obj[key]){
-					if (clave != "items"){
-						//Grupo
-						var groupBox = Ext.create('Ext.container.Container', {
-							padding:"15 15 5 30",
-							cls:"inlineblock",
-							html:'<p class="panel-border-bottom s120 emph">'+i+'.'+c+' '+clave+'</p>'
-						});
-						//si la clave es Your annotation tratarlo de otra manera... para mas adelante
-//						console.log(clave)
-						result.push(groupBox);
-						
-//						debugger
-						//Resultados - se le pasa el array de items
-						result.push(this.getResults(obj[key][clave]));
-					c++;
-					}
-				}//subgrupos
-				i++;
-			}
-			
-			
-			var downloadButton = Ext.create('Ext.button.Button', {
-				 text: 'Download',
-				 margin: "0 0 25 15",
-				 handler: function (){
-					 _this.adapter.download(_this.jobId, $.cookie('bioinfo_sid'));
-				 }
-			});
-			
-
-			var deleteJobButton = Ext.create('Ext.button.Button', {
-				 text: 'Delete',
-				 margin: "0 0 25 30",
-				 handler: function (){
-					 Ext.Msg.confirm("Delete job", "Are you sure you want to delete this job?", function (btnClicked){
-//						 console.log(btnClicked);
-						 if(btnClicked == "yes") {
-							 _this.adapter.onDeleteJob.addEventListener(function (sender, data){
-								 var msg = "";
-								 if(data.response.indexOf("OK") != -1) {
-									 Ext.getCmp(_this.targetId).getActiveTab().close();
-									 msg = "The job has been succesfully deleted.";
-								 }
-								 else {
-									 msg = "ERROR: could not delete job.";
-								 }
-								 Ext.Msg.alert("Delete job", msg);
-							 });
-//							 console.log("Job id: "+_this.jobId+" Cookie: "+$.cookie('bioinfo_sid'));
-							 _this.adapter.deleteJob(_this.jobId, $.cookie('bioinfo_sid'));
-						 }
-					 });
-				 }
-			});
-
-
-			this.panel.add(topLink);
-			this.panel.add(info);
-			//this.panel.add(downloadButton);
-			//this.panel.add(deleteJobButton);
-			this.panel.add(result);
-
-			_this.onViewRendered.notify();			
-
-		}//else
-};
-
-
-ResultWidget.prototype.getResults = function (items){
-	//Resultados
-	var boxes = [];
-	for (var j = 0; j < items.length; j++){
-		var item = items[j];
-		
-		//Obtener el container con el resultado
-		var itemBox = this.showInfo(item);
-		boxes.push(itemBox);
-		
-		//Añadir el container para resultados adicionales segun el type y el tag si procede
-		var container = this.showTypeInfo(item);
-		if(container){
-			boxes.push(container);
-		}
-		var container = this.showTagInfo(item);
-		if(container!=null){
-			boxes.push(container);
-		}
-	}
-	var itemsBox = Ext.create('Ext.container.Container', {
-		layout: {type: 'table',columns: 1, tableAttrs: {style: {width: '100%'}}},					       
-		items:boxes
-	});
-	return itemsBox;
-};
-
-
-ResultWidget.prototype.showInfo = function (item){
-	var _this=this;
-	
-	
-	var itemTpl = new Ext.XTemplate(
-//			'<tpl for="tags">',
-//			'<span class="ok">{.} </span>:: ',
-//			'</tpl>',
-//			'<span class="err">{type} </span>',
-			'<span class="key">{title} </span>',
-			'<span class="{[ this.setCSS(values) ]}">{value}</span><br>'
-	,
-	{
-	 // XTemplate configuration:
-	disableFormats: true,
-    // member functions:
-	setCSS: function(item){
-    	switch(item.type){
-    		case 'FILE':
-			return 'file';
-			break;
-			case 'MESSAGE':
-				//Setting species code 
-				if (item.name == "species"){
-					_this.species=item.value;
-				}
-			return 'message';
-			break;
-    	}
+ResultTable.prototype.getTemplate = function (keys) {
+    var str = "<p>";
+    for (var i = 0; i < keys.length; i++) {
+        str += '<span class="dis s90">' + keys[i] + ' </span> {' + keys[i].replace(/ /g, "_") + '} &nbsp; &nbsp; &nbsp;';
     }
-    
-	});
-	//fin template
-	
-	return itemBox = Ext.create('Ext.container.Container', {
-		data:item,
-		datos:item,
-		margin:"0 10 0 20",
-		padding:5,
-		tpl:itemTpl,
-		cls:"inlineblock",
-		listeners:{
-			afterrender:function(){
-				var datos = this.datos;
-				if(this.datos.type == 'FILE'){
-					this.getEl().addClsOnOver("encima");
-					this.getEl().addCls("whiteborder");
-					
-	    			if(_this.application=="variant" && datos.title.toLowerCase().indexOf("filter")!=-1){
-	    				_this.filteredVcfFile=datos.value;
-	    			}
-					
-	    			this.getEl().on("click",function(){
-	    				console.log(datos);
-	    				var value = datos.value.trim();
-		    			_this.adapter.poll($.cookie('bioinfo_account'),$.cookie('bioinfo_sid'), _this.jobId, value, true);
-	    			});
-	    		}
-			}
-		}
-	});
-};
-
-
-ResultWidget.prototype.showTypeInfo = function (item){
-	var _this=this;
-	var box = Ext.create('Ext.container.Container',{
-		margin:"0 10 0 10",
-		padding:5
-	});
-	switch(item.type){
-		case 'IMAGE':
-				/*width="400" height="200" */
-			var filename = item.value.trim();
-			box.html =  '<div><img src="'+_this.adapter.pollurl($.cookie('bioinfo_account'),$.cookie('bioinfo_sid'), _this.jobId,filename)+'"></div>';
-			return box;
-		break;
-		default: return null;
-	}
-};
-
-ResultWidget.prototype.showTagInfo = function (item){
-	var _this=this;
-	var box = Ext.create('Ext.container.Container',{
-		margin:"0 10 0 10",
-		flex:1,
-		padding:5,
-		html:""
-	});
-	for(var i = 0; i < item.tags.length ; i++){
-    	switch(item.tags[i]){
-    		case 'TABLE':
-        		var value = item.value.trim();
-        		var id = _this.jobId+value+item.tags;
-				_this.resultTables[id] =  new ResultTable (_this.jobId, value, item.tags,{targetId:'resultTable_'+id});
-//							_this.resultTables[id].onRendered.
-				box.html +=  '<div id="resultTable_'+id+'" style="padding:5px;"></div>';
-				return box;
-			break;
-    		case 'HISTOGRAM':
-    			var id = "histogram_"+_this.jobId+item.value+item.tags;
-    			_this.resultHistograms[id] = item.value;
-    			box.html =  '<div id="'+id+'" style="padding:5px;"></div>';
-    			return box;
-			break;
-    		case 'GCHART':
-    			var id = 'gchart_'+item.name;
-    			_this.resultGCharts[id] = item.value;
-    			box.html =  '<div id="'+id+'"></div>';
-    			return box;
-    		break;
-    		case 'CONSEQUENCE_TYPE_VARIANTS':
-    			this.variantFiles[item.name] = item.title;
-    		break;
-    	}
-	}
-	return null;
-};
-
-ResultWidget.prototype.drawTables = function (){
-//	console.log(this.resultTables);
-	for(id in this.resultTables){
-		this.resultTables[id].draw();
-	}	
-};
-
-ResultWidget.prototype.drawHistograms = function (){
-	//se dibujan todas las tablas
-//	console.log(this.resultHistograms);
-	for(id in this.resultHistograms){
-		
-		var adapterPoll = new OpencgaManager();
-		adapterPoll.onPoll.addEventListener(function(sender,data){
-			if(data!=""){
-				var lines = data.split("\n");
-				var fields=[];
-				var names=[];
-				var values=[];
-				var normValues=[];
-				var total = 0;
-				for ( var i = 0; i < lines.length; i++) {
-					fields.push(lines[i].split("\t"));
-					if(fields[i][0]!=""){
-						names.push(fields[i][0]);
-					}
-					if(fields[i][1]!=null){
-						total = total + parseFloat(fields[i][1]);
-						values.push(fields[i][1]);
-					}
-				}
-				for ( var i = 0; i < values.length; i++) {
-					normValues.push(Math.round(parseFloat(values[i])/total*100));
-				}
-				names = names.toString().replace(/,/gi,"|");
-				var img = '<img src="https://chart.googleapis.com/chart?cht=p&chs=600x300&chd=t:'+normValues+'&chl='+names+'&chtt=Consequence+types&chts=000000,14.5">';
-				document.getElementById(id).innerHTML=img;
-			}
-		});
-		
-		//adapterPoll.poll(this.jobId,this.resultHistograms[id],false,$.cookie('bioinfo_sid'));
-		adapterPoll.poll($.cookie("bioinfo_account"), $.cookie('bioinfo_sid'), this.jobId, this.resultHistograms[id], false);
-	}	
-};
-ResultWidget.prototype.drawGCharts = function (){
-	for(id in this.resultGCharts){
-		drawChart(id, this.resultGCharts[id]);
-	}
-};
-
-ResultWidget.prototype.drawApplicationItems  = function (){
-	var _this=this;
-	var viewerContainer = Ext.create('Ext.container.Container', {
-		id:this.application+this.id+"Container",
-		border: true,
-		margin:"50 50 0 50",
-		html:'<div class="greyborder" id="'+this.id+'Container"></div><div style="height:40px"></div>'
-	});
-		
-	switch (this.application){
-	case "variant":
-		viewerContainer.on("afterrender",function(){
-			_this.createGenomeViewer(_this.id+"Container");
-		});
-		break;
-	case "renato":
-		//***********bar
-		var pbar = Ext.create('Ext.ProgressBar', {id:this.id+'pbar',margin:"5 0 0 50",width: 500});
-		// Wait for 5 seconds, then update the status el (progress bar will auto-reset)
-		pbar.wait({
-			interval: 500, //bar will move fast!
-			duration: 50000,
-			increment: 15,
-			text: 'Getting database information and drawing the network, please wait...',
-			scope: this,
-			fn: function(){
-				pbar.updateText('Done!');
-			}
-		});
-		//Add de bar to the main panel
-		this.panel.add(pbar);
-		/*************************/
-		viewerContainer.on("afterrender",function(){
-			_this.createCellBrowser(_this.id+"Container");
-		});
-		break;
-	
-	default: return null;
-	}
-		
-	this.panel.add(viewerContainer);
-};
-
-
-ResultWidget.prototype.createGenomeViewer = function (targetId){
-	var _this = this;
-
-	var width = Ext.getCmp(this.application+targetId).getWidth();
-	var height = Ext.getCmp(this.application+targetId).getHeight();
-		
-	//var genomeViewer = new GenomeViewer(targetId, AVAILABLE_SPECIES[0],{
-		//version:"",
-		//zoom:75,
-		//width:width-2,
-		//height:height-2
-	//});
-	//genomeViewer.setMenuBar(this.getGenomeViewerResultBar(genomeViewer));
-	
-
-	genomeViewer = new GenomeViewer(targetId, DEFAULT_SPECIES,{
-		sidePanelCollapsed:true,
-		width:width-2,
-		height:700-2
-	});
-	genomeViewer.afterRender.addEventListener(function(sender,event){
-		_this.app.setTracks(genomeViewer);
-		genomeViewer.addSidePanelItems();
-		var variantFilterWidget = new VariantFilterWidget(_this.jobId,{
-				width:width-2,
-				targetId:_this.application+targetId,
-				viewer:genomeViewer,
-				fileNames:_this.variantFiles
-		});
-	});
-	genomeViewer.draw();
-	
-	var adapter = new OpencgaManager();
-	adapter.onPoll.addEventListener(function(sender, data){
-		if(data.indexOf("ERROR")!=1){
-			console.error(data);
-		}
-		var vcfDataAdapter = new VCFDataAdapter(new StringDataSource(data),{async:false,species:genomeViewer.species});
-		var vcfTrack = new TrackData("VCF file",{
-			adapter: vcfDataAdapter
-		});
-		genomeViewer.addTrack(vcfTrack,{
-			id:"VCF file",
-			featuresRender:"MultiFeatureRender",
-			histogramZoom:50,
-			height:150,
-			visibleRange:{start:0,end:100},
-			featureTypes:FEATURE_TYPES
-		});
-		//var feature = vcfDataAdapter.featureCache.getFirstFeature();
-		//genomeViewer.region.load(feature);
-		//genomeViewer.setRegion({sender:""});
-//		genomeViewer.setZoom(75);
-	});
-	
-	
-//	console.log(this.filteredVcfFile)
-	if(this.filteredVcfFile != null){
-		adapter.poll($.cookie("bioinfo_account"), $.cookie('bioinfo_sid'), _this.jobId, this.filteredVcfFile, false);
-		//adapter.poll(_this.jobId, this.filteredVcfFile, false, $.cookie('bioinfo_sid'));
-	}else{
-		console.log("No filtered VCF file.");
-	}
-};
-
-
-
-var mostSignificativesFeatures = new Array();
-ResultWidget.prototype.createCellBrowser = function (targetId){
-	var _this = this;
-	record = this.record;
-	
-	//hide network-viewer, all nodes mut be rendered before show
-	Ext.getCmp(this.application+targetId).disable();
-	
-	var width = Ext.getCmp(this.application+targetId).getWidth();
-	var height = Ext.getCmp(this.application+targetId).getHeight();
-	
-	//Pako creating cellBrowser
-	this.networkViewer = new NetworkViewer(targetId,this.getSpeciesItem(this.species),{
-		width:width-2,
-		height:height-2
-	});
-//	this.networkViewer.setSpeciesMenu(AVAILABLE_SPECIES);
-	this.networkViewer.draw();
-
-	
-	
-	
-	//setting a empty data and format, nodes will be draw later using the interface
-	var dataset = new GraphDataset();
-	var layout = new LayoutDataset();
-	var formatter = new NetworkDataSetFormatter({
-		"defaultFormat": {"type":"LineEdgeNetworkFormatter","opacity":1, "fill":"#000000", "radius":"5", "strokeWidth":"1", "stroke":"#000000", "size":"2", "title":{"fontSize":10, "fill":"#000000"}},
-		"selected": {"opacity":0.9, "fill":"#FF0000", "radius":"5", "stroke":"#000000",  "size":"2"},
-		"over": {"opacity":1, "fill":"#DF0101", "radius":"5", "stroke":"#000000",   "size":"2", "strokeWidth":"1"}
-	}, 
-	{
-		"defaultFormat": {  "opacity":0.8,"stroke":"#000000", "strokeWidth":"1", "strokeOpacity":0.5, "title":{"fontSize":6, "fontColor":"#000000"}},
-		"selected": {"stroke":"#DF0101", "fill":"#FF0000"},
-		"over": { "stroke":"#DF0101","strokeOpacity":1, "strokeWidth":"4"}
-	},
-//		{ "labeled":false, "height":height,"width":this.width,"right":this.width,"backgroundColor":"#FFFFFF", "balanceNodes":false, "nodesMaxSize":4, "nodesMinSize":2});		
-	{ "labeled":false, "backgroundColor":"#FFFFFF", "balanceNodes":false, "nodesMaxSize":4, "nodesMinSize":2});		
-	formatter.dataBind(dataset);
-	layout.dataBind(dataset);
-	
-	formatter.setHeight(height - 140);
-	formatter.setWidth(width-2-13);
-	this.networkViewer.drawNetwork(dataset, formatter, layout);
-	
-	
-	
-	//Getting significant_your_annotation_0.05.txt
-	var adapter2 = new WumRestAdapter();
-	adapter2.onPoll.addEventListener(function(sender, data){
-		var lines = data.split("\n");
-		var significativesFeatures = new Array();
-		for ( var i = 1; i < lines.length; i++) {
-			var column = 13;
-			if(record.data.toolName == "fatiscan"){
-				if(lines[i].split("\t").length==7){
-					//we are in the case of logistic model
-					column = 6;
-				}
-			}
-			var significativeValue = lines[i].split("\t")[column];
-			if(significativeValue < 1000000){
-				significativesFeatures.push(lines[i].split("\t")[0]);
-			} 
-		}
-		console.log('significativesFeatures.length: '+significativesFeatures.length);
-		
-		
-		/** TFBS **/
-		var adapter3 = new WumRestAdapter();
-		adapter3.onPoll.addEventListener(function(sender, data){
-			var genes = data.split("\n");
-			/** Para elminar la linea en blanco: Gorrion Rules! **/
-			genes.pop();
-			console.log('genes.length: '+genes.length);
-			_this.loadNetworkOnCellBrowser(genes, significativesFeatures, targetId);
-		});
-
-		var file = "clean_list1.txt";
-		if(record.data.toolName == "fatiscan")
-			file = "id_list.txt";
-		adapter3.poll(_this.jobId, file, false, $.cookie('bioinfo_sid'));
-	});
-	adapter2.poll(this.jobId, "significant_your_annotation_0.05.txt", false, $.cookie('bioinfo_sid'));
-	//END getting significant_your_annotation_0.05.txt
-		
-	
-	
-	
-	// By Nacho
-	// getting 50 most significant genes
-	console.log('getting ranked_list...');
-	var cleanListWumAdapater = new WumRestAdapter();
-	cleanListWumAdapater.onPoll.addEventListener(function(sender, data) {
-		var lines = data.split("\n");
-		var numGenes = lines.length;
-		var cont = 0;
-		console.log('getting top clean_list...');
-		for(var i = 0; cont < 50 && i < numGenes; i++) {
-			if(lines[i].indexOf('#') < 0) {
-//				console.log('getting top ranked_list... '+lines[i]);
-//				console.log('getting top ranked_list... '+lines[i].split("\t")[0]);
-				mostSignificativesFeatures[lines[i].split("\t")[0]] = true;
-				cont++;
-			}
-		}
-		cont = 0;
-		console.log('getting bottom clean_list...');
-		for(var i = numGenes-1; cont < 50 && i > 0; i--) {
-			if(lines[i].indexOf('#') < 0) {
-				mostSignificativesFeatures[lines[i].split("\t")[0]] = true;
-				cont++;
-			}
-		}
-	});
-	cleanListWumAdapater.poll(this.jobId, "clean_list1.txt", false, $.cookie('bioinfo_sid'));
-	// END getting 50 most significant genes
-	
-	
-	
-	
-	// getting ranked_list
-	console.log('getting ranked_list...');
-	var rankedListWumAdapater = new WumRestAdapter();
-	rankedListWumAdapater.onPoll.addEventListener(function(sender, data) {
-		var lines = data.split("\n");
-		var numGenes = lines.length;
-		var cont = 0;
-		console.log('getting top ranked_list...');
-		for(var i = 0; cont < 50 && i < numGenes; i++) {
-			if(lines[i].indexOf('#') < 0) {
-				mostSignificativesFeatures[lines[i].split("\t")[0]] = true;
-				cont++;
-			}
-		}
-		cont = 0;
-		console.log('getting bottom ranked_list...');
-		for(var i = numGenes-1; cont < 50 && i > 0; i--) {
-			if(lines[i].indexOf('#') < 0) {
-				mostSignificativesFeatures[lines[i].split("\t")[0]] = true;
-				cont++;
-			}
-		}
-	});
-	rankedListWumAdapater.poll(this.jobId, "ranked_list.txt", false, $.cookie('bioinfo_sid'));
-	//END getting ranked_list	
-		
-};
-
-
-ResultWidget.prototype.loadNetworkOnCellBrowser = function (genes, tfbs, targetId){
-	var _this = this;
-
-	//tfbs and mirna nodes are rendered
-	//2 indicates that mirna and tfbs are done 
-	var nodesRendered = 0;
-
-	//Getting tfbs by gene
-	var cellBaseManager = new CellBaseManager(this.networkViewer.species);
-	cellBaseManager.success.addEventListener(function (evt, response){
-		var data_tfbs = response.result;
-		var tfbsByGene = new Object();
-		for (var i = 0; i < data_tfbs.length; i++){
-			for ( var j = 0; j < data_tfbs[i].length; j++) {
-				if(tfbs.toString().indexOf(data_tfbs[i][j].tfName) != -1){
-					if (tfbsByGene[data_tfbs[i][j].tfName] == null){
-						tfbsByGene[data_tfbs[i][j].tfName] = new Object();
-					}
-
-					if(tfbsByGene[data_tfbs[i][j].tfName][genes[i]] == null){
-						tfbsByGene[data_tfbs[i][j].tfName][genes[i]] = true;
-					}
-				}
-			}
-		}
-		console.log(tfbsByGene);
-		console.log(data_tfbs.length);
-		console.log('contando TFBSs...');
-		// check the number of elemts to be rendered
-		// if there are more than 500 then select the most significant
-		var numElements = 0;
-		for ( var tf in tfbsByGene) {
-			if(numElements > 500) {
-				break;
-			}
-			for ( var gene in tfbsByGene[tf]) {
-				numElements++;
-			}
-		}
-		console.log('menos de 500: '+numElements);
-		for ( var tf in tfbsByGene) {
-			_this.networkViewer.networkWidget.getDataset().addNode(tf, {type:"tf"});
-			var verticeId = _this.networkViewer.networkWidget.getDataset().getVerticesCount() - 1;
-			_this.networkViewer.networkWidget.getFormatter().getVertexById(verticeId).getDefault().setFill("#DF0101");
-
-//			console.log(tfbsByGene[tf]);
-//			console.log(_this.networkViewer.networkWidget.getFormatter().getVertexById(verticeId));
-			for ( var gene in tfbsByGene[tf]) {
-				if(numElements < 500 || mostSignificativesFeatures[gene] == true) {
-//					console.log(gene);
-					/** Conecto los tfbs con sus genes **/
-					if(_this.networkViewer.networkWidget.getDataset().getVertexByName(gene).length == 0){
-						_this.networkViewer.networkWidget.getDataset().addNode(gene, {type:"gene"});
-					}
-
-//					console.log(_this.networkViewer.networkWidget.getDataset());
-					// getVertexByName returns an array
-
-					var vertexGeneId = _this.networkViewer.networkWidget.getDataset().getVertexByName(gene)[0].id;
-					var vertexTfbsId = _this.networkViewer.networkWidget.getDataset().getVertexByName(tf)[0].id;
-					_this.networkViewer.networkWidget.getDataset().addEdge("tfbs_" + vertexGeneId + "_" + vertexTfbsId, vertexTfbsId, vertexGeneId);
-					_this.networkViewer.networkWidget.getFormatter().getVertexById(vertexGeneId).getDefault().setFill("#0000FF");
-				}
-			}
-		}
-
-
-		_this.networkViewer.networkWidget.getLayout().getLayout("neato");
-		_this.networkViewer.networkWidget.getLayout().layoutDone.addEventListener(function (evt){
-			nodesRendered++;
-			if(nodesRendered==2){
-				Ext.getCmp(_this.id+'pbar').destroy();
-				Ext.getCmp(_this.application+targetId).enable();
-			}
-		});
-	});
-	if(genes.length>0){
-		cellBaseManager.get("feature", "gene", genes, "tfbs");
-	}
-	//getting mirna target by gene
-	var cellBaseManagerMirna = new CellBaseManager(this.networkViewer.species);
-	cellBaseManagerMirna.success.addEventListener(function (evt, response){
-		var data_tfbs = response.result;
-		var tfbsByGene = new Object();
-		for (var i = 0; i < data_tfbs.length; i++){
-			for ( var j = 0; j < data_tfbs[i].length; j++) {
-
-				if(tfbs.toString().indexOf(data_tfbs[i][j].mirbaseId) != -1){
-					if (tfbsByGene[data_tfbs[i][j].mirbaseId] == null){
-						tfbsByGene[data_tfbs[i][j].mirbaseId] = new Object();
-					}
-
-					if(tfbsByGene[data_tfbs[i][j].mirbaseId][genes[i]] == null){
-						tfbsByGene[data_tfbs[i][j].mirbaseId][genes[i]] = true;
-					}
-				}
-			}
-		}
-		console.log(tfbsByGene);
-		console.log(data_tfbs.length);
-		console.log('contando miRNAs...');
-		// check the number of elemts to be rendered
-		// if there are more than 500 then select the most significant
-		var numElements = 0;
-		for ( var tf in tfbsByGene) {
-			if(numElements > 500) {
-				break;
-			}
-			for ( var gene in tfbsByGene[tf]) {
-				numElements++;
-			}
-		}
-		console.log('menos de 500: '+numElements);
-		for ( var mirna in tfbsByGene) {
-			_this.networkViewer.networkWidget.getDataset().addNode(mirna, {type:"mirna"});
-			var verticeId = _this.networkViewer.networkWidget.getDataset().getVerticesCount() - 1;
-			_this.networkViewer.networkWidget.getFormatter().getVertexById(verticeId).getDefault().setFill("red");
-			for ( var gene in tfbsByGene[mirna]) {
-				if(numElements < 500 || mostSignificativesFeatures[gene] == true) {
-//					console.log(gene);
-					if(_this.networkViewer.networkWidget.getDataset().getVertexByName(gene).length == 0){
-//						if(_this.networkViewer.networkWidget.getDataset().getVertexByName(gene) == null) {
-						_this.networkViewer.networkWidget.getDataset().addNode(gene, {type:"gene"});
-					}
-
-					var vertexGeneId = _this.networkViewer.networkWidget.getDataset().getVertexByName(gene)[0].id;
-					var vertexTfbsId = _this.networkViewer.networkWidget.getDataset().getVertexByName(mirna)[0].id;
-					_this.networkViewer.networkWidget.getDataset().addEdge("tfbs_" + vertexGeneId + "_" + vertexTfbsId, vertexTfbsId, vertexGeneId);
-					_this.networkViewer.networkWidget.getFormatter().getVertexById(vertexGeneId).getDefault().setFill("blue");
-
-					var edgeId = _this.networkViewer.networkWidget.getDataset().getEdgesCount() - 1;
-
-
-					_this.networkViewer.networkWidget.getFormatter().changeEdgeType(edgeId, "CutDirectedLineEdgeNetworkFormatter");
-				}
-
-			}
-		}    
-
-
-		_this.networkViewer.networkWidget.getLayout().getLayout("neato");
-		_this.networkViewer.networkWidget.getLayout().layoutDone.addEventListener(function (evt){
-			nodesRendered++;
-			if(nodesRendered==2){
-				Ext.getCmp(_this.id+'pbar').destroy();
-				Ext.getCmp(_this.application+targetId).enable();
-			}
-		});
-
-	});
-	if(genes.length>0){
-		cellBaseManagerMirna.get("feature", "gene", genes, "mirna_target");    
-	}else{
-		Ext.getCmp(_this.id+'pbar').destroy();
-		Ext.getCmp(_this.application+targetId).enable();
-	}
-};
-
-
-
-ResultWidget.prototype.getGenomeViewerResultBar = function(genomeViewer) {
-	var _this=this;
-
-	switch (this.application){
-	case "variant":
-		var toolbarMenu = Ext.create('Ext.container.Container', {
-			cls:'bio-toolbar',
-			defaults:{margin:'1 0 0 2'},
-			layout:'vbox',
-			height:27,
-			items : [
-				{xtype:'button',text:'<span class="info">Variant filter tool...</span>',handler:function(){
-						var variantFilterWidget = new VariantFilterWidget(_this.jobId,{viewer:genomeViewer,fileNames:_this.variantFiles});
-//						variantFilterWidget.draw();
-//						variantFilterWidget.parseData(data);
-//						var wumRestAdapter = new WumRestAdapter();
-//						wumRestAdapter.onPoll.addEventListener(function(sender, data){
-//						});
-						
-//						wumRestAdapter.poll(_this.jobId, "variant.txt", false, $.cookie('bioinfo_sid'));
-					}
-				}
-			]
-		});
-		return toolbarMenu;
-		break;
-		
-	
-	default: return null;
-	}
-};
-
-
-ResultWidget.prototype.getSpeciesItem = function(species) {
-	//selecciona el objeto AVAILABLE_SPECIES segun el species code
-	for ( var i = 0; i < AVAILABLE_SPECIES.length; i++) {
-		if(AVAILABLE_SPECIES[i].species==species){
-			return AVAILABLE_SPECIES[i];
-		}
-	}
-};
-
-//Quita los resultados para your annotation
-ResultWidget.prototype.checkPValue = function(str) {
-	//return false si es 0.005, 0.01 ó 0.1
-	if(str.indexOf("pvalue<0.005")!= -1 ||
-		str.indexOf("pvalue<0.01")!= -1 ||
-		str.indexOf("pvalue<0.1")!= -1
-	){
-		return false;
-	}
-	return true;
-};
-
-//Quita los resultados para your annotation
-ResultWidget.prototype.renamePValue = function(item) {
-	//reemplaza la cadena ${pvalue} por 0.05
-	if(item.value.indexOf("${pvalue}") != -1){
-		item.value = item.value.replace(/\$\{pvalue\}/gi, "0.05");
-	}
-};
-
-//XXX no se usa por ahora...Para mas adelante
-ResultWidget.prototype.setPValue = function(value) {
-	console.log(this.id);
-	var divId="#pvalue"+this.id;
-	$(divId).html(value);
-};
-
-//Quita los resultados para your annotation
-ResultWidget.prototype.getInfo = function(groupName) {
-	switch (this.application){
-	case "renato":
-		switch (groupName){
-			case "Input data": return "This section is a reminder of the parameters or settings you have submitted to run the analysis.";
-			case "Summary": return "<p>This section shows the number of genes annotated to each database in each list.</p><br><p>Gene list: contains three elements, the number of genes in your gene list annotated in the database over the total number of genes remaining in your gene list after the duplicates management, a percentage of genes in your gene list annotated in the database and the ratio of regulators per gene.<br> Genome: the same structure explained above but applied to the whole genome (TFBS or miRNA) or Your Annotations after the duplicates management.</p>";
-			case "Significant Results":  return "<p>We consider a significant enrichment after correcting the results by a multiple testing correction method. Enrichment p-values are corrected applying the False discovery rate (FDR) method (Benjamini et al., 1995; Storey andTibshirani, 2003). The threshold of signification applied to the correction has been set to 0.05.</p><br><p>The table provided summarizes the information about the enrichment test for each of the significant regulatory elements that have an Adjusted p-value < 0.05. The table is originally sorted by adjusted p-value and can be sorted up and down by clicking in any of the other column headings. When the number of significant results in a table is higher than five, results are split into different pages. You can move forward or backward in the page list using the arrow buttons.</p>";
-			case "All results": return "This section contains a downloadable individual text file containing all results for all significant and not significant regulators. This file follows the same structure described above.";
-			case "Annotation files": return "<p>When significant results are obtained, we can suppose that there is one or several regulatory elements behaving different when comparing groups. The list of genes included in the analysis have pointed to a significantly over-represented set of common regulators to these genes. The interpretation of the results will be different in the case of TFs (transcription factors) and miRNAs given that (generally) the first are positive regulators and the latter are negative regulators.</p><br><p>TFs generally bind to the promoter region of their target genes to assist and promote the transcription. miRNAs, on the other hand, bind to transcript products preventing them from being translated. Significant TF and miRNAs can be pointed to be responsible for the differential expression of the genes observed in the list. We must take special care in the interpretation of over-expressed or under-expressed genes in a functional analysis. In the case of TFs, if we are working with the list of over-expressed genes, the significant results makes reference to active TFs in one condition with respect to the other; while significant results of under-expressed genes makes reference to inactive TFs. In miRNAs, significant results of over-expressed genes will point to inactive miRNAs, while significant results of under-expressed genes will point to active miRNAs when comparing conditions.</p>";
-			default: return "";
-		}
-	break;
-	case "variant":
-		switch (groupName){
-			case "Variants by Consequence Type": return "Click this link: <a class='ok' target='_blank' href='http://docs.bioinfo.cipf.es/projects/variant/wiki/Output_columns'>Output columns</a>";
-			default: return "";
-		}
-	break;
-	
-	default: return "";
-	}
+    str += "</p>";
+    return  new Ext.XTemplate(str);
 };
 
 /*
@@ -14604,7 +16564,7 @@ ResultWidget.prototype = {
     id: "ResultWidget" + Math.round(Math.random() * 10000),
     draw: function (sid, record) {
         var _this = this;
-        this.job = record.raw;
+        this.job = record.data;
 
         this.job['command'] = Utils.parseJobCommand(this.job);
 
@@ -14631,6 +16591,7 @@ ResultWidget.prototype = {
                     closable: true,
                     autoScroll: true,
                     overflowY: 'auto',
+                    maximizable: true,
                     layout: {
                         type: 'vbox',
                         align: 'stretch'
@@ -14652,36 +16613,55 @@ ResultWidget.prototype = {
             }
             this.panel.setLoading("Loading job info...");
 
-            var url = OpencgaManager.jobResultUrl({
-                accountId: $.cookie("bioinfo_account"),
-                sessionId: sid,
-                jobId: this.jobId,
-                format: "json"
-            });
-            console.log(url);
-            $.getScript(url, function () {
-                _this.panel.setLoading(false);
-                _this.result = RESULT;
-                var layout = _this.result[_this.layoutName].layout;
-                layout.outputItems = _this.job.outputData.sort(layout.sortOutputItems);
-                layout.job = _this.job;
+
+            /* Check job status before get result.js */
+            if (this.job.status.indexOf('error') !== -1) {
+                this.panel.add(this._getJobInfo());
+                this.panel.add(this._getErrorInfo());
+
+                OpencgaManager.jobInfo({
+                    accountId: $.cookie("bioinfo_account"),
+                    sessionId: sid,
+                    jobId: this.jobId,
+                    success: function (job) {
+
+                    }
+                });
+
+                this.panel.setLoading(false);
+            } else {
+                /* Get result.js */
+                var url = OpencgaManager.jobResultUrl({
+                    accountId: $.cookie("bioinfo_account"),
+                    sessionId: sid,
+                    jobId: this.jobId,
+                    format: "json"
+                });
+                console.log(url);
+                $.getScript(url, function () {
+                    _this.panel.setLoading(false);
+                    _this.result = RESULT;
+                    var layout = _this.result[_this.layoutName].layout;
+                    layout.outputItems = _this.job.outputData.sort(layout.sortOutputItems);
+                    layout.job = _this.job;
+
+                    /**/
+                    if (typeof layout.oldXML !== 'undefined') {
+                        _this._parseOldXML(layout);
+                    }
+                    /**/
+
+                    _this.render(_this.result);
 
 
-                /**/
-                if (typeof layout.oldXML !== 'undefined') {
-                    _this._parseOldXML(layout);
-                }
-                /**/
+                    if (_this.type == "window") {
+                        _this.panel.show();
+                    } else {
+                        Ext.getCmp(_this.targetId).setActiveTab(_this.panel);
+                    }
+                });
+            }
 
-                _this.render(_this.result);
-
-
-                if (_this.type == "window") {
-                    _this.panel.show();
-                } else {
-                    Ext.getCmp(_this.targetId).setActiveTab(_this.panel);
-                }
-            });
         } else {
             if (this.type == "window") {
                 this.panel.show();
@@ -14695,82 +16675,11 @@ ResultWidget.prototype = {
         var _this = this;
         console.log(this.application);
 
-        var getJobInfo = function (args) {
-            var args = args || {};
-            var itemTpl = new Ext.XTemplate(
-                '<div class="s110">',
-                '<div style="display:inline-block;color:steelblue;width: 45px;">Id: </div>{id}<br>',
-                '<div style="display:inline-block;color:steelblue;width: 45px;">Name: </div>{name}<br>',
-                '<div style="display:inline-block;color:steelblue;width: 45px;">Tool: </div>{toolName}<br>',
-                '<div style="display:inline-block;color:steelblue;width: 45px;">Date: </div>{date}<br>',
-                '</div>',
-                '<p class="tip emph">{description}</p>',
-                '<p class="">{command.html}</p>'
-            );
-            var container = Ext.create('Ext.panel.Panel', {
-                title: 'Information',
-                header: {
-                    baseCls: 'ocb-panel-title'
-                },
-                border: false,
-                collapsible: true,
-                titleCollapse: true,
-                collapsed: _this.collapseInformation,
-                margin: 10,
-                bodyPadding: 10,
-                items: [
-                    {
-                        xtype: 'box',
-                        data: _this.job,
-                        tpl: itemTpl
-                    },
-                    {
-                        xtype: 'container', layout: 'hbox', margin: '10 0 0 0', defaults: {margin: '0 5 0 5'},
-                        items: [
-                            {
-                                xtype: 'button',
-                                text: 'download',
-                                handler: function () {
-                                    OpencgaManager.downloadJob($.cookie('bioinfo_account'), $.cookie('bioinfo_sid'), _this.jobId);
-                                }
-                            },
-                            {
-                                xtype: 'button',
-                                text: 'delete',
-                                handler: function () {
-                                    Ext.Msg.confirm("Delete job", "Are you sure you want to delete this job?", function (btnClicked) {
-                                        if (btnClicked == "yes") {
-                                            OpencgaManager.deleteJob({
-                                                accountId: $.cookie('bioinfo_account'),
-                                                sessionId: $.cookie('bioinfo_sid'),
-                                                jobId: _this.jobId,
-                                                success: function (response) {
-                                                    if (response.errorMsg === '') {
-                                                        Ext.example.msg('Delete job', '</span class="emph">' + response.result[0].msg + '</span>');
-                                                    } else {
-                                                        Ext.Msg.alert('Delete job, try again later.', response.errorMsg);
-                                                    }
-                                                }
-                                            });
-                                        }
-                                    });
-                                }
-                            }
-                        ]
-                    }
-                ]
-            });
-            if (typeof args.items != 'undefined') {
-                container.child('container').add(args.items);
-            }
-            return container;
-        };
-
         var getResultIndex = function (children) {
             var boxes = [];
             for (var i = 0; i < children.length; i++) {
                 boxes.push(Ext.create('Ext.Component', {
-                    cls: 'dedo',
+                    cls: 'ocb-pointer',
                     overCls: 'u err',
                     resultId: _this.jobId + children[i].title.replace(/ /g, ''),
                     html: children[i].title,
@@ -15011,7 +16920,7 @@ ResultWidget.prototype = {
                                     type: 'scatter',
                                     renderer: function (sprite, record, attributes, index, store) {
                                         if (typeof renderer.config !== 'undefined') {
-                                            return Ext.apply(attributes, renderer.config(record.raw));
+                                            return Ext.apply(attributes, renderer.config(record.data));
                                         }
                                     },
                                     markerConfig: {
@@ -15096,6 +17005,56 @@ ResultWidget.prototype = {
                             }
                         });
                         break;
+                    case 'vcf-grid':
+                        var id = 'resultTable_' + _this.jobId + item.file;
+
+                        var table = {
+                            name: "Stats Samples Table",
+                            colNames: ["CHROM", "POS", "ID", "REF", "ALT", "QUAL", "FILTER", "INFO", "FORMAT"],
+                            colTypes: ["string", "int", "string", "string", "string", "string", "string", "string", "string"],
+                            colVisibility: [1, 1, 1, 1, 1, 1, 1, 1, 1],
+                            colOrder: [0, 1, 2, 3, , 4, 5, 6, 7, 8, 9]
+                        };
+
+
+                        var session_id = $.cookie('bioinfo_sid');
+                        var accountId = $.cookie('bioinfo_account');
+
+                        OpencgaManager.jobFileGrep({
+                            pattern: "^#CHR.*",
+                            ignoreCase: "true",
+                            multi: false,
+                            filename: item.file,
+                            sessionId: session_id,
+                            accountId: accountId,
+                            jobId: _this.jobId,
+                            async: false,
+                            success: function (data, textStatus, jqXHR) {
+                                var fields = data.trim().split("\t");
+
+                                for (var i = 9; i < fields.length; i++) {
+                                    table.colNames.push(fields[i]);
+                                    table.colTypes.push("string");
+                                    table.colVisibility.push(1);
+                                    table.colOrder.push((fields[i - 1] + 1));
+                                }
+
+                                var resultTable = new ResultTable(_this.jobId, item.file, item.tags, {targetId: id, tableLayout: table});
+                                itemBox = Ext.create('Ext.Component', {
+                                    flex: 1,
+                                    resultTable: resultTable,
+                                    html: '<div id="' + id + '" style="padding:5px;"> </div>',
+                                    listeners: {
+                                        afterrender: function (este) {
+                                            este.resultTable.draw();
+                                        }
+                                    }
+                                });
+                            }
+                        });
+
+
+                        break;
                     case 'table':
                         var url = OpencgaManager.pollurl({
                             accountId: $.cookie('bioinfo_account'),
@@ -15139,22 +17098,39 @@ ResultWidget.prototype = {
                         });
                         break;
                     case 'genome-viewer':
-                        var gm_id = Utils.genId('gm');
-                        var vfw_id = Utils.genId('vfw');
-                        var html =
-                            '<div style="width:1500px;height:1200px;">' +
-                            '<div id="' + vfw_id + '" style="width:1500px;">' +
-                            '</div>' +
-                            '<div id="' + gm_id + '" style="width:1500px;height:800px;">' +
-                            '</div>' +
-                            '</div>';
+                        var div = document.createElement('div');
+                        $(div).css({
+                            height: '1200px'
+                        });
+                        var gmDiv = document.createElement('div');
+                        $(gmDiv).css({
+                            width: '1500px',
+                            marginTop:'10px',
+                            border:'1px solid lightgray'
+                        });
+                        var vfwDiv = document.createElement('div');
+                        $(vfwDiv).css({
+                            width: '1500px',
+                            height: '300px'
+                        });
+                        div.appendChild(vfwDiv);
+                        div.appendChild(gmDiv);
+//                        var gm_id = Utils.genId('gm');
+//                        var vfw_id = Utils.genId('vfw');
+//                        var html =
+//                            '<div style="width:1500px;height:1200px;">' +
+//                            '<div id="' + vfw_id + '" style="width:1500px;">' +
+//                            '</div>' +
+//                            '<div id="' + gm_id + '" style="width:1500px;height:800px;">' +
+//                            '</div>' +
+//                            '</div>';
                         itemBox = Ext.create('Ext.Component', {
                             flex: 1,
-                            html: html,
+                            contentEl: div,
                             listeners: {
                                 afterrender: function () {
-                                    var gv = _this._createGenomeViewer(gm_id);
-                                    _this._createVariantFilterWidget(vfw_id, gv, _this.result[_this.layoutName].layout.variantFilterFiles, renderer.tableLayout);
+                                    var gv = _this._createGenomeViewer(gmDiv);
+                                    _this._createVariantFilterWidget(vfwDiv, gv, _this.result[_this.layoutName].layout.variantFilterFiles, renderer.tableLayout);
                                 }
                             }
                         });
@@ -15195,11 +17171,16 @@ ResultWidget.prototype = {
                             },
                             listeners: {
                                 afterrender: function () {
+
+                                    var url = OpencgaManager.getJobAnalysisUrl($.cookie("bioinfo_account"), _this.job.id) + '/variantsMongo';
+                                    console.log("URL: " + url);
+
                                     var variantWidget = new VariantWidget({
                                         targetId: itemBox,
                                         height: height,
                                         closable: false,
                                         border: true,
+                                        url: url,
 //                                        title:  _this.job.name,
                                         job: _this.job,
                                         autoRender: true
@@ -15286,8 +17267,9 @@ ResultWidget.prototype = {
                         items: [
                             {
                                 xtype: 'box',
-                                overCls: 'dedo',
-                                cls: 'panel-border-bottom', margin: '0 20 10 0',
+                                overCls: 'ocb-pointer',
+                                cls: 'panel-border-bottom',
+                                margin: '0 20 10 0',
                                 data: item, tpl: itemTpl,
                                 listeners: {
                                     afterrender: function () {
@@ -15310,7 +17292,7 @@ ResultWidget.prototype = {
         };
 
         var detailedResutls = getDetailsAsDocument(resultData[this.layoutName].layout, true);
-        this.panel.add(getJobInfo({items: this.extItems}));
+        this.panel.add(this._getJobInfo({items: this.args}));
         if (this.drawIndex === true) {
             var indexResutl = getResultIndex(resultData[this.layoutName].layout.children);
             this.panel.insert(indexResutl);
@@ -15319,52 +17301,253 @@ ResultWidget.prototype = {
 
     },//end render
 
-    _createGenomeViewer: function (targetId) {
-        console.log('creating result genome viewer in: ' + targetId);
-        var _this = this;
-        var genomeViewer = new GenomeViewer({
-            targetId: targetId,
-            autoRender: true,
-            sidePanel: false,
-            region: new Region(DEFAULT_SPECIES.region),
-            species: DEFAULT_SPECIES,
-            border: true,
-            version: '',
-            resizable: false,
-//            trackPanelScrollWidth: 36,
-//            zoom: urlZoom,
-//            confPanelHidden: confPanelHidden,
-//            regionPanelHidden: regionPanelHidden,
-            availableSpecies: AVAILABLE_SPECIES,
-            popularSpecies: POPULAR_SPECIES,
-            drawNavigationBar: true,
-            drawStatusBar: true,
-//            height: this.height - this.headerWidget.height,
-//            width: this.width-18,
-            handlers: {
-                'species:change': function (event) {
-//            _this._setTracks();
-//            _this.setTracksMenu();
-                    _this.species = event.species;
-                    var text = _this.species.text + ' <span style="color: #8396b2">' + _this.species.assembly + '</span>';
-                    _this.headerWidget.setDescription(text);
-//                    _this._refreshInitialTracksConfig();
-                }
+
+    _getErrorInfo: function () {
+        var container = Ext.create('Ext.container.Container', {
+            margin: 10
+        });
+
+        $.ajax({
+            type: "GET",
+            async: false,
+            url: OpencgaManager.pollurl({
+                accountId: $.cookie('bioinfo_account'),
+                sessionId: $.cookie('bioinfo_sid'),
+                jobId: this.jobId,
+                filename: 'sge_err.log'
+            }),
+            success: function (d) {
+                container.add({
+                    title: 'Error log',
+                    bodyPadding: '0 10',
+                    border: false,
+                    header: {
+                        baseCls: 'ocb-panel-title'
+                    },
+                    style: {
+                        borderBottom: '1px solid lightgray'
+                    },
+                    maxHeight: 400,
+                    overflowY: true,
+                    html: '<pre>' + d + '</pre>'
+                })
             }
         });
-        genomeViewer.draw();
+        $.ajax({
+            type: "GET",
+            async: false,
+            url: OpencgaManager.pollurl({
+                accountId: $.cookie('bioinfo_account'),
+                sessionId: $.cookie('bioinfo_sid'),
+                jobId: this.jobId,
+                filename: 'sge_out.log'
+            }),
+            success: function (d) {
+                container.add({
+                    title: 'Out log',
+                    bodyPadding: '0 10',
+                    margin: '20 0 0 0',
+                    border: false,
+                    header: {
+                        baseCls: 'ocb-panel-title'
+                    },
+                    style: {
+                        borderBottom: '1px solid lightgray'
+                    },
+                    maxHeight: 400,
+                    overflowY: true,
+                    html: '<pre>' + d + '</pre>'
+                })
+            }
+        });
+
+        return container;
+    },
+
+    _getJobInfo: function (args) {
+        var _this = this;
+        var args = args || {};
+        var itemTpl = new Ext.XTemplate(
+            '<div class="s110">',
+            '<div style="display:inline-block;color:steelblue;width: 45px;">Id: </div>{id}<br>',
+            '<div style="display:inline-block;color:steelblue;width: 45px;">Name: </div>{name}<br>',
+            '<div style="display:inline-block;color:steelblue;width: 45px;">Tool: </div>{toolName}<br>',
+            '<div style="display:inline-block;color:steelblue;width: 45px;">Date: </div>{date}<br>',
+            '</div>',
+            '<p class="tip emph">{description}</p>',
+            '<p class="">{command.html}</p>'
+        );
+        var container = Ext.create('Ext.panel.Panel', {
+            title: 'Information',
+            header: {
+                baseCls: 'ocb-panel-title'
+            },
+            border: false,
+            collapsible: true,
+            titleCollapse: true,
+            collapsed: this.collapseInformation,
+            margin: 10,
+            bodyPadding: 10,
+            items: [
+                {
+                    xtype: 'box',
+                    data: this.job,
+                    tpl: itemTpl
+                },
+                {
+                    xtype: 'container', layout: 'hbox', margin: '10 0 0 0', defaults: {margin: '0 5 0 5'},
+                    items: [
+                        {
+                            xtype: 'button',
+                            text: 'download',
+                            handler: function () {
+                                OpencgaManager.downloadJob({
+                                    accountId: $.cookie('bioinfo_account'),
+                                    sessionId: $.cookie('bioinfo_sid'),
+                                    jobId: _this.jobId
+                                })
+                            }
+                        },
+                        {
+                            xtype: 'button',
+                            text: 'delete',
+                            handler: function () {
+                                Ext.Msg.confirm("Delete job", "Are you sure you want to delete this job?", function (btnClicked) {
+                                    if (btnClicked == "yes") {
+                                        OpencgaManager.deleteJob({
+                                            accountId: $.cookie('bioinfo_account'),
+                                            sessionId: $.cookie('bioinfo_sid'),
+                                            jobId: this.jobId,
+                                            success: function (response) {
+                                                if (response.errorMsg === '') {
+                                                    Utils.msg('Delete job', '</span class="emph">' + response.result[0].msg + '</span>');
+                                                } else {
+                                                    Ext.Msg.alert('Delete job, try again later.', response.errorMsg);
+                                                }
+                                            }
+                                        });
+                                    }
+                                });
+                            }
+                        }
+                    ]
+                }
+            ]
+        });
+        if (typeof args.items != 'undefined') {
+            container.child('container').add(args.items);
+        }
+        return container;
+    },
+
+
+    _createGenomeViewer: function (target) {
+        var _this = this;
+        var genomeViewer = new GenomeViewer({
+            cellBaseHost: 'http://www.ebi.ac.uk/cellbase/webservices/rest',
+            cellBaseVersion: 'v3',
+            target: target,
+            width: $(target).width(),
+            region: new Region(DEFAULT_SPECIES.region),
+            availableSpecies: AVAILABLE_SPECIES,
+            species: DEFAULT_SPECIES,
+            sidePanel: false,
+            resizable: false,
+//        quickSearchResultFn:quickSearchResultFn,
+//        quickSearchDisplayKey:,
+            karyotypePanelConfig: {
+                collapsed: false,
+                collapsible: true
+            },
+            chromosomePanelConfig: {
+                collapsed: false,
+                collapsible: true
+            },
+            navigationBarConfig: {
+                componentsConfig: {
+//                restoreDefaultRegionButton:false,
+//                regionHistoryButton:false,
+//                speciesButton:false,
+//                chromosomesButton:false,
+//                karyotypeButton:false,
+//                chromosomeButton:false,
+//                regionButton:false,
+//                zoomControl:false,
+//                windowSizeControl:false,
+//                positionControl:false,
+//                moveControl:false,
+//                autoheightButton:false,
+//                compactButton:false,
+//                searchControl:false
+                }
+            },
+            handlers: {
+                'region:change': function (e) {
+                    console.log(e)
+                }
+            }
+//        chromosomeList:[]
+//            trackListTitle: ''
+//            drawNavigationBar = true;
+//            drawKaryotypePanel: false,
+//            drawChromosomePanel: false,
+//            drawOverviewTrackListPanel: false
+
+        }); //the div must exist
+
+        var tracks = [];
+        this.sequence = new SequenceTrack({
+//        title: 'Sequence',
+            height: 30,
+            visibleRegionSize: 200,
+
+            renderer: new SequenceRenderer(),
+
+            dataAdapter: new SequenceAdapter({
+                category: "genomic",
+                subCategory: "region",
+                resource: "sequence",
+                species: genomeViewer.species
+            })
+        });
+
+        tracks.push(this.sequence);
+
+        this.gene = new GeneTrack({
+            title: 'Gene',
+            minHistogramRegionSize: 20000000,
+            maxLabelRegionSize: 10000000,
+            minTranscriptRegionSize: 200000,
+            height: 140,
+
+            renderer: new GeneRenderer(),
+
+            dataAdapter: new CellBaseAdapter({
+                category: "genomic",
+                subCategory: "region",
+                resource: "gene",
+                species: genomeViewer.species,
+                params: {
+                    exclude: 'transcripts.tfbs,transcripts.xrefs,transcripts.exons.sequence'
+                },
+                cacheConfig: {
+                    chunkSize: 100000
+                }
+            })
+        });
+
+        tracks.push(this.gene);
+
 
         var renderer = new FeatureRenderer(FEATURE_TYPES.gene);
         renderer.on({
             'feature:click': function (event) {
+                // feature click event example
                 console.log(event)
-                new GeneInfoWidget(null, _this.species).draw(event);
             }
         });
-        var geneOverview = new FeatureTrack({
-            targetId: null,
-            id: 2,
-            title: 'Gene',
+        var gene = new FeatureTrack({
+//        title: 'Gene overview',
             minHistogramRegionSize: 20000000,
             maxLabelRegionSize: 10000000,
             height: 100,
@@ -15376,102 +17559,60 @@ ResultWidget.prototype = {
                 subCategory: "region",
                 resource: "gene",
                 params: {
-                    exclude: 'transcripts'
+                    exclude: 'transcripts,chunkIds'
                 },
                 species: genomeViewer.species,
                 cacheConfig: {
-                    chunkSize: 50000
+                    chunkSize: 100000
                 }
             })
         });
-        genomeViewer.addOverviewTrack(geneOverview);
+        genomeViewer.addOverviewTrack(gene);
 
-//        var sequence = new SequenceTrack({
-//            targetId: null,
-//            id: 1,
-//            title: 'Sequence',
-//            histogramZoom: 20,
-//            transcriptZoom: 50,
-//            height: 30,
-//            visibleRange: {start: 99, end: 100},
-//            featureTypes: FEATURE_TYPES,
-//
-//            renderer: new SequenceRenderer(),
-//
-//            dataAdapter: new SequenceAdapter({
-//                category: "genomic",
-//                subCategory: "region",
-//                resource: "sequence",
-//                species: genomeViewer.species,
-//                featureCache: {
-//                    gzip: true,
-//                    chunkSize: 1000
-//                }
-//            })
-//        });
-//
-//        genomeViewer.addTrack(sequence);
+        this.snp = new FeatureTrack({
+            title: 'SNP',
+            featureType: 'SNP',
+            minHistogramRegionSize: 10000,
+            maxLabelRegionSize: 3000,
+            height: 100,
 
-        var gene = new GeneTrack({
-            targetId: null,
-            id: 2,
-            title: 'Gene',
-            histogramZoom: 20,
-            transcriptZoom: 50,
-            height: 140,
-            visibleRange: {start: 0, end: 100},
-            featureTypes: FEATURE_TYPES,
-
-            renderer: new GeneRenderer(),
+            renderer: new FeatureRenderer(FEATURE_TYPES.snp),
 
             dataAdapter: new CellBaseAdapter({
                 category: "genomic",
                 subCategory: "region",
-                resource: "gene",
-                species: genomeViewer.species,
-                featureCache: {
-                    gzip: true,
-                    chunkSize: 50000
+                resource: "snp",
+                params: {
+                    exclude: 'transcriptVariations,xrefs,samples'
                 },
-                filters: {},
-                options: {},
-                featureConfig: FEATURE_CONFIG.gene
+                species: genomeViewer.species,
+                cacheConfig: {
+                    chunkSize: 10000
+                }
             })
         });
-        genomeViewer.addTrack(gene);
+
+        tracks.push(this.snp);
 
 
-//        var snp = new FeatureTrack({
-//            targetId: null,
-//            id: 4,
-//            title: 'SNP',
-//            histogramZoom: 70,
-//            labelZoom: 80,
-//            height: 100,
-//            visibleRange: {start: 0, end: 100},
-//            featureTypes: FEATURE_TYPES,
-//
-//            renderer: new FeatureRenderer('snp'),
-//
-//            dataAdapter: new CellBaseAdapter({
-//                category: "genomic",
-//                subCategory: "region",
-//                resource: "snp",
-//                params: {
-//                    exclude: 'transcriptVariations,xrefs,samples'
-//                },
-//                species: genomeViewer.species,
-//                featureCache: {
-//                    gzip: true,
-//                    chunkSize: 10000
-//                },
-//                filters: {},
-//                options: {},
-//                featureConfig: FEATURE_CONFIG.snp
-//            })
+        genomeViewer.addTrack(tracks);
+
+
+        genomeViewer.draw();
+
+
+//        var genomeViewer = new GenomeViewer({
+//            handlers: {
+//                'species:change': function (event) {
+////            _this._setTracks();
+////            _this.setTracksMenu();
+//                    _this.species = event.species;
+//                    var text = _this.species.text + ' <span style="color: #8396b2">' + _this.species.assembly + '</span>';
+//                    _this.headerWidget.setDescription(text);
+////                    _this._refreshInitialTracksConfig();
+//                }
+//            }
 //        });
-//
-//        genomeViewer.addTrack(snp);
 
 
         genomeViewer.chromosomePanel.hide();
@@ -15512,17 +17653,17 @@ ResultWidget.prototype = {
 
         return genomeViewer;
     },
-    _createVariantFilterWidget: function (targetId, gv, variantFilterFiles, tableLayout) {
+    _createVariantFilterWidget: function (target, gv, variantFilterFiles, tableLayout) {
         var variantFilterWidget = new VariantFilterWidget(this.jobId, {
-            width: 1500,
-            height: 300,
-            targetId: targetId,
+            width: $(target).width(),
+            height: $(target).height(),
+            targetId: target,
             viewer: gv,
 //            fileNames:_this.variantFiles
             fileNames: variantFilterFiles,
             tableLayout: tableLayout
         });
-        variantFilterWidget.getPanel(targetId);
+        variantFilterWidget.getPanel(target);
 
         return variantFilterWidget;
     },
@@ -15548,6 +17689,7 @@ ResultWidget.prototype = {
     }
 
 };
+
 /*
  * Copyright (c) 2012 Francisco Salavert (ICM-CIPF)
  * Copyright (c) 2012 Ruben Sanchez (ICM-CIPF)
@@ -15587,7 +17729,7 @@ function UploadWidget(args) {
     }
     this.uploadObjectToBucketSuccess = function (response) {
         if (response.errorMsg === '') {
-            Ext.example.msg('Object upload', '</span class="emph">' + response.result[0].msg + '</span>');
+            Utils.msg('Object upload', '</span class="emph">' + response.result[0].msg + '</span>');
             _this.uploadComplete(response.result[0].msg);
         } else {
             Ext.Msg.alert('Object upload', response.errorMsg);
@@ -15642,7 +17784,7 @@ UploadWidget.prototype.draw = function (opencgaLocation) {
                 { text: "Expression", tag: "expression"}
             ] }
         ],
-        "6":[
+        "6": [
             { text: "Feature", children: [
                 { text: "VCF 4.0", tag: "vcf"},
                 { text: "GFF2", tag: "gff2"},
@@ -15652,7 +17794,7 @@ UploadWidget.prototype.draw = function (opencgaLocation) {
                 { text: "PED", tag: "ped"}
             ] }
         ],
-        "11":[
+        "11": [
             {text: "Annotation", tag: "annotation"},
             {text: "ID List", children: [
                 { text: "Gene", tag: "idlist:gene"    },
@@ -15660,23 +17802,23 @@ UploadWidget.prototype.draw = function (opencgaLocation) {
             ]
             }
         ],
-        "12":[
+        "12": [
             {text: "Abundances", tag: "abundances"}
         ],
-        "100":[
+        "100": [
             {text: "Sequence", tag: "sequence"}
         ],
-        "22":[
+        "22": [
             {text: "Tabbed text file", tag: "txt", validate: this.getTypeValidation('txt|text')},
             {text: "CEL compressed file", tag: "cel", validate: this.getTypeValidation('zip|tar|tar.gz|tgz')}
         ],
-        "85":[
+        "85": [
             { text: "Feature", children: [
                 { text: "VCF 4.0", tag: "vcf", validate: this.getTypeValidation('vcf')},
                 { text: "PED", tag: "ped", validate: this.getTypeValidation('ped')}
             ] }
         ],
-        "cellmaps":[
+        "cellmaps": [
             { text: "Network", children: [
                 { text: "SIF", tag: "sif", validate: this.getTypeValidation('sif')},
                 { text: "Expresion matrix", tag: "txt", validate: this.getTypeValidation('txt')},
@@ -15685,11 +17827,11 @@ UploadWidget.prototype.draw = function (opencgaLocation) {
         ]
     };
 
-    if(typeof dataTypes[this.suiteId] === 'undefined'){
+    if (typeof dataTypes[this.suiteId] === 'undefined') {
         this.render([
             {text: "No data types defined"}
         ]);
-    }else{
+    } else {
         this.checkDataTypes(dataTypes[this.suiteId]);
         this.render(dataTypes[this.suiteId]);
     }
@@ -15741,11 +17883,11 @@ UploadWidget.prototype.clean = function () {
 UploadWidget.prototype.checkDataTypes = function (dataTypes) {
     for (var i = 0; i < dataTypes.length; i++) {
         if (dataTypes[i]["children"] != null) {
-            dataTypes[i]["iconCls"] = 'icon-box';
+//            dataTypes[i]["iconCls"] = 'icon-box';
             dataTypes[i]["expanded"] = true;
             this.checkDataTypes(dataTypes[i]["children"]);
         } else {
-            dataTypes[i]["iconCls"] = 'icon-blue-box';
+//            dataTypes[i]["iconCls"] = 'icon-blue-box';
             dataTypes[i]["leaf"] = true;
         }
     }
@@ -15761,19 +17903,22 @@ UploadWidget.prototype.render = function (dataTypes) {
                 children: dataTypes
             }
         });
-        var height = Object.keys(store.tree.nodeHash).length * 23;
-        if (height < 250) {
-            height = 250;
-        }
+//        var height = Object.keys(store.tree.nodeHash).length * 23;
+//        if (height < 250) {
+//            height = 250;
+//        }
 
+        var height = 400;
 
         var pan1Width = 250;
         var pan1 = Ext.create('Ext.tree.Panel', {
-            title: 'Select your data type',
-            bodyPadding: 10,
+            header: {
+                baseCls: 'header-form'
+            },
+            title: 'Select your data type <span style="color:gray">(req)</span>',
+            bodyPadding: '10 0 0 0',
             height: height,
             border: false,
-            cls: 'ocb-border-right-lightgrey',
             width: pan1Width,
             store: store,
             useArrows: true,
@@ -15782,13 +17927,13 @@ UploadWidget.prototype.render = function (dataTypes) {
                 scope: this,
                 itemclick: function (este, record) {
                     if (record.data.leaf) {
-                        this.selectedDataType = record.raw.tag;
-                        this.selectedDataTypeObj = record.raw;
-                        this.dataTypeLabel.setText('<span class="info">Type:</span><span class="ok"> OK </span>', false);
+                        this.selectedDataType = record.data.tag;
+                        this.selectedDataTypeObj = record.data;
+                        this.dataTypeLabel.update('<span class="info">Type:</span><span class="ok"> OK </span>');
                     } else {
-                        this.selectedDataType = null;
-                        this.selectedDataTypeObj = null;
-                        this.dataTypeLabel.setText('<span class="info">Select a data type</span><span class="err"> !!!</span>', false);
+                        this.selectedDataType = undefined;
+                        this.selectedDataTypeObj = undefined;
+                        this.dataTypeLabel.update('<span class="info">Select a data type</span><span class="err"> !!!</span>');
                     }
                     this.validate();
                 }
@@ -15806,9 +17951,9 @@ UploadWidget.prototype.render = function (dataTypes) {
                 scope: this,
                 change: function (el) {
                     if (el.getValue() != "") {
-                        this.dataNameLabel.setText('<span class="info">Name:</span><span class="ok"> OK </span>', false);
+                        this.dataNameLabel.update('<span class="info">Name:</span><span class="ok"> OK </span>');
                     } else {
-                        this.dataNameLabel.setText('<span class="info">Enter the data name</span><span class="err"> !!!</span>', false);
+                        this.dataNameLabel.update('<span class="info">Enter the data name</span><span class="err"> !!!</span>');
                     }
                     this.validate();
                 }
@@ -15841,7 +17986,10 @@ UploadWidget.prototype.render = function (dataTypes) {
 
         var pan2Width = 350;
         var pan2 = Ext.create('Ext.panel.Panel', {
-            title: 'Some aditional data',
+            title: 'Aditional information',
+            header: {
+                baseCls: 'header-form'
+            },
             width: pan2Width,
             border: false,
 //            cls: 'panel-border-top',
@@ -15851,37 +17999,33 @@ UploadWidget.prototype.render = function (dataTypes) {
 
         });
 
-        this.dataTypeLabel = Ext.create('Ext.toolbar.TextItem', {
-            text: '<span class="info">Select a data type</span>'
+        this.dataTypeLabel = Ext.create('Ext.Component', {
+            html: '<span class="info">Select a data type</span>'
         });
-        this.dataNameLabel = Ext.create('Ext.toolbar.TextItem', {
-            text: '<span class="info">Enter the data name</span>'
+        this.dataNameLabel = Ext.create('Ext.Component', {
+            html: '<span class="info">Enter the data name</span>'
         });
-        this.dataFieldLabel = Ext.create('Ext.toolbar.TextItem', {
-            text: '<span class="info">Select a data file</span>'
+        this.dataFieldLabel = Ext.create('Ext.Component', {
+            html: '<span class="info">Select a data file</span>'
         });
         this.originCheck = Ext.create('Ext.form.field.Checkbox', {
             xtype: 'checkbox',
-            margin: '0 0 5 5',
             hidden: !this.enableTextMode,
             boxLabel: 'Text mode',
+            margin: '0 0 0 0',
             listeners: {
                 scope: this,
                 change: function () {
                     if (this.originCheck.getValue()) {
-                        this.dataFieldLabel.setText('<span class="ok">' + this.editor.getValue().length + '</span><span class="info"> chars</span>', false);
-                        this.uploadBar.hide();
+                        this.dataFieldLabel.update('<span class="ok">' + this.editor.getValue().length + '</span><span class="info"> chars</span>');
+                        this.uploadField.hide();
                         this.editor.show();
-                        this.uploadField.destroy();
                         this.uploadField.setRawValue(null);
-                        this.pan3.setHeight(100);
                     } else {
-                        this.dataFieldLabel.setText('<span class="info">Select a data file</span>', false);
+                        this.dataFieldLabel.update('<span class="info">Select a data file</span>');
                         this.editor.hide();
-                        this.uploadBar.show();
+                        this.uploadField.show();
                         this.editor.setRawValue(null);
-                        this.createUploadField();
-                        this.pan3.setHeight(30);
                     }
                     this.validate();
                 }
@@ -15908,48 +18052,36 @@ UploadWidget.prototype.render = function (dataTypes) {
 
         this.editor = Ext.create('Ext.form.field.TextArea', {
             xtype: 'textarea',
-            width: 602,
-            flex: 1,
-            height: 100,
             emptyText: 'Paste or write your file directly',
             hidden: true,
             name: 'file',
-            margin: "-1",
+            width:'100%',
+            height:100,
             enableKeyEvents: true,
             listeners: {
                 scope: this,
                 change: function () {
-                    this.dataFieldLabel.setText('<span class="ok">' + this.editor.getValue().length + '</span> <span class="info"> chars</span>', false);
+                    this.dataFieldLabel.update('<span class="ok">' + this.editor.getValue().length + '</span> <span class="info"> chars</span>');
                     this.validate();
                 }
 
             }
         });
 
-        this.uploadBar = Ext.create('Ext.toolbar.Toolbar', {cls: "bio-border-false", dock: 'top', height: 28});
+
         this.createUploadField();
-
-        this.modebar = Ext.create('Ext.toolbar.Toolbar', {
-            dock: 'bottom',
-            height: 28,
-            colspan: 2,
-            cls: 'ocb-border-top-lightgrey',
-            border: false,
-            items: [this.dataTypeLabel, '-', /*this.dataNameLabel,'-',*/this.dataFieldLabel, '->', this.originCheck]
-        });
-
-        var pan3 = Ext.create('Ext.panel.Panel', {
-//            title: 'File origin',
+        this.pan3 = Ext.create('Ext.panel.Panel', {
+            title: 'Data file',
+            header: {
+                baseCls: 'header-form'
+            },
             colspan: 2,
             border: false,
+            padding: 5,
+            bodyPadding: 15,
             width: pan1Width + pan2Width,
-//            cls: 'panel-border-',
-            height: 30,
-//		    bodyStyle:{"background-color":"#d3e1f1"},
-            items: [this.editor],
-            dockedItems: [this.uploadBar]
+            items: [this.editor, this.uploadField]
         });
-        this.pan3 = pan3;
 
         this.panel = Ext.create('Ext.window.Window', {
             title: 'Upload a data file',// + ' -  <span class="err">ZIP files will be allowed shortly</span>',
@@ -15959,31 +18091,61 @@ UploadWidget.prototype.render = function (dataTypes) {
             constrain: true,
             closable: false,
             modal: true,
-            layout: {
-                type: 'table',
-                columns: 2,
-                rows: 3
+            items: {
+                border: 0,
+                layout: {
+                    type: 'vbox',
+                    align: 'stretch'
+                },
+                items: [
+                    this.pan3,
+                    {
+                        xtype: 'container',
+                        padding: 5,
+                        layout: {
+                            type: 'hbox',
+                            align: 'stretch'
+                        },
+                        items: [pan1, pan2]
+                    },
+                ],
+                dockedItems: [
+                    {
+                        xtype: 'toolbar',
+                        dock: 'bottom',
+                        layout: {
+                            pack: 'end'
+                        },
+                        defaults: {
+                            width: 100
+                        },
+                        items: [
+                            {
+                                text: "Close",
+                                handler: function () {
+                                    _this.panel.minimize();
+                                }
+                            },
+                            uploadButton
+                        ]
+                    },
+                    {
+                        xtype: 'toolbar',
+                        dock: 'bottom',
+                        items: [this.originCheck, '->', this.dataTypeLabel, /*this.dataNameLabel,'-',*/this.dataFieldLabel, ]
+                    },
+                ]
             },
-            items: [pan3, pan1, pan2, this.modebar], // pan3],
-            dockedItems: [],
-            buttonAlign: 'right',
-            buttons: [
-                {text: "Close", handler: function () {
-                    _this.panel.destroy();
-                }},
-                uploadButton
-            ],
             listeners: {
                 scope: this,
                 minimize: function () {
-                    this.panel.destroy();
-                },
-                destroy: function () {
-                    delete this.panel;
+                    this.panel.hide();
+                    this.uploadField.setRawValue(null);
+                    this.editor.setRawValue(null);
+                    this.originCheck.setValue(false);
                 }
             }
         });
-
     }
     this.panel.show();
 };
@@ -15994,12 +18156,10 @@ UploadWidget.prototype.createUploadField = function () {
         id: this.uploadFieldId,
         xtype: 'filefield',
         name: 'file',
-        flex: 1,
-        padding: 1,
         msgTarget: 'side',
         emptyText: 'Choose a file',
+        width: 500,
         allowBlank: false,
-        anchor: '100%',
         buttonText: 'Upload local file...',
         buttonAlign: 'left',
         rtl: false,
@@ -16011,7 +18171,6 @@ UploadWidget.prototype.createUploadField = function () {
             }
         }
     });
-    this.uploadBar.add(this.uploadField);
 };
 
 UploadWidget.prototype.validate = function () {
@@ -16020,16 +18179,18 @@ UploadWidget.prototype.validate = function () {
 //	console.log((this.uploadField.getRawValue()!="" || this.editor.getValue()!=""));
 
     var extensionValid = true;
-    if (this.selectedDataTypeObj.validate != null) {
-        extensionValid = this.selectedDataTypeObj.validate(Ext.getCmp(this.uploadFieldId).getValue());
+    if (typeof this.selectedDataTypeObj !== 'undefined') {
+        if (typeof this.selectedDataTypeObj.validate !== 'undefined') {
+            extensionValid = this.selectedDataTypeObj.validate(Ext.getCmp(this.uploadFieldId).getValue());
+        }
     }
 
     if (extensionValid && this.selectedDataType != null /*&& this.nameField.getValue() !=""*/ && (this.uploadField.getRawValue() != "" || this.editor.getValue() != "")) {
         Ext.getCmp(this.uploadButtonId).enable();
-        this.dataTypeLabel.setText('<span class="info">Type:</span><span class="ok"> OK </span>', false);
+        this.dataTypeLabel.update('<span class="info">Type:</span><span class="ok"> OK </span>');
     } else {
         Ext.getCmp(this.uploadButtonId).disable();
-        this.dataTypeLabel.setText('<span class="info">Type:</span><span class="err"> Not valid </span>', false);
+        this.dataTypeLabel.update('<span class="info">Type:</span><span class="err"> Not valid </span>');
     }
 
     if (this.originCheck.getValue()) {
@@ -16053,7 +18214,7 @@ UploadWidget.prototype.fileSelected = function () {
             fileSize = (Math.round(file.size * 100 / 1024) / 100).toString() + 'KB';
 
 
-        this.dataFieldLabel.setText('<span class="info">Size: </span><span class="ok">' + fileSize + '</span>', false);
+        this.dataFieldLabel.update('<span class="info">Size: </span><span class="ok">' + fileSize + '</span>');
 //          document.getElementById('fileName').innerHTML = '<b>Name</b>: ' + file.name;
 //          document.getElementById('fileSize').innerHTML = '<b>Size</b>: ' + fileSize;
 //          document.getElementById('fileType').innerHTML = '<b>Type</b>: ' + file.type;
@@ -16126,7 +18287,7 @@ UploadWidget.prototype.uploadFile2 = function () {
         'bucketId': this.opencgaLocation.bucketId,
         'resume': true
     });
-    this.panel.close();
+    this.panel.hide();
 };
 
 //UploadWidget.prototype.uploadProgress = function(evt)  {
@@ -16149,7 +18310,7 @@ UploadWidget.prototype.uploadComplete = function (msg) {
     });
     this.panel.enable();
     Ext.getBody().unmask();
-    this.panel.close();
+    this.panel.hide();
 };
 
 UploadWidget.prototype.uploadFailed = function (response) {
@@ -16160,136 +18321,6 @@ UploadWidget.prototype.uploadFailed = function (response) {
     this.panel.enable();
     Ext.getBody().unmask();
 };
-/*
- * Copyright (c) 2012 Francisco Salavert (ICM-CIPF)
- * Copyright (c) 2012 Ruben Sanchez (ICM-CIPF)
- * Copyright (c) 2012 Ignacio Medina (ICM-CIPF)
- *
- * This file is part of JS Common Libs.
- *
- * JS Common Libs is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 2 of the License, or
- * (at your option) any later version.
- *
- * JS Common Libs is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with JS Common Libs. If not, see <http://www.gnu.org/licenses/>.
- */
-
-function TextWindowWidget(args){
-	this.windows = new Array();
-};
-
-TextWindowWidget.prototype.draw = function(text){
-//	this.windows.push( window.open(''+self.location,"Bioinformatics",config="height="+500+",width="+800+" ,font-size=8, resizable=yes, toolbar=1, menubar=1"));
-//	this.windows[this.windows.length-1].document.write("<title>"+ "asdasda" +"</title>");
-//	this.windows[this.windows.length-1].document.write(text);
-//	this.windows[this.windows.length-1].document.close();
-	
-	
-	myRef = window.open('data:text/csv,field1%2Cfield2%0Afoo%2Cbar%0Agoo%2Cgai%0A','mywin',
-	'left=20,top=20,width=500,height=200');
-	
-	myRef.document.write(text);
-};
-
-function ClienSideDownloaderWindowWidget(args){
-	this.windows = new Array();
-};
-
-ClienSideDownloaderWindowWidget.prototype.draw = function(text, content){
-//	myRef = window.open('data:text/csv,field1%2Cfield2%0Afoo%2Cbar%0Agoo%2Cgai%0A','mywin', 'left=20,top=20,width=500,height=200');
-	
-	myRef = window.open('data:text/csv,' + content,'mywin', 'left=20,top=20,width=500,height=200');
-//	myRef = window.open('data:image/svg+xml,' + content,'mywin', 'left=20,top=20,width=500,height=200');
-	
-	myRef.document.write(text);
-};
-/*
- * Copyright (c) 2012 Francisco Salavert (ICM-CIPF)
- * Copyright (c) 2012 Ruben Sanchez (ICM-CIPF)
- * Copyright (c) 2012 Ignacio Medina (ICM-CIPF)
- *
- * This file is part of JS Common Libs.
- *
- * JS Common Libs is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 2 of the License, or
- * (at your option) any later version.
- *
- * JS Common Libs is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with JS Common Libs. If not, see <http://www.gnu.org/licenses/>.
- */
-
-	/*Nuevo tipo ventana*/
-if(typeof Ext != 'undefined'){
-    Ext.define("Ext.ux.Window",{
-        extend:"Ext.window.Window",
-        minimizable:true,
-        constrain:true,
-        collapsible:true,
-        initComponent: function () {
-            this.callParent();
-            if(this.taskbar!=null){//si no existe, las ventanas funcionan como hasta ahora
-                this.zIndexManager = this.taskbar.winMgr;
-                this.iconCls='icon-grid';
-                this.button=Ext.create('Ext.button.Button', {
-                    text:this.title,
-                    window:this,
-                    iconCls : this.iconCls,
-                    handler:function(){
-                        if(this.window.zIndexManager.front==this.window){
-                            this.window.minimize();
-                        }else{
-                            this.window.show();
-                        }
-                    }
-                });
-                this.taskbar.add(this.button);
-
-
-                this.contextMenu = new Ext.menu.Menu({
-                    items: [{
-                        text: 'Close',
-                        window:this,
-                        iconCls:'tools-icons x-tool-close',
-                        handler:function(){this.window.close();}
-                    }]
-                });
-                this.button.getEl().on('contextmenu', function(e){
-                    e.preventDefault();
-                    this.contextMenu.showAt(e.getX(),e.getY()-10-(this.contextMenu.items.length)*25);
-                },this);
-
-                this.button.on('destroy', function(){this.window.close();});
-
-                //Taskbar button can be destroying
-                this.on('destroy',function(){if(this.button.destroying!=true){this.button.destroy();}});
-
-                this.on('minimize',function(){this.hide();});
-                this.on('deactivate',function(){
-                    if(this.zIndexManager && this.zIndexManager.front.ghostPanel){
-                        this.zIndexManager.unregister(this.zIndexManager.front.ghostPanel);
-                    }
-                    this.button.toggle(false);
-                });
-                this.on('activate',function(){this.button.toggle(true);});
-
-            }
-        }
-    });
-}
-
 /*
  * Copyright (c) 2012 Francisco Salavert (ICM-CIPF)
  * Copyright (c) 2012 Ruben Sanchez (ICM-CIPF)
@@ -16488,26 +18519,31 @@ function AttributeManagerStore(args) {
     _.extend(this, Backbone.Events);
     this.id = Utils.genId('AttributeManagerStore');
 
-    this.model = Ext.define('Attribute', {
-        extend: 'Ext.data.Model',
-        idProperty: 'Id'
-    });
     this.store = Ext.create('Ext.data.Store', {
 //        groupField: 'selected',
         pageSize: 50,
         proxy: {
             type: 'memory'
         },
-        model: this.model,
+        fields: [],
+//        model: this.model,
         listeners: {
             update: function (st, record, operation, modifiedFieldNames) {
                 if (modifiedFieldNames && modifiedFieldNames[0] != 'Selected') {
+                    console.log("AttributeManagerStore - update")
                     _this.trigger('change:recordsAttribute', {records: [record], attributeName: modifiedFieldNames[0], sender: this});
                 }
             }
+//            remove: function () {
+//                console.log("AttributeManagerStore - remove")
+//                _this.trigger('change:data', {sender: this});
+//            },
+//            add: function () {
+//                console.log("AttributeManagerStore - add")
+//                _this.trigger('change:data', {sender: this});
+//            }
         }
     });
-
 
     this.columnsGrid = [];
     this.attributes = [];
@@ -16546,32 +18582,37 @@ AttributeManagerStore.prototype = {
         this.attributes.push(attribute);
         this._processAttribute(attribute);
         if (fireChangeEvent !== false) {
-            console.log('change:attributes - add one attr')
+            console.log('addAttribute - change:attributes');
             this.trigger('change:attributes', {sender: this});
         }
         return true;
     },
     _processAttribute: function (attribute) {
+        attribute.id = attribute.name;
         /** Id column is not editable **/
         var editor;
-        if (attribute.name !== 'Id') {
+        if (attribute.name !== 'id') {
             editor = {xtype: 'textfield', allowBlank: true};
         }
 
+        var columnConfig = {
+            "text": attribute.name,
+            "dataIndex": attribute.name,
+            "editor": editor
+        };
+
         if (attribute.name !== 'Selected') {
-            this.columnsGrid.push({
-                "text": attribute.name,
-                "dataIndex": attribute.name,
-                "editor": editor
-            });
+            this.columnsGrid.push(columnConfig);
         }
+
         // set model fields
-        this.model.setFields(this.attributes);
+        this.store.setFields(this.attributes);
     },
     addAttributes: function (attributes) {
         for (var i = 0; i < attributes.length; i++) {
             this.addAttribute(attributes[i], false);
         }
+        console.log('addAttributes - change:attributes');
         this.trigger('change:attributes', {sender: this});
     },
     removeAttribute: function (attributeName) {
@@ -16582,7 +18623,8 @@ AttributeManagerStore.prototype = {
                 this.columnsGrid.splice(i, 1);
                 this.attributes.splice(i, 1);
 
-                this.model.setFields(this.attributes);
+                this.store.setFields(this.attributes);
+                console.log('removeAttribute - change:attributes');
                 this.trigger('change:attributes', {sender: this});
                 return true;
             }
@@ -16613,8 +18655,7 @@ AttributeManagerStore.prototype = {
         if (this.isAttributeLocked(attributeName)) {
             return false;
         }
-        var data = this.store.snapshot || this.store.data;
-        var record = data.map[id];
+        var record = this.store.getById(id);
         if (record) {
             record.set(attributeName, value);
             record.commit();
@@ -16623,11 +18664,10 @@ AttributeManagerStore.prototype = {
     setRecordAttributeByIds: function (records) {
         this.store.suspendEvents();
 //        console.time('AttributeManagerStore.setRecordAttributeByIds');
-        var data = this.store.snapshot || this.store.data;
         for (var i = 0; i < records.length; i++) {
             var recordObject = records[i];
             if (!this.isAttributeLocked(recordObject.attributeName)) {
-                var record = data.map[recordObject.id];
+                var record = this.store.getById(recordObject.id);
                 if (record) { // if exists a row with this name
                     record.beginEdit();
                     for (var attributeName in recordObject) {
@@ -16668,22 +18708,24 @@ AttributeManagerStore.prototype = {
         this.store.add(data);
     },
     removeRecordById: function (id) {
-        var data = this.store.snapshot || this.store.data;
-        var record = data.map[id];
+        var record = this.store.getById(id);
         if (record) {
             this.store.remove(record);
         }
     },
     getValueByAttributeAndId: function (id, attribute) {
-        var data = this.store.snapshot || this.store.data;
-        var record = data.map[id];
+        var record = this.store.getById(id);
         if (record) {
-            return record.get(attribute);
+            var value = record.get(attribute);
+            if (value) {
+                return value;
+            } else {
+                return '';
+            }
         }
     },
     getOrderedIdsByAttribute: function (attributeName) {
-        var data = this.store.snapshot || this.store.data;
-        var records = data.items;
+        var records = this.store.query().items;
         var values = [];
 
         var type = 'float';
@@ -16691,8 +18733,11 @@ AttributeManagerStore.prototype = {
 
         for (var i = 0; i < records.length; i++) {
             var record = records[i];
-            var id = record.get('Id');
+            var id = record.get('id');
             var value = record.get(attributeName);
+            if (!value) {
+                value = '';
+            }
 
             /* detect number or string */
             if (checkType) {
@@ -16727,35 +18772,32 @@ AttributeManagerStore.prototype = {
         var mixedCollection = this.store.query(attribute, value, false, false, true);
         for (var i = 0; i < mixedCollection.items.length; i++) {
             var item = mixedCollection.items[i];
-            var id = item.data["Id"];
+            var id = item.data["id"];
             if (dupHash[id] !== true) {
-                ids.push(item.data["Id"]);
+                ids.push(item.data["id"]);
             }
             dupHash[id] = true;
         }
         return ids;
     },
     eachRecord: function (eachFunction) {
-        var data = this.store.snapshot || this.store.data;
-        var records = data.items;
+        var records = this.store.query().items;
         for (var i = 0; i < records.length; i++) {
             var record = records[i];
             eachFunction(record);
         }
     },
     getRecords: function () {
-        var data = this.store.snapshot || this.store.data;
-        var records = data.items;
+        var records = this.store.query().items;
         return records;
     },
     getValuesByAttribute: function (attributeName) {
-        var data = this.store.snapshot || this.store.data;
-        var records = data.items;
+        var records = this.store.query().items;
         var values = [];
         for (var i = 0; i < records.length; i++) {
             var record = records[i];
             var value = record.get(attributeName);
-            var id = record.get('Id');
+            var id = record.get('id');
             if (value != null && value !== '') {
                 values.push({value: value, id: id});
             }
@@ -16763,13 +18805,12 @@ AttributeManagerStore.prototype = {
         return values;
     },
     getSelectedValuesByAttribute: function (attributeName) {
-        var data = this.store.snapshot || this.store.data;
-        var records = data.items;
+        var records = this.store.query().items;
         var values = [];
         for (var i = 0; i < records.length; i++) {
             var record = records[i];
             var value = record.get(attributeName);
-            var id = record.get('Id');
+            var id = record.get('id');
             var selected = record.get('Selected');
             if (selected === true && value != null && value !== '') {
                 values.push({value: value, id: id})
@@ -16781,17 +18822,16 @@ AttributeManagerStore.prototype = {
 //        var records = [];
 //        for (var i = 0; i < items.length; i++) {
 //            var item = items[i];
-//            var record = this.store.findRecord('Id', item.id);
+//            var record = this.store.findRecord('id', item.id);
 //            records.push(record);
 //        }
 //        return records;
 //    },
     selectByItems: function (items) {
-        var data = this.store.snapshot || this.store.data;
         this.store.suspendEvents();
         for (var i = 0; i < items.length; i++) {
             var item = items[i];
-            var record = data.map[item.id];
+            var record = this.store.getById(item.id);
             if (record) {
                 record.set('Selected', true);
                 record.commit();
@@ -16801,11 +18841,10 @@ AttributeManagerStore.prototype = {
         this.store.fireEvent('refresh');
     },
     deselectByItems: function (items) {
-        var data = this.store.snapshot || this.store.data;
         this.store.suspendEvents();
         for (var i = 0; i < items.length; i++) {
             var item = items[i];
-            var record = data.map[item.id];
+            var record = this.store.getById(item.id);
             if (record) {
                 record.set('Selected', false);
                 record.commit();
@@ -16816,22 +18855,22 @@ AttributeManagerStore.prototype = {
     },
     selectAll: function () {
         this.store.suspendEvents();
-        var data = this.store.snapshot || this.store.data;
-        var records = data.items;
+        var records = this.store.query().items;
         for (var i = 0; i < records.length; i++) {
             var record = records[i];
             record.set('Selected', true);
+            record.commit();
         }
         this.store.resumeEvents();
         this.store.fireEvent('refresh');
     },
     deselectAll: function () {
         this.store.suspendEvents();
-        var data = this.store.snapshot || this.store.data;
-        var records = data.items;
+        var records = this.store.query().items;
         for (var i = 0; i < records.length; i++) {
             var record = records[i];
             record.set('Selected', false);
+            record.commit();
         }
         this.store.resumeEvents();
         this.store.fireEvent('refresh');
@@ -16844,8 +18883,9 @@ AttributeManagerStore.prototype = {
 
         this.store.removeAll();
         this._processAttribute({name: "Selected", type: "boolean", defaultValue: false});
-        this.model.setFields(this.attributes);
+        this.store.setFields(this.attributes);
 
+        console.log('clean - change:attributes');
         this.trigger('change:attributes', {sender: this});
     },
     getAsFile: function (separator) {
@@ -16868,8 +18908,7 @@ AttributeManagerStore.prototype = {
         }
         text += '\n';
 
-        var data = this.store.snapshot || this.store.data;
-        var records = data.items;
+        var records = this.store.query().items;
         for (var i = 0; i < records.length; i++) {
             var record = records[i];
             for (var j = 0; j < this.attributes.length; j++) {
@@ -16894,8 +18933,7 @@ AttributeManagerStore.prototype = {
         json.data = [];
 
         // add row values to data matrix
-        var data = this.store.snapshot || this.store.data;
-        var records = data.items;
+        var records = this.store.query().items;
         for (var j = 0; j < records.length; j++) {
             json.data.push([]);
             for (var i = 0; i < this.attributes.length; i++) {
@@ -16925,7 +18963,7 @@ AttributeManagerStore.prototype.updateAttribute = function (oldName, newName, ty
             this.attributes[i].type = type;
             this.attributes[i].defaultValue = defaultValue;
 
-            this.model.setFields(this.attributes);
+            this.store.setFields(this.attributes);
 
             return true;
         }
@@ -17126,7 +19164,7 @@ AttributeManagerStore.prototype.loadJSON = function (json) {
 };
 
 AttributeManagerStore.prototype.setName = function (vertexId, newName) {
-    var register = this.store.getAt(this.store.find("Id", vertexId));
+    var register = this.store.getAt(this.store.find("id", vertexId));
     register.set("Name", newName);
     register.commit();
 };
@@ -17230,13 +19268,6 @@ function CircosVertexRenderer(args) {
     this.labelPositionY = 0;
     this.labelText = '';
 
-    if (localStorage.getItem('CELLMAPS_SESSION') !== null) {
-        var config = JSON.parse(localStorage.getItem('CELLMAPS_SESSION'));
-        if (typeof config.vertexDefaults !== 'undefined') {
-            _.extend(this, config.vertexDefaults);
-        }
-    }
-
     this.sliceArea = 1;
 
     this.pieSlices = [
@@ -17319,6 +19350,7 @@ CircosVertexRenderer.prototype = {
         console.log("update")
     },
     updateComplex: function (slicesMap, defaults) {
+        this.shape = 'circle';
         this.color = defaults['pieSlices'].color;
         this.size = defaults['pieSlices'].size;
         this.strokeColor = defaults['donutSlices'].color;
@@ -17357,7 +19389,12 @@ CircosVertexRenderer.prototype = {
     },
     setLabelContent: function (text) {
         this.labelText = text;
-        this.update();
+        if (this.labelEl) {
+            this._updateLabelElPosition();
+            this.labelEl.setAttribute('x', this.labelX);
+            this.labelEl.setAttribute('y', this.labelY);
+            this.labelEl.textContent = this.labelText;
+        }
     },
     getSize: function () {
         this._updateDrawParameters();
@@ -17440,7 +19477,7 @@ CircosVertexRenderer.prototype = {
         this.selectEl = SVG.create("ellipse", {
             cx: this.mid,
             cy: this.mid,
-            rx: this.figureSize * 0.9,
+            rx: this.figureSize,
             ry: this.figureSize * 0.65,
             opacity: '0.5',
             fill: '#999999',
@@ -17971,14 +20008,18 @@ DefaultEdgeRenderer.prototype = {
         if (this.edge.source === this.edge.target) {
             //calculate self edge
             var length1 = this.sourceRenderer.getSize() * 0.6;
-            var length2 = this.sourceRenderer.getSize() * 2;
+            var length2 = this.sourceRenderer.getSize() * 1.8;
             labelX = this.sourceCoords.x - this.sourceRenderer.getSize();
             labelY = this.sourceCoords.y - this.sourceRenderer.getSize();
-            d = ['M', this.sourceCoords.x, this.sourceCoords.y,
+
+
+            var rSize = this.sourceRenderer.getSize() / 2;
+
+            d = ['M', this.sourceCoords.x - rSize, this.sourceCoords.y ,
                 'L', this.sourceCoords.x - length1, this.sourceCoords.y,
                 'C', this.sourceCoords.x - length2, this.sourceCoords.y, this.sourceCoords.x, this.sourceCoords.y - length2,
                 this.sourceCoords.x , this.sourceCoords.y - length1,
-                'L', this.targetCoords.x, this.targetCoords.y].join(' ');
+                'L', this.targetCoords.x, this.targetCoords.y - rSize].join(' ');
         } else {
             //calculate bezier line
             var deltaX = this.targetCoords.x - this.sourceCoords.x;
@@ -17988,68 +20029,114 @@ DefaultEdgeRenderer.prototype = {
                 angle = 0;
             }
 
-            var remainder = this.edge.overlapCount % 2;
-            var sum = ( remainder == 0) ? 0 : 1;
-            var sign = (remainder == 0) ? -1 : 1;
-            var controlPointOffset = (this.edge.overlapCount + sum) / 2 * 10 * (sign);
-            var controlPointOffsetLabel = controlPointOffset / 1.33;
 
             var midX = (this.sourceCoords.x + this.targetCoords.x) / 2;
             var midY = (this.sourceCoords.y + this.targetCoords.y) / 2;
-            var controlX = midX - (Math.sin(angle) * controlPointOffset);
-            var controlY = midY + (Math.cos(angle) * controlPointOffset);
+            var controlPath = '';
+            if (this.edge.overlapCount === 0) {
+                labelX = midX - (Math.sin(angle));
+                labelY = midY + (Math.cos(angle));
+            } else {
+                var separation = 15;
+                var remainder = this.edge.overlapCount % 2;
+                var sum = 1;
+                var sign = 1;
+                if (remainder === 0) {
+                    sum = 0;
+                    sign = -1
+                }
+                var controlPointOffset = (this.edge.overlapCount + sum) / 2 * separation * (sign);
+                var controlPointOffsetLabel = controlPointOffset / 1.33;
+                var controlX = midX - (Math.sin(angle) * controlPointOffset);
+                var controlY = midY + (Math.cos(angle) * controlPointOffset);
+                labelX = midX - (Math.sin(angle) * controlPointOffsetLabel);
+                labelY = midY + (Math.cos(angle) * controlPointOffsetLabel);
+                controlPath = ['C', controlX, controlY, controlX, controlY].join(' ');
+            }
+            var pp = this._getPerimeterPositions(angle);
 
-            labelX = midX - (Math.sin(angle) * controlPointOffsetLabel);
-            labelY = midY + (Math.cos(angle) * controlPointOffsetLabel);
-
-            d = ['M', this.sourceCoords.x, this.sourceCoords.y, 'C', controlX, controlY, controlX, controlY, this.targetCoords.x, this.targetCoords.y].join(' ');
+//            d = ['M', this.sourceCoords.x, this.sourceCoords.y, 'C', controlX, controlY, controlX, controlY, this.targetCoords.x, this.targetCoords.y].join(' ');
+            d = ['M', pp.sx, pp.sy, controlPath, pp.tx, pp.ty].join(' ');
         }
         return {d: d, xl: labelX, yl: labelY};
     },
+    _getPerimeterPositions: function (angle) {
+        // Calculate source and target points of the perimeter - TODO ellipse, square, rectangle
+        var sign = this.targetCoords.x > this.sourceCoords.x ? 1 : -1;
+        var srHalfSize = this.sourceRenderer.getSize() / 2;
+
+        var offset = 0;
+        if (this.shape !== 'undirected') {
+            offset = this.size * 2;
+        }
+        var trHalfSize = offset + (this.targetRenderer.getSize() / 2);
+
+        var cosAngle = Math.cos(angle);
+        var sinAngle = Math.sin(angle);
+        var absCosAngle = Math.abs(cosAngle);
+        var absSinAngle = Math.abs(sinAngle);
+        var sx, sy, tx, ty, magnitudeCos, magnitudeSin, magnitude;
+
+        //circle
+        // x = cx + r * cos(a)
+        // y = cy + r * sin(a)
+
+        //Square
+        // center + (cos(angle), sin(angle))*magnitude
+
+        //Source
+        switch (this.sourceRenderer.shape) {
+            case 'square':
+                magnitudeCos = srHalfSize / absCosAngle;
+                magnitudeSin = srHalfSize / absSinAngle;
+                magnitude = (magnitudeCos <= magnitudeSin) ? magnitudeCos : magnitudeSin;
+                sx = this.sourceCoords.x + (sign * cosAngle * magnitude);
+                sy = this.sourceCoords.y + (sign * sinAngle * magnitude);
+                break;
+            case 'rectangle':
+                magnitudeCos = srHalfSize * 1.4 / absCosAngle;
+                magnitudeSin = srHalfSize / absSinAngle;
+                magnitude = (magnitudeCos <= magnitudeSin) ? magnitudeCos : magnitudeSin;
+                sx = this.sourceCoords.x + (sign * cosAngle * magnitude);
+                sy = this.sourceCoords.y + (sign * sinAngle * magnitude);
+                break;
+            case 'ellipse':
+                sx = this.sourceCoords.x + (sign * cosAngle * srHalfSize * 1.4);
+                sy = this.sourceCoords.y + (sign * sinAngle * srHalfSize);
+                break;
+            case 'circle':
+            default:
+                sx = this.sourceCoords.x + (sign * cosAngle * srHalfSize);
+                sy = this.sourceCoords.y + (sign * sinAngle * srHalfSize);
+        }
+        //Target
+        switch (this.targetRenderer.shape) {
+            case 'square':
+                magnitudeCos = trHalfSize / absCosAngle;
+                magnitudeSin = trHalfSize / absSinAngle;
+                magnitude = (magnitudeCos <= magnitudeSin) ? magnitudeCos : magnitudeSin;
+                tx = this.targetCoords.x - (sign * cosAngle * magnitude);
+                ty = this.targetCoords.y - (sign * sinAngle * magnitude);
+                break;
+            case 'rectangle':
+                magnitudeCos = trHalfSize * 1.4 / absCosAngle;
+                magnitudeSin = trHalfSize / absSinAngle;
+                magnitude = (magnitudeCos <= magnitudeSin) ? magnitudeCos : magnitudeSin;
+                tx = this.targetCoords.x - (sign * cosAngle * magnitude);
+                ty = this.targetCoords.y - (sign * sinAngle * magnitude);
+                break;
+            case 'ellipse':
+                tx = this.targetCoords.x - (sign * cosAngle * trHalfSize * 1.4);
+                ty = this.targetCoords.y - (sign * sinAngle * trHalfSize);
+                break;
+            case 'circle':
+            default:
+                tx = this.targetCoords.x - (sign * cosAngle * trHalfSize);
+                ty = this.targetCoords.y - (sign * sinAngle * trHalfSize);
+        }
+        return {sx: sx, sy: sy, tx: tx, ty: ty};
+    },
     /* Private */
-//    _renderOff: function () {
-//        var groupSvg = SVG.create('g', {
-//            "cursor": "pointer",
-//            "id": this.edge.id,
-//            opacity: this.opacity,
-//            'network-type': 'edge-g'
-//        });
-//
-//        var linkSvg = SVG.addChild(groupSvg, "line", {
-//            "x1": this.sourceCoords.x,
-//            "y1": this.sourceCoords.y,
-//            "x2": this.targetCoords.x,
-//            "y2": this.targetCoords.y,
-//            opacity: this.opacity,
-//            "stroke": this.color,
-//            "stroke-width": this.size,
-//            "cursor": "pointer",
-//            "marker-end": "url(" + this._getMarkerArrowId() + ")",
-//            'network-type': 'edge'
-//        }, 0);
-//
-//        var x = (this.sourceCoords.x + this.targetCoords.x) / 2;
-//        var y = (this.sourceCoords.y + this.targetCoords.y) / 2;
-//
-//        var textOffset = this.sourceRenderer.getSize();
-//        var text = SVG.addChild(groupSvg, "text", {
-//            "x": x,
-//            "y": y,
-//            "font-size": this.labelSize,
-//            "fill": this.labelColor,
-//            'network-type': 'edge-label'
-//        });
-//        text.textContent = this.edge.id;
-//
-//        this.el = groupSvg;
-//        this.edgeEl = linkSvg;
-//        this.labelEl = text;
-//        SVG._insert(this.targetEl, groupSvg, 0);
-//
-//        if (this.selected) {
-//            this._renderSelect();
-//        }
-//    },
     _render: function () {
         var groupSvg = SVG.create('g', {
             "cursor": "pointer",
@@ -18067,9 +20154,11 @@ DefaultEdgeRenderer.prototype = {
             "stroke-width": this.size,
             "cursor": "pointer",
             fill: 'none',
-            "marker-end": "url(" + this._getMarkerArrowId() + ")",
             'network-type': 'edge'
         }, 0);
+        if (this.shape !== 'undirected') {
+            linkSvg.setAttribute('marker-end', "url(" + this._getMarkerArrowId() + ")");
+        }
 
         var textOffset = this.sourceRenderer.getSize();
         var text = SVG.addChild(groupSvg, "text", {
@@ -18089,14 +20178,6 @@ DefaultEdgeRenderer.prototype = {
         if (this.selected) {
             this._renderSelect();
         }
-
-//        //Debugger only
-//        this.control = SVG.addChild(groupSvg, "circle", {
-//            "cx": control.x,
-//            "cy": control.y,
-//            r: 2,
-//            "fill": this.color
-//        });
     },
 
     _renderSelect: function () {
@@ -18113,7 +20194,7 @@ DefaultEdgeRenderer.prototype = {
     },
     /**/
     _getMarkerArrowId: function () {
-        var offset = this.targetRenderer.getSize() / 2;
+        var offset = (this.size * -2) - 1;
         // if not exists this marker, add new one to defs
         var markerArrowId = "arrow-" + this.shape + "-" + offset.toString().replace(".", "_") + '-' + this.size.toString().replace(".", "_") + '-' + this.color.replace('#', '');
         var markerArrowIdSel = '#' + markerArrowId;
@@ -18133,7 +20214,7 @@ DefaultEdgeRenderer.prototype = {
 
         var headWidth = 4 * mult;
         var headHeight = 5 * mult;
-        var headRadius = 4 * mult;
+        var headRadius = 3 * mult;
 
         offset = scale * offset;
 
@@ -18144,7 +20225,6 @@ DefaultEdgeRenderer.prototype = {
         if (defs.length == 0) {
             defsEl = SVG.addChild(targetSvg, "defs", {}, 0);
         }
-
         if (typeof color === 'undefined') {
             color = '#000000';
         }
@@ -18184,7 +20264,7 @@ DefaultEdgeRenderer.prototype = {
                 var arrow = SVG.addChild(marker, "path", {
 //                    "transform": "scale(" + scale + ") rotate(0) translate(0,0)",
                     "fill": color,
-                    "d": ['M0,0', 'V', headWidth, 'L', headHeight, headWidth, 'L', headHeight, 0, 'Z'].join(' ')
+                    "d": ['M', headHeight , 0, 'V', headHeight, 'L', headHeight / 2, headHeight, 'L', headHeight / 2, 0, 'Z'].join(' ')
 //                    "x":0,
 //                    "y": 0,
 //                    "width": headWidth,
@@ -18231,7 +20311,6 @@ DefaultEdgeRenderer.prototype = {
             labelText: this.labelText
         };
     }
-
 }
 /*
  * Copyright (c) 2012 Francisco Salavert (ICM-CIPF)
@@ -19423,13 +21502,13 @@ function NetworkConfig(args) {
     _.extend(this, Backbone.Events);
     this.id = Utils.genId('NetworkConfig');
 
+    this.session;
+
     //set instantiation args, must be last
     _.extend(this, args);
 
-
     this.vertices = {}; // [{id:"one",color:red,...},...]
     this.edges = {};  // [{id:"one",color:red,...},...]
-    this.general = {};
 
     this.on(this.handlers);
 }
@@ -19466,14 +21545,173 @@ NetworkConfig.prototype = {
     removeEdge: function (edge) {
         delete this.edges[edge.id];
     },
+
     toJSON: function () {
         return {
             vertices: this.vertices,
-            edges: this.edges,
-            general: this.general
+            edges: this.edges
         }
     }
 }
+/*
+ * Copyright (c) 2012 Francisco Salavert (ICM-CIPF)
+ * Copyright (c) 2012 Ruben Sanchez (ICM-CIPF)
+ * Copyright (c) 2012 Ignacio Medina (ICM-CIPF)
+ *
+ * This file is part of JS Common Libs.
+ *
+ * JS Common Libs is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * JS Common Libs is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with JS Common Libs. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+function NetworkSession() {
+
+    this.version = 1;
+
+    this.general = {
+        vertexDefaults: {
+            shape: 'circle',
+            size: 40,
+//            color: '#9fc6e7',
+            color: '#fff',
+            strokeSize: 2,
+//            strokeColor: '#9fc6e7',
+            strokeColor: '#888888',
+            opacity: 0.8,
+            labelSize: 12,
+            labelColor: '#111111'
+        },
+        edgeDefaults: {
+            shape: 'undirected',
+            size: 1,
+            color: '#888888',
+//            color: '#cccccc',
+            opacity: 1,
+            labelSize: 0,
+            labelColor: '#111111'
+        },
+        visualSets: {},
+        zoom: 25,
+        backgroundImages: [],
+        backgroundColor: '#FFF',
+        center: {
+            x: 0,
+            y: 0
+        }
+    };
+    this.config = {
+        vertices: {},
+        edges: {}
+    };
+    this.graph = {
+        vertices: {},
+        edges: {}
+    };
+    this.attributes = {
+        vertices: {},
+        edges: {}
+    }
+}
+
+NetworkSession.prototype = {
+    loadGraph: function (graph) {
+        this.graph = graph.toJSON();
+    },
+    loadConfig: function (config) {
+        this.config = config;
+    },
+    loadVertexAttributes: function (attributeManager) {
+        this.attributes.vertices = attributeManager.toJSON();
+    },
+    loadEdgeAttributes: function (attributeManager) {
+        this.attributes.edges = attributeManager.toJSON();
+    },
+    getBackgroundImages: function () {
+        return this.general.backgroundImages;
+    },
+    setBackgroundImages: function (images) {
+        this.general.backgroundImages = images;
+    },
+    getBackgroundColor: function () {
+        return this.general.backgroundColor;
+    },
+    setBackgroundColor: function (color) {
+        this.general.backgroundColor = color;
+    },
+    setVertexDefault: function (key, value) {
+        this.general.vertexDefaults[key] = value;
+    },
+    setEdgeDefault: function (key, value) {
+        this.general.edgeDefaults[key] = value;
+    },
+    getVertexDefault: function (key) {
+        return this.general.vertexDefaults[key];
+    },
+    getEdgeDefault: function (key) {
+        return this.general.edgeDefaults[key];
+    },
+    getVertexDefaults: function () {
+        return this.general.vertexDefaults;
+    },
+    getEdgeDefaults: function () {
+        return this.general.edgeDefaults;
+    },
+    getVisualSets: function () {
+        return this.general.visualSets;
+    },
+    loadVisualSets: function (visualSets) {
+        this.general.visualSets = visualSets;
+    },
+    setVisualSet: function (key, value) {
+        this.general.visualSets[key] = value;
+    },
+    setCenter: function (center) {
+        this.general.center = center;
+    },
+    getCenter: function () {
+        return this.general.center;
+    },
+    getZoom: function () {
+        return this.general.zoom;
+    },
+    setZoom: function (zoom) {
+        this.general.zoom = zoom;
+    },
+    loadJSON: function (o) {
+        if (o.version === this.version) {
+            _.extend(this, o)
+        } else {
+            console.log('Could not load session, does not match with current version');
+            localStorage.removeItem('CELLMAPS_SESSION');
+        }
+//        this.config = o.config;
+//        this.graph = o.graph;
+//        this.attributes = o.attributes;
+//        this.general = o.general;
+    },
+    toJSON: function () {
+        return {
+            general: this.general,
+            config: this.config,
+            graph: this.graph,
+            attributes: this.attributes,
+            version: this.version
+        };
+    }
+};
+
+
+
 /*
  * Copyright (c) 2012 Francisco Salavert (ICM-CIPF)
  * Copyright (c) 2012 Ruben Sanchez (ICM-CIPF)
@@ -19503,21 +21741,21 @@ function Network(args) {
     //set instantiation args, must be last
     _.extend(this, args);
 
-
     this.graph = new Graph();
     this.config = new NetworkConfig();
 
     // Default attributes for vertices and edges.
     // They cannot be deleted.
     var vertexAttributes = [
-        {name: "Id", type: "string", defaultValue: "none", locked: true},
+        {name: "id", type: "string", defaultValue: "none", locked: true},
         {name: "Name", type: "string", defaultValue: "none"}
     ];
     var edgeAttributes = [
-        {name: "Id", type: "string", defaultValue: "none", locked: true},
+        {name: "id", type: "string", defaultValue: "none", locked: true},
         {name: "Name", type: "string", defaultValue: "none"},
         {name: "Relation", type: "string", defaultValue: "none"}
     ];
+
     this.vertexAttributeManager = new AttributeManagerStore({
         attributes: vertexAttributes,
         handlers: {
@@ -19534,6 +21772,7 @@ function Network(args) {
             }
         }
     });
+
 
     this.batchFlag = false;
 
@@ -19552,7 +21791,9 @@ Network.prototype = {
             if (typeof vertex !== 'undefined') {
                 this.addVertex({
                     vertex: vertex,
-                    vertexConfig: new VertexConfig({})
+                    vertexConfig: new VertexConfig({
+                        rendererConfig: this.session.getVertexDefaults()
+                    })
                 });
             }
         }
@@ -19561,7 +21802,9 @@ Network.prototype = {
             if (typeof edge !== 'undefined') {
                 this.addEdge({
                     edge: edge,
-                    edgeConfig: new EdgeConfig({})
+                    edgeConfig: new EdgeConfig({
+                        rendererConfig: this.session.getEdgeDefaults()
+                    })
                 });
             }
         }
@@ -19606,7 +21849,9 @@ Network.prototype = {
 
             /* vertex config */
             if (typeof vertexConfig === 'undefined') {
-                vertexConfig = new VertexConfig({});
+                vertexConfig = new VertexConfig({
+                    rendererConfig: this.session.getVertexDefaults()
+                });
             }
             vertexConfig.id = vertex.id;
             this.setVertexConfig(vertexConfig);
@@ -19622,11 +21867,12 @@ Network.prototype = {
             }
 
             this.vertexAttributeManager.addRecord({
-                'Id': vertex.id,
+                'id': vertex.id,
                 'Name': n
             });
 
             if (this.batchFlag == false) {
+                this.vertexAttributeManager.trigger('change:data', {sender: this});
                 this.trigger('add:vertex');
             }
         }
@@ -19643,7 +21889,9 @@ Network.prototype = {
 
             /* edge config */
             if (typeof edgeConfig === 'undefined') {
-                edgeConfig = new EdgeConfig({});
+                edgeConfig = new EdgeConfig({
+                    rendererConfig: this.session.getEdgeDefaults()
+                });
             }
             edgeConfig.id = edge.id;
             this.setEdgeConfig(edgeConfig);
@@ -19655,12 +21903,13 @@ Network.prototype = {
 
             //attributes
             this.edgeAttributeManager.addRecord({
-                'Id': edge.id,
+                'id': edge.id,
                 'Name': edge.id,
                 'Relation': edge.relation
             });
 
             if (this.batchFlag == false) {
+                this.edgeAttributeManager.trigger('change:data', {sender: this});
                 this.trigger('add:edge');
             }
         }
@@ -19714,15 +21963,14 @@ Network.prototype = {
         }
     },
     removeVertices: function (vertices) {
-        this.vertexAttributeManager.store.suspendEvents();
+        this.batchStart();
         for (var i = 0, li = vertices.length; i < li; i++) {
             var vertex = vertices[i];
             if (typeof vertex !== 'undefined') {
-                this.removeVertex(vertex, true);
+                this.removeVertex(vertex);
             }
         }
-        this.vertexAttributeManager.store.resumeEvents();
-        this.vertexAttributeManager.store.fireEvent('refresh');
+        this.batchEnd();
         this.trigger('remove:vertices');
     },
     renderVertex: function (vertex, target) {
@@ -20118,7 +22366,7 @@ Network.prototype = {
 
                 var slicesMap = {};
 
-                var id = record.get('Id');
+                var id = record.get('id');
 
 //                if(id === 'c'){
 //                    debugger
@@ -20140,7 +22388,7 @@ Network.prototype = {
                             var config = configs[i];
                             if (typeof config !== 'undefined') {
                                 var value = record.get(config.attribute);
-                                if (typeof value !== 'undefined') {
+                                if (value) {
                                     var valueSplit = value.split(',');
                                     valuesAndConfigList.push({values: valueSplit, config: config});
                                 }
@@ -20210,7 +22458,7 @@ Network.prototype = {
                                     slices.push(slice);
                                 }
                             } else {
-                                console.log(record.get('Id'));
+                                console.log(record.get('id'));
                             }
                         }
                         if (slices.length > 0) {
@@ -20219,6 +22467,7 @@ Network.prototype = {
                     }
                 }
                 vertexConfig.renderer.updateComplex(slicesMap, defaults);
+                _this._updateEdgeCoords(vertex);
             });
         }
     },
@@ -20314,11 +22563,11 @@ Network.prototype = {
         this.edgeAttributeManager.clean();
 
         var vertexAttributes = [
-            {name: "Id", type: "string", defaultValue: "none", locked: true},
+            {name: "id", type: "string", defaultValue: "none", locked: true},
             {name: "Name", type: "string", defaultValue: "none"}
         ];
         var edgeAttributes = [
-            {name: "Id", type: "string", defaultValue: "none", locked: true},
+            {name: "id", type: "string", defaultValue: "none", locked: true},
             {name: "Name", type: "string", defaultValue: "none"},
             {name: "Relation", type: "string", defaultValue: "none"}
         ];
@@ -20367,44 +22616,56 @@ Network.prototype = {
 
     /** JSON import/export **/
     /* https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/JSON/stringify */
-    toJSON: function () {
-        return {
-            graph: this.graph,
-            config: this.config,
-            vertexAttributes: this.vertexAttributeManager,
-            edgeAttributes: this.edgeAttributeManager
-        };
+    saveSession: function () {
+        this.session.loadGraph(this.graph);
+        this.session.loadConfig(this.config);
+        this.session.loadVertexAttributes(this.vertexAttributeManager);
+        this.session.loadEdgeAttributes(this.edgeAttributeManager);
+//        return {
+//            graph: this.graph,
+//            config: this.config,
+//            vertexAttributes: this.vertexAttributeManager,
+//            edgeAttributes: this.edgeAttributeManager
+//        };
     },
-    loadJSON: function (content) {
+    loadSession: function () {
         this.clean();
 
         this.batchStart();
         console.time('Network.loadJSON');
-        for (var i = 0; i < content.graph.vertices.length; i++) {
-            var v = content.graph.vertices[i];
+
+//        console.time('Network.loadJSON-Vertices');
+        for (var i = 0; i < this.session.graph.vertices.length; i++) {
+            var v = this.session.graph.vertices[i];
             var vertex = new Vertex({
                 id: v.id
             });
 
             /* vertex config */
-            var config = content.config.vertices[v.id];
+            var config = this.session.config.vertices[v.id];
+//            console.time('Network.loadJSON-vertex');
             if (typeof config === 'undefined') {
-                var vertexConfig = new VertexConfig({});
+                var vertexConfig = new VertexConfig({
+                    rendererConfig: this.session.getVertexDefaults()
+                });
             } else {
                 var vertexConfig = new VertexConfig({
                     id: v.id,
-                    coords: content.config.vertices[v.id].coords,
+                    coords: this.session.config.vertices[v.id].coords,
                     rendererConfig: config.renderer
                 });
             }
+//            console.timeEnd('Network.loadJSON-vertex');
 
             this.addVertex({
                 vertex: vertex,
                 vertexConfig: vertexConfig
             });
         }
-        for (var i = 0; i < content.graph.edges.length; i++) {
-            var e = content.graph.edges[i];
+//        console.timeEnd('Network.loadJSON-Vertices');
+//        console.time('Network.loadJSON-Edges');
+        for (var i = 0; i < this.session.graph.edges.length; i++) {
+            var e = this.session.graph.edges[i];
 
             var source = this.getVertexById(e.source.id);
             var target = this.getVertexById(e.target.id);
@@ -20417,13 +22678,15 @@ Network.prototype = {
             });
 
             /* edge config */
-            var config = content.config.edges[v.id];
+            var config = this.session.config.edges[e.id];
             if (typeof config === 'undefined') {
-                var edgeConfig = new EdgeConfig({});
+                var edgeConfig = new EdgeConfig({
+                    rendererConfig: this.session.getEdgeDefaults()
+                });
             } else {
                 var edgeConfig = new EdgeConfig({
-                    id: v.id,
-                    coords: content.config.edges[v.id].coords,
+                    id: e.id,
+                    coords: this.session.config.edges[e.id].coords,
                     rendererConfig: config.renderer
                 });
             }
@@ -20433,9 +22696,10 @@ Network.prototype = {
                 edgeConfig: edgeConfig
             });
         }
+//        console.timeEnd('Network.loadJSON-Edges');
 
-        this._importAttributes(content.vertexAttributes, this.vertexAttributeManager);
-        this._importAttributes(content.edgeAttributes, this.edgeAttributeManager);
+        this._importAttributes(this.session.attributes.vertices, this.vertexAttributeManager);
+        this._importAttributes(this.session.attributes.edges, this.edgeAttributeManager);
 
         this.batchEnd();
         this.trigger('load:json');
@@ -20464,7 +22728,7 @@ Network.prototype = {
         console.timeEnd('Network.importVertexWithAttributes');
     },
     _importAttributes: function (data, attributeManager) {
-        if (data.attributes.length > 1) {
+        if (data.attributes && data.attributes.length > 1) {
             var attributes = data.attributes;
             attributeManager.addAttributes(attributes);
             // add values for attributes
@@ -20504,10 +22768,11 @@ Network.prototype = {
         this.edgeAttributeManager.store.resumeEvents();
         this.vertexAttributeManager.store.fireEvent('refresh');
         this.edgeAttributeManager.store.fireEvent('refresh');
+        this.vertexAttributeManager.trigger('change:data', {sender: this});
+        this.edgeAttributeManager.trigger('change:data', {sender: this});
         this.batchFlag = false;
         this.trigger('batch:end');
     }
-
 }
 /*
  * Copyright (c) 2012 Francisco Salavert (ICM-CIPF)
@@ -20998,7 +23263,7 @@ function FeatureDataAdapter(dataSource, args) {
         }
     }
 
-    this.featureCache = new FeatureCache({chunkSize: 10000, gzip: this.gzip});
+    this.featureCache = new FileFeatureCache({chunkSize: 10000, gzip: this.gzip});
 
 //	this.onLoad = new Event();
 //	this.onGetData = new Event();
@@ -21021,8 +23286,9 @@ FeatureDataAdapter.prototype.getData = function (args) {
 
     var itemList = this.featureCache.getFeatureChunksByRegion(args.region);
     if (itemList != null) {
-        this.trigger('data:ready', {items: itemList, params: this.params, chunkSize:this.featureCache.chunkSize, cached: true, sender: this});
+        this.trigger('data:ready', {items: itemList, params: this.params, chunkSize: this.featureCache.chunkSize, cached: true, sender: this});
     }
+    args.done();
 };
 
 FeatureDataAdapter.prototype._fetchData = function (region) {
@@ -21037,7 +23303,7 @@ FeatureDataAdapter.prototype._fetchData = function (region) {
 
                 var itemList = _this.featureCache.getFeatureChunksByRegion(region);
                 if (itemList != null) {
-                    _this.trigger('data:ready', {items: itemList, params: _this.params, chunkSize:_this.featureCache.chunkSize, cached: true, sender: _this});
+                    _this.trigger('data:ready', {items: itemList, params: _this.params, chunkSize: _this.featureCache.chunkSize, cached: true, sender: _this});
                 }
 
             });
@@ -21388,6 +23654,9 @@ function CellBaseAdapter(args) {
 
     _.extend(this, Backbone.Events);
 
+    this.host;
+    this.version;
+
     _.extend(this, args);
 
     this.on(this.handlers);
@@ -21399,6 +23668,8 @@ CellBaseAdapter.prototype = {
 
     getData: function (args) {
         var _this = this;
+
+        args.webServiceCallCount = 0;
 
         /** Check region and parameters **/
         var region = args.region;
@@ -21437,9 +23708,11 @@ CellBaseAdapter.prototype = {
             //      |------------------------|         -> Adjusted region
             var adjustedRegions = this.cache[histogramId].getAdjustedRegions(region);
             if (adjustedRegions.length > 0) {
+                args.webServiceCallCount++;
                 // Get CellBase data
                 CellBaseManager.get({
                     host: this.host,
+                    version: this.version,
                     species: this.species,
                     category: this.category,
                     subCategory: this.subCategory,
@@ -21447,17 +23720,17 @@ CellBaseAdapter.prototype = {
                     resource: this.resource,
                     params: params,
                     success: function (data) {
-                        _this._cellbaseHistogramSuccess(data, dataType, histogramId);
+                        _this._cellbaseHistogramSuccess(data, dataType, histogramId, args);
                     }
                 });
-            } else {
-                // Get chunks from cache
-                var chunksByRegion = this.cache[histogramId].getCachedByRegion(region);
-                var chunksCached = this.cache[histogramId].getByRegions(chunksByRegion.cached);
-                this.trigger('data:ready', {items: chunksCached, dataType: dataType, chunkSize: chunkSize, sender: this});
             }
+            // Get chunks from cache
+            var chunksByRegion = this.cache[histogramId].getCachedByRegion(region);
+            var chunksCached = this.cache[histogramId].getByRegions(chunksByRegion.cached);
+            this.trigger('data:ready', {items: chunksCached, dataType: dataType, chunkSize: chunkSize, sender: this});
 
-        /** Features: genes, snps ... **/
+
+            /** Features: genes, snps ... **/
         } else {
             // Features will be saved using the dataType features
             if (_.isUndefined(this.cache[dataType])) {
@@ -21487,8 +23760,10 @@ CellBaseAdapter.prototype = {
                 var queriesList = _.toArray(lists); //Added this to convert the returned object to an array.
 
                 for (var i = 0; i < queriesList.length; i++) {
+                    args.webServiceCallCount++;
                     CellBaseManager.get({
                         host: this.host,
+                        version: this.version,
                         species: this.species,
                         category: this.category,
                         subCategory: this.subCategory,
@@ -21496,7 +23771,7 @@ CellBaseAdapter.prototype = {
                         resource: this.resource,
                         params: params,
                         success: function (data) {
-                            _this._cellbaseSuccess(data, dataType);
+                            _this._cellbaseSuccess(data, dataType, args);
                         }
                     });
                 }
@@ -21507,10 +23782,13 @@ CellBaseAdapter.prototype = {
                 this.trigger('data:ready', {items: chunksCached, dataType: dataType, chunkSize: chunkSize, sender: this});
             }
         }
-
+        if (args.webServiceCallCount === 0) {
+            args.done();
+        }
     },
 
-    _cellbaseSuccess: function (data, dataType) {
+    _cellbaseSuccess: function (data, dataType, args) {
+        args.webServiceCallCount--;
         var timeId = this.resource + " save " + Utils.randomString(4);
         console.time(timeId);
         /** time log **/
@@ -21534,10 +23812,14 @@ CellBaseAdapter.prototype = {
         if (chunks.length > 0) {
             this.trigger('data:ready', {items: chunks, dataType: dataType, chunkSize: chunkSize, sender: this});
         }
+        if (args.webServiceCallCount === 0) {
+            args.done();
+        }
 
 
     },
-    _cellbaseHistogramSuccess: function (data, dataType, histogramId) {
+    _cellbaseHistogramSuccess: function (data, dataType, histogramId, args) {
+        args.webServiceCallCount--;
         var timeId = Utils.randomString(4);
         console.time(this.resource + " save " + timeId);
         /** time log **/
@@ -21556,6 +23838,10 @@ CellBaseAdapter.prototype = {
         }
 
         this.trigger('data:ready', {items: chunks, dataType: dataType, chunkSize: chunkSize, sender: this});
+        if (args.webServiceCallCount === 0) {
+            args.done();
+        }
+
         /** time log **/
         console.timeEnd(this.resource + " get and save " + timeId);
     }
@@ -22505,6 +24791,7 @@ function SequenceAdapter(args) {
 
     //set default args
     this.host;
+    this.version;
     this.gzip = true;
 
     //set instantiation args, must be last
@@ -22548,6 +24835,7 @@ SequenceAdapter.prototype.getData = function (args) {
 
         CellBaseManager.get({
             host: this.host,
+            version: this.version,
             species: this.species,
             category: this.category,
             subCategory: this.subCategory,
@@ -22591,7 +24879,7 @@ SequenceAdapter.prototype._getSequenceQuery = function (region) {
         query = chromosome + ":" + s + "-" + e;
         querys.push(query);
     } else {
-        if (region.start < _this.start[chromosome] ) {
+        if (region.start < _this.start[chromosome]) {
             s = region.start;
             e = _this.start[chromosome] - 1;
             e = (e < 1) ? region.end = 1 : e;
@@ -22627,7 +24915,7 @@ SequenceAdapter.prototype._processSequenceQuery = function (data, throwNotify) {
 
 
         var chromosome = seqResponse.chromosome;
-        if(typeof chromosome === 'undefined'){
+        if (typeof chromosome === 'undefined') {
             chromosome = seqResponse.sequenceName;
         }
 
@@ -22678,6 +24966,7 @@ SequenceAdapter.prototype.getNucleotidByPosition = function (args) {
         if (queryString != "") {
             var data = CellBaseManager.get({
                 host: this.host,
+                version: this.version,
                 species: this.species,
                 category: this.category,
                 subCategory: this.subCategory,
@@ -22722,76 +25011,77 @@ SequenceAdapter.prototype.getNucleotidByPosition = function (args) {
 VCFDataAdapter.prototype.getData = FeatureDataAdapter.prototype.getData;
 VCFDataAdapter.prototype._fetchData = FeatureDataAdapter.prototype._fetchData;
 
-function VCFDataAdapter(dataSource, args){
-	FeatureDataAdapter.prototype.constructor.call(this, dataSource, args);
-	var _this = this;
-	
-	this.async = true;
-	//stat atributes
-	this.featuresCount = 0;
-	this.featuresByChromosome = {};
-	
-	this.header = "";
-	this.samples = [];
+function VCFDataAdapter(dataSource, args) {
+    FeatureDataAdapter.prototype.constructor.call(this, dataSource, args);
+    var _this = this;
 
-	if (args != null){
-		if(args.async != null){
-			this.async = args.async;
-		}
-	}
+    this.async = true;
+    //stat atributes
+    this.featuresCount = 0;
+    this.featuresByChromosome = {};
+
+    this.header = "";
+    this.samples = [];
+
+    if (args != null) {
+        if (args.async != null) {
+            this.async = args.async;
+        }
+    }
 }
 
-VCFDataAdapter.prototype.parse = function(data, region){
+VCFDataAdapter.prototype.parse = function (data, region) {
 //	console.log(data);
-	var _this = this;
-	var dataType = "value";
-	var lines = data.split("\n");
+    var _this = this;
+    var dataType = "value";
+    var lines = data.split("\n");
 //    debugger
 //	console.log("creating objects");
-	for (var i = 0; i < lines.length; i++){
+    for (var i = 0; i < lines.length; i++) {
 //        debugger
-		var line = lines[i].replace(/^\s+|\s+$/g,"");
-		if ((line != null)&&(line.length > 0)){
-			var fields = line.split("\t");
-			if(fields[0]==region.chromosome){// load only one chromosome on the cache
-			
-				if(line.substr(0,1)==="#"){
-					if(line.substr(1,1)==="#"){
-						this.header+=line.replace(/</gi,"&#60;").replace(/>/gi,"&#62;")+"<br>";
-					}else{
-						this.samples = fields.slice(9);
-					}
-				}else{
-	//				_this.addQualityControl(fields[5]);
-					var feature = {
-							"chromosome": 	fields[0],
-							"position": 	parseInt(fields[1]), 
-							"start": 		parseInt(fields[1]),//added
-							"end": 			parseInt(fields[1]),//added
-							"id":  			fields[2],
-							"reference": 			fields[3],
-							"alternate": 			fields[4],
-							"quality": 		fields[5], 
-							"filter": 		fields[6], 
-							"info": 		fields[7].replace(/;/gi,"<br>"), 
-							"format": 		fields[8],
-							"sampleData":	line,
-	//						"record":		fields,
-	//						"label": 		fields[2] + " " +fields[3] + "/" + fields[4] + " Q:" + fields[5],
-							"featureType":	"vcf"
-					};
-					
-					this.featureCache.putFeatures(feature, dataType);
-					
-					if (this.featuresByChromosome[fields[0]] == null){
-						this.featuresByChromosome[fields[0]] = 0;
-					}
-					this.featuresByChromosome[fields[0]]++;
-					this.featuresCount++;
-				}
-			}
-		}
-	}
+        var line = lines[i].replace(/^\s+|\s+$/g, "");
+        if ((line != null) && (line.length > 0)) {
+            var fields = line.split("\t");
+            var chrom = fields[0].replace(/chr/gi, "");
+            if (chrom == region.chromosome) {// load only one chromosome on the cache
+
+                if (line.substr(0, 1) === "#") {
+                    if (line.substr(1, 1) === "#") {
+                        this.header += line.replace(/</gi, "&#60;").replace(/>/gi, "&#62;") + "<br>";
+                    } else {
+                        this.samples = fields.slice(9);
+                    }
+                } else {
+                    //				_this.addQualityControl(fields[5]);
+                    var feature = {
+                        "chromosome": chrom,
+                        "position": parseInt(fields[1]),
+                        "start": parseInt(fields[1]),//added
+                        "end": parseInt(fields[1]),//added
+                        "id": fields[2],
+                        "reference": fields[3],
+                        "alternate": fields[4],
+                        "quality": fields[5],
+                        "filter": fields[6],
+                        "info": fields[7].replace(/;/gi, "<br>"),
+                        "format": fields[8],
+                        "sampleData": line,
+                        //						"record":		fields,
+                        //						"label": 		fields[2] + " " +fields[3] + "/" + fields[4] + " Q:" + fields[5],
+                        "featureType": "vcf"
+                    };
+
+                    this.featureCache.putFeatures(feature, dataType);
+
+                    if (this.featuresByChromosome[chrom] == null) {
+                        this.featuresByChromosome[chrom] = 0;
+                    }
+                    this.featuresByChromosome[chrom]++;
+                    this.featuresCount++;
+                }
+            }
+        }
+    }
 };
 
 /*
@@ -22875,16 +25165,28 @@ AttributeNetworkDataAdapter.prototype.parse = function (data) {
 
 
     try {
-
         var lines = data.split("\n");
         var firstLine = lines[0].replace(/^\s+|\s+$/g, "");
+        var columnNames = [];
+        if (firstLine.substr(0, 1) === "#") {
+            columnNames = firstLine.split("\t");
+
+            //search for first non header line "#"
+            for (var i = 0; i < lines.length; i++) {
+                var line = lines[i].replace(/^\s+|\s+$/g, "");
+                if(line.substr(0, 1) !== "#"){
+                    firstLine = line;
+                    break;
+                }
+            }
+        }
+
         var numColumns = firstLine.split("\t").length;
         for (var i = 0; i < numColumns; i++) {
-            var name = "Column" + i;
+            var name = (columnNames[i]) ? columnNames[i] : "Column" + i;
             if (i == 0) {
-                name = "Id";
+                name = "id";
             }
-
             if (this.ignoreColumns[i] !== true) {
                 this.attributes.push({
                     "name": name,
@@ -22893,6 +25195,7 @@ AttributeNetworkDataAdapter.prototype.parse = function (data) {
                 });
             }
         }
+
 
         //ignore attributes
         if (Object.keys(this.ignoreColumns).length > 0) {
@@ -22911,7 +25214,7 @@ AttributeNetworkDataAdapter.prototype.parse = function (data) {
                     this.data.push(filteredFields);
                 }
             }
-        }else{
+        } else {
             for (var i = 0; i < lines.length; i++) {
                 var line = lines[i].replace(/^\s+|\s+$/g, "");
                 if ((line != null) && (line.length > 0) && line.substr(0, 1) != "#") {
@@ -22924,6 +25227,7 @@ AttributeNetworkDataAdapter.prototype.parse = function (data) {
         this.trigger('data:load', {sender: this});
     } catch (e) {
         console.log(e);
+        console.log(e.stack);
         this.trigger('error:parse', {errorMsg: 'Parse error', sender: this});
     }
 
@@ -23437,7 +25741,7 @@ TextNetworkDataAdapter.prototype.parse = function (data) {
     }
 };
 
-TextNetworkDataAdapter.prototype.parseColumns = function (sourceIndex, relationIndex, targetIndex) {
+TextNetworkDataAdapter.prototype.parseColumns = function (sourceIndex, targetIndex, relationIndex, relationDefaultName) {
     this.graph = new Graph();
     this.addedVertex = {};
     this.addedEdges = {};
@@ -23446,8 +25750,13 @@ TextNetworkDataAdapter.prototype.parseColumns = function (sourceIndex, relationI
         var fields = this.lines[i];
 
         var sourceName = fields[sourceIndex];
-        var edgeName = fields[relationIndex];
         var targetName = fields[targetIndex];
+        var edgeName;
+        if(relationIndex < 0){
+            edgeName = relationDefaultName;
+        }else{
+            edgeName = fields[relationIndex];
+        }
 
         /** create source vertex **/
         if (typeof this.addedVertex[sourceName] === 'undefined') {
@@ -23877,234 +26186,208 @@ FeatureChunkCache.prototype = {
  * along with JS Common Libs. If not, see <http://www.gnu.org/licenses/>.
  */
 
-function FeatureCache(args) {
+function FileFeatureCache(args) {
+	this.args = args;
+	this.id = Math.round(Math.random() * 10000000); // internal id for this class
 
-    // Using Underscore 'extend' function to extend and add Backbone Events
-    _.extend(this, Backbone.Events);
+	this.chunkSize = 50000;
+	this.gzip = true;
+	this.maxSize = 10*1024*1024;
+	this.size = 0;
+	
+	if (args != null){
+		if(args.chunkSize != null){
+			this.chunkSize = args.chunkSize;
+		}
+		if(args.gzip != null){
+			this.gzip = args.gzip;
+		}
+	}
+	
+	this.cache = {};
+	this.chunksDisplayed = {};
+	
+	this.maxFeaturesInterval = 0;
+	
+	//XXX
+	this.gzip = false;
 
-//    this.args = args;
-
-    // Default values
-    this.id = Utils.genId("FeatureCache");
-    // Accepted values are 'memory' and 'indexeddb' [memory]
-    this.storeType = 'memory';
-    this.chunkSize = 50000;
-    this.maxSize = 10*1024*1024;
-    this.size = 0;
-    this.verbose = false;
-    this.gzip = true;
-
-    // Now we set the args parameters
-    // must be the last instruction
-    _.extend(this, args);
-
-
-
-    this.store;
-
-//    this.cache = {};
-    this.chunksDisplayed = {};
-
-    this.maxFeaturesInterval = 0;
-
-    this.init();
 };
 
-FeatureCache.prototype = {
+FileFeatureCache.prototype._getChunk = function(position){
+	return Math.floor(position/this.chunkSize);
+};
 
-    init: function() {
-        this.size = 0;
-        if(typeof this.storeType === 'undefined' || this.storeType == 'memory') {
-            this.store = new MemoryStore({});
-        }else {
-            this.store = new IndexedDBStore({});
+FileFeatureCache.prototype.getChunkRegion = function(region){
+	start = this._getChunk(region.start) * this.chunkSize;
+	end = (this._getChunk(region.end) * this.chunkSize) + this.chunkSize-1;
+	return {start:start,end:end};
+};
+
+FileFeatureCache.prototype.getFirstFeature = function(){
+	var feature;
+	if(this.gzip) {
+		feature = JSON.parse(RawDeflate.inflate(this.cache[Object.keys(this.cache)[0]].data[0]));
+	}else{
+		feature = this.cache[Object.keys(this.cache)[0]].data[0];
+	}
+	return feature;
+};
+
+
+//new 
+FileFeatureCache.prototype.getFeatureChunk = function(key){
+	if(this.cache[key] != null) {
+		return this.cache[key];
+	}
+	return null;
+};
+FileFeatureCache.prototype.getFeatureChunkByDataType = function(key,dataType){
+	if(this.cache[key] != null) {
+        if(this.cache[key][dataType] != null){
+		    return this.cache[key][dataType];
         }
-//        this.cache = {};
-    },
-
-    _getChunk: function(position){
-        return Math.floor(position/this.chunkSize);
-    },
-
-    _getChunkKey: function(chromosome, chunkId){
-        return chromosome + ":" + chunkId;
-    },
-
-    getChunkRegion: function(region){
-        start = this._getChunk(region.start) * this.chunkSize;
-        end = (this._getChunk(region.end) * this.chunkSize) + this.chunkSize-1;
-        return {start: start, end: end};
-    },
-
-    getFirstFeature: function(){
-       return this.store.get(Object.keys(this.store.store)[0].key)[0];
-    },
-
-
+	}
+	return null;
+};
 //new
-    getFeatureChunk: function(key){
-        return this.store.get(key);
-    },
-//new
-    getFeatureChunksByRegion: function(region){
-        var firstRegionChunk, lastRegionChunk;
-        var chunks = [];
-        var key;
-        firstRegionChunk = this._getChunk(region.start);
-        lastRegionChunk = this._getChunk(region.end);
-        for(var i=firstRegionChunk; i<=lastRegionChunk; i++){
-            key = region.chromosome+":"+i;
-
-            // check if this key exists in cache (features from files)
-            var feature = this.store.get(key);
-            if(!_.isUndefined(feature)){
-                chunks.push(feature);
-            }
-        }
-        // Returns empty list if nothing was found
-        return chunks;
-    },
+FileFeatureCache.prototype.getFeatureChunksByRegion = function(region){
+	var firstRegionChunk, lastRegionChunk,  chunks = [], key;
+	firstRegionChunk = this._getChunk(region.start);
+	lastRegionChunk = this._getChunk(region.end);
+	for(var i=firstRegionChunk; i<=lastRegionChunk; i++){
+		key = region.chromosome+":"+i;
+		// check if this key exists in cache (features from files)
+		if(this.cache[key] != null ){
+			chunks.push(this.cache[key]);
+		}
+		
+	}
+	//if(chunks.length == 0){
+		//return null;
+	//}
+	return chunks;
+};
 
 
-    putFeatureByRegion:function(feature, region){
+FileFeatureCache.prototype.putFeaturesByRegion = function(featureDataList, region, featureType, dataType){
+	var key, firstRegionChunk, lastRegionChunk, firstChunk, lastChunk, feature, gzipFeature;
 
-        var firstFeatureChunk = this._getChunk(feature.start);
-        var lastFeatureChunk = this._getChunk(feature.end);
 
-        var firstRegionChunk = this._getChunk(region.start);
-        var lastRegionChunk = this._getChunk(region.end);
+	//initialize region
+	firstRegionChunk = this._getChunk(region.start);
+	lastRegionChunk = this._getChunk(region.end);
 
-        for(var i=firstFeatureChunk; i<=lastFeatureChunk; i++) {
-            if(i >= firstRegionChunk && i<= lastRegionChunk){//only if is inside the called region
-                key = region.chromosome+":"+i;
-                this.store.put()
-                this.cache[key][dataType].push(gzipFeature);
-            }
-        }
-    },
-
-    putFeaturesByRegion: function(featureDataList, region){
-        var key, firstRegionChunk, lastRegionChunk, firstChunk, lastChunk, feature, gzipFeature;
-
-        //initialize region
-        firstRegionChunk = this._getChunk(region.start);
-        lastRegionChunk = this._getChunk(region.end);
-
-        for(var i=firstRegionChunk; i<=lastRegionChunk; i++){
-            key = region.chromosome+":"+i;
-            if(this.cache[key]==null){
-                this.cache[key] = {};
-                this.cache[key].key = key;
-            }
+	for(var i=firstRegionChunk; i<=lastRegionChunk; i++){
+		key = region.chromosome+":"+i;
+		if(this.cache[key]==null){
+			this.cache[key] = {};
+			this.cache[key].key = key;
+		}
 //        else{
 //            // TODO
 //            console.log(region.chromosome+region.start+region.end+'-'+featureType+'-'+dataType);
 ////            return;
 //        }
+		if(this.cache[key][dataType]==null){
+			this.cache[key][dataType] = [];
+		}
+	}
 
-//            this.store.add(key+"_"+dataType, value);
-//            this.store.add(key, {datatype: value});
+    //Check if is a single object
+    if(featureDataList.constructor != Array){
+        featureDataList = [featureDataList];
+    }
 
-
-            if(this.cache[key][dataType]==null){
-                this.cache[key][dataType] = [];
-            }
-        }
-
-        //Check if is a single object
-        if(featureDataList.constructor != Array){
-            featureDataList = [featureDataList];
-        }
-
-        //loop over features and set on corresponding chunks
-        for(var index = 0, len = featureDataList.length; index<len; index++) {
-            feature = featureDataList[index];
-            feature.featureType = featureType;
-            firstChunk = this._getChunk(feature.start);
-            lastChunk = this._getChunk(feature.end);
-
-            if(this.gzip) {
-                gzipFeature = RawDeflate.deflate(JSON.stringify(feature));
-            }else{
-                gzipFeature = feature;
-            }
-
-            for(var i=firstChunk; i<=lastChunk; i++) {
-                if(i >= firstRegionChunk && i<= lastRegionChunk){//only if is inside the called region
-                    key = region.chromosome+":"+i;
-                    this.cache[key][dataType].push(gzipFeature);
-                }
-            }
-        }
+    //loop over features and set on corresponding chunks
+	for(var index = 0, len = featureDataList.length; index<len; index++) {
+		feature = featureDataList[index];
+		feature.featureType = featureType;
+		firstChunk = this._getChunk(feature.start);
+		lastChunk = this._getChunk(feature.end);
+		
+		if(this.gzip) {
+			gzipFeature = RawDeflate.deflate(JSON.stringify(feature));
+		}else{
+			gzipFeature = feature;
+		}
+		
+		for(var i=firstChunk; i<=lastChunk; i++) {
+			if(i >= firstRegionChunk && i<= lastRegionChunk){//only if is inside the called region
+				key = region.chromosome+":"+i;
+				this.cache[key][dataType].push(gzipFeature);
+			}
+		}
+	}
 //        console.log(this.cache[region.chromosome+":"+firstRegionChunk][dataType].length)
-    },
+};
 
 
 //used by BED, GFF, VCF
-    putFeatures: function(featureDataList, dataType){
-        var feature, key, firstChunk, lastChunk;
+FileFeatureCache.prototype.putFeatures = function(featureDataList, dataType){
+	var feature, key, firstChunk, lastChunk;
 
-        //Check if is a single object
-        if(featureDataList.constructor != Array){
-            featureDataList = [featureDataList];
-        }
+	//Check if is a single object
+	if(featureDataList.constructor != Array){
+		featureDataList = [featureDataList];
+	}
 
-        for(var index = 0, len = featureDataList.length; index<len; index++) {
-            feature = featureDataList[index];
-            firstChunk = this._getChunk(feature.start);
-            lastChunk = this._getChunk(feature.end);
-            for(var i=firstChunk; i<=lastChunk; i++) {
-                key = feature.chromosome+":"+i;
-                if(this.cache[key]==null){
-                    this.cache[key] = [];
-                    this.cache[key].key = key;
-                }
-                if(this.cache[key][dataType]==null){
-                    this.cache[key][dataType] = [];
-                }
-                if(this.gzip) {
-                    this.cache[key][dataType].push(RawDeflate.deflate(JSON.stringify(feature)));
-                }else{
-                    this.cache[key][dataType].push(feature);
-                }
+	for(var index = 0, len = featureDataList.length; index<len; index++) {
+		feature = featureDataList[index];
+		firstChunk = this._getChunk(feature.start);
+		lastChunk = this._getChunk(feature.end);
+		for(var i=firstChunk; i<=lastChunk; i++) {
+			key = feature.chromosome+":"+i;
+			if(this.cache[key]==null){
+				this.cache[key] = [];
+				this.cache[key].key = key;
+			}
+			if(this.cache[key][dataType]==null){
+				this.cache[key][dataType] = [];
+			}
+			if(this.gzip) {
+				this.cache[key][dataType].push(RawDeflate.deflate(JSON.stringify(feature)));
+			}else{
+				this.cache[key][dataType].push(feature);
+			}
 
-            }
-        }
-    },
-
-    putChunk: function(key, item){
-        this.cache[key] = item;
-    },
-
-    getChunk: function(key){
-        return this.cache[key];
-    },
-
-    putCustom: function(f){
-        f(this);
-    },
-
-    getCustom: function(f){
-        f(this);
-    },
+		}
+	}
+};
 
 
 
-    remove: function(region){
-        var firstChunk = this._getChunk(region.start);
-        var lastChunk = this._getChunk(region.end);
-        for(var i=firstChunk; i<=lastChunk; i++){
-            var key = region.chromosome+":"+i;
-            this.cache[key] = null;
-        }
-    },
+FileFeatureCache.prototype.putChunk = function(key, item){
+	this.cache[key] = item;
+};
 
-    clear: function(){
-        this.size = 0;
-        this.cache = {};
-    }
-}
+FileFeatureCache.prototype.getChunk = function(key){
+	return this.cache[key];
+};
 
+FileFeatureCache.prototype.putCustom = function(f){
+	f(this);
+};
+
+FileFeatureCache.prototype.getCustom = function(f){
+	f(this);
+};
+
+
+
+FileFeatureCache.prototype.remove = function(region){
+	var firstChunk = this._getChunk(region.start);
+	var lastChunk = this._getChunk(region.end);
+	for(var i=firstChunk; i<=lastChunk; i++){
+		var key = region.chromosome+":"+i;
+		this.cache[key] = null;
+	}
+};
+
+FileFeatureCache.prototype.clear = function(){
+		this.size = 0;		
+		this.cache = {};
+};
 
 
 //END
@@ -24116,188 +26399,188 @@ FeatureCache.prototype = {
 
 
 /*
- FeatureCache.prototype.getFeaturesByChunk = function(key, dataType){
- var features =  [];
- var feature, firstChunk, lastChunk;
-
- if(this.cache[key] != null && this.cache[key][dataType] != null) {
- for ( var i = 0, len = this.cache[key][dataType].length; i < len; i++) {
- if(this.gzip) {
- feature = JSON.parse(RawDeflate.inflate(this.cache[key][dataType][i]));
- }else{
- feature = this.cache[key][dataType][i];
- }
-
- //check if any feature chunk has been already displayed
- var displayed = false;
- firstChunk = this._getChunk(feature.start);
- lastChunk = this._getChunk(feature.end);
- for(var f=firstChunk; f<=lastChunk; f++){
- var fkey = feature.chromosome+":"+f;
- if(this.chunksDisplayed[fkey+dataType]==true){
- displayed = true;
- break;
- }
- }
-
- if(!displayed){
- features.push(feature);
- returnNull = false;
- }
- }
- this.chunksDisplayed[key+dataType]=true;
- return features;
- }
-
- return null;
- };
-
-
- FeatureCache.prototype.getFeaturesByRegion = function(region, dataType){
- var firstRegionChunk, lastRegionChunk, firstChunk, lastChunk, features = [], feature, key, returnNull = true, displayed;
- firstRegionChunk = this._getChunk(region.start);
- lastRegionChunk = this._getChunk(region.end);
- for(var i=firstRegionChunk; i<=lastRegionChunk; i++){
- key = region.chromosome+":"+i;
- //check if this key exists in cache (features from files)
- if(this.cache[key] != null && this.cache[key][dataType] != null){
- for ( var j = 0, len = this.cache[key][dataType].length; j < len; j++) {
- if(this.gzip) {
- try {
- feature = JSON.parse(RawDeflate.inflate(this.cache[key][dataType][j]));
- } catch (e) {
- //feature es ""
- console.log(e)
- debugger
-
- }
-
- }else{
- feature = this.cache[key][dataType][j];
- }
- // we only get those features in the region AND check if chunk has been already displayed
- if(feature.end > region.start && feature.start < region.end){
-
- //		 check displayCheck argument
- if(region.displayedCheck != false){
- //		check if any feature chunk has been already displayed
- displayed = false;
- firstChunk = this._getChunk(feature.start);
- lastChunk = this._getChunk(feature.end);
- for(var f=firstChunk; f<=lastChunk; f++){
- var fkey = region.chromosome+":"+f;
- if(this.chunksDisplayed[fkey+dataType]==true){
- displayed = true;
- break;
- }
- }
-
- if(!displayed){
- features.push(feature);
- returnNull = false;
- }
- }else{
- features.push(feature);
- returnNull = false;
- }
+FileFeatureCache.prototype.getFeaturesByChunk = function(key, dataType){
+	var features =  [];
+	var feature, firstChunk, lastChunk;
+	
+	if(this.cache[key] != null && this.cache[key][dataType] != null) {
+		for ( var i = 0, len = this.cache[key][dataType].length; i < len; i++) {
+			if(this.gzip) {
+				feature = JSON.parse(RawDeflate.inflate(this.cache[key][dataType][i]));
+			}else{
+				feature = this.cache[key][dataType][i];
+			}
+			
+			//check if any feature chunk has been already displayed 
+			var displayed = false;
+			firstChunk = this._getChunk(feature.start);
+			lastChunk = this._getChunk(feature.end);
+			for(var f=firstChunk; f<=lastChunk; f++){
+				var fkey = feature.chromosome+":"+f;
+				if(this.chunksDisplayed[fkey+dataType]==true){
+					displayed = true;
+					break;
+				}
+			}
+			
+			if(!displayed){
+				features.push(feature);
+				returnNull = false;
+			}
+		}
+		this.chunksDisplayed[key+dataType]=true;
+		return features;
+	}
+	
+	return null;
+};
 
 
- }
- }
- }
- //check displayCheck argument
- if(region.displayedCheck != false){
- this.chunksDisplayed[key+dataType]=true;//mark chunk as displayed
- }
- }
- if(returnNull){
- return null;
- }else{
- return features;
- }
- };
- */
+FileFeatureCache.prototype.getFeaturesByRegion = function(region, dataType){
+	var firstRegionChunk, lastRegionChunk, firstChunk, lastChunk, features = [], feature, key, returnNull = true, displayed;
+	firstRegionChunk = this._getChunk(region.start);
+	lastRegionChunk = this._getChunk(region.end);
+	for(var i=firstRegionChunk; i<=lastRegionChunk; i++){
+		key = region.chromosome+":"+i;
+		 //check if this key exists in cache (features from files)
+		if(this.cache[key] != null && this.cache[key][dataType] != null){
+			for ( var j = 0, len = this.cache[key][dataType].length; j < len; j++) {
+				if(this.gzip) {
+					try {
+						feature = JSON.parse(RawDeflate.inflate(this.cache[key][dataType][j]));
+					} catch (e) {
+						//feature es "" 
+						console.log(e)
+						debugger
+						
+					}
+					
+				}else{
+					feature = this.cache[key][dataType][j];
+				}
+				// we only get those features in the region AND check if chunk has been already displayed
+				if(feature.end > region.start && feature.start < region.end){
+
+			//		 check displayCheck argument 
+					if(region.displayedCheck != false){
+				//		check if any feature chunk has been already displayed 
+						displayed = false;
+						firstChunk = this._getChunk(feature.start);
+						lastChunk = this._getChunk(feature.end);
+						for(var f=firstChunk; f<=lastChunk; f++){
+							var fkey = region.chromosome+":"+f;
+							if(this.chunksDisplayed[fkey+dataType]==true){
+								displayed = true;
+								break;
+							}
+						}
+						
+						if(!displayed){
+							features.push(feature);
+							returnNull = false;
+						}
+					}else{
+						features.push(feature);
+						returnNull = false;
+					}
+
+					
+				}
+			}
+		}
+		 //check displayCheck argument 
+		if(region.displayedCheck != false){
+			this.chunksDisplayed[key+dataType]=true;//mark chunk as displayed
+		}
+	}
+	if(returnNull){
+		return null;
+	}else{
+		return features;
+	}
+};
+*/
 
 
 
 
 /*
 
- FeatureCache.prototype.putChunk = function(featureDataList, chunkRegion, dataType){
- var feature, key, chunk;
- chunk = this._getChunk(chunkRegion.start);
- key = chunkRegion.chromosome+":"+chunk;
+FileFeatureCache.prototype.putChunk = function(featureDataList, chunkRegion, dataType){
+	var feature, key, chunk;
+	chunk = this._getChunk(chunkRegion.start);
+	key = chunkRegion.chromosome+":"+chunk;
 
- if(this.cache[key]==null){
- this.cache[key] = [];
- }
- if(this.cache[key][dataType]==null){
- this.cache[key][dataType] = [];
- }
+	if(this.cache[key]==null){
+		this.cache[key] = [];
+	}
+	if(this.cache[key][dataType]==null){
+		this.cache[key][dataType] = [];
+	}
 
- if(featureDataList.constructor == Object){
- if(this.gzip) {
- this.cache[key][dataType].push(RawDeflate.deflate(JSON.stringify(featureDataList)));
- }else{
- this.cache[key][dataType].push(featureDataList);
- }
- }else{
- for(var index = 0, len = featureDataList.length; index<len; index++) {
- feature = featureDataList[index];
- if(this.gzip) {
- this.cache[key][dataType].push(RawDeflate.deflate(JSON.stringify(feature)));
- }else{
- this.cache[key][dataType].push(feature);
- }
- }
- }
+	if(featureDataList.constructor == Object){
+		if(this.gzip) {
+			this.cache[key][dataType].push(RawDeflate.deflate(JSON.stringify(featureDataList)));
+		}else{
+			this.cache[key][dataType].push(featureDataList);
+		}
+	}else{
+		for(var index = 0, len = featureDataList.length; index<len; index++) {
+			feature = featureDataList[index];
+			if(this.gzip) {
+				this.cache[key][dataType].push(RawDeflate.deflate(JSON.stringify(feature)));
+			}else{
+				this.cache[key][dataType].push(feature);
+			}
+		}
+	}
+	
+};
 
- };
-
- */
+*/
 
 
 //NOT USED dev not tested
-//FeatureCache.prototype.histogram = function(region, interval){
+//FileFeatureCache.prototype.histogram = function(region, interval){
 //
-//var intervals = (region.end-region.start+1)/interval;
-//var intervalList = [];
-//
-//for ( var i = 0; i < intervals; i++) {
-//var featuresInterval = 0;
-//
-//var intervalStart = i*interval;//deberia empezar en 1...
-//var intervalEnd = ((i+1)*interval)-1;
-//
-//var firstChunk = this._getChunk(intervalStart+region.start);
-//var lastChunk = this._getChunk(intervalEnd+region.start);
-//
-//console.log(this.cache);
-//for(var j=firstChunk; j<=lastChunk; j++){
-//var key = region.chromosome+":"+j;
-//console.log(key);
-//console.log(this.cache[key]);
-//for ( var k = 0, len = this.cache[key].length; k < len; k++) {
-//if(this.gzip) {
-//feature = JSON.parse(RawDeflate.inflate(this.cache[key][k]));
-//}else{
-//feature = this.cache[key][k];
-//}
-//if(feature.start > intervalStart && feature.start < intervalEnd);
-//featuresInterval++;
-//}
-//
-//}
-//intervalList[i]=featuresInterval;
-//
-//if(this.maxFeaturesInterval<featuresInterval){
-//this.maxFeaturesInterval = featuresInterval;
-//}
-//}
-//
-//for ( var inter in  intervalList) {
-//intervalList[inter]=intervalList[inter]/this.maxFeaturesInterval;
-//}
+	//var intervals = (region.end-region.start+1)/interval;
+	//var intervalList = [];
+	//
+	//for ( var i = 0; i < intervals; i++) {
+		//var featuresInterval = 0;
+		//
+		//var intervalStart = i*interval;//deberia empezar en 1...
+		//var intervalEnd = ((i+1)*interval)-1;
+		//
+		//var firstChunk = this._getChunk(intervalStart+region.start);
+		//var lastChunk = this._getChunk(intervalEnd+region.start);
+		//
+		//console.log(this.cache);
+		//for(var j=firstChunk; j<=lastChunk; j++){
+			//var key = region.chromosome+":"+j;
+			//console.log(key);
+			//console.log(this.cache[key]);
+			//for ( var k = 0, len = this.cache[key].length; k < len; k++) {
+				//if(this.gzip) {
+					//feature = JSON.parse(RawDeflate.inflate(this.cache[key][k]));
+				//}else{
+					//feature = this.cache[key][k];
+				//}
+				//if(feature.start > intervalStart && feature.start < intervalEnd);
+				//featuresInterval++;
+			//}
+			//
+		//}
+		//intervalList[i]=featuresInterval;
+		//
+		//if(this.maxFeaturesInterval<featuresInterval){
+			//this.maxFeaturesInterval = featuresInterval;
+		//}
+	//}
+	//
+	//for ( var inter in  intervalList) {
+		//intervalList[inter]=intervalList[inter]/this.maxFeaturesInterval;
+	//}
 //};
 
 /*
@@ -24321,7 +26604,7 @@ FeatureCache.prototype = {
  * along with JS Common Libs. If not, see <http://www.gnu.org/licenses/>.
  */
 
-BamCache.prototype.putHistogramFeaturesByRegion = FeatureCache.prototype.putFeaturesByRegion;
+BamCache.prototype.putHistogramFeaturesByRegion = FileFeatureCache.prototype.putFeaturesByRegion;
 
 function BamCache(args) {
 	this.args = args;
@@ -24618,12 +26901,36 @@ function NavigationBar(args) {
 
     this.id = Utils.genId("NavigationBar");
 
+    this.cellBaseHost = 'http://www.ebi.ac.uk/cellbase/webservices/rest';
+    this.cellBaseVersion = 'v3';
+
     this.species = 'Homo sapiens';
     this.increment = 3;
-    this.componentsConfig = 3;
+    this.componentsConfig = {
+        leftSideButton: false,
+        restoreDefaultRegionButton: true,
+        regionHistoryButton: true,
+        speciesButton: true,
+        chromosomesButton: true,
+        karyotypeButton: true,
+        chromosomeButton: true,
+        regionButton: true,
+        zoomControl: true,
+        windowSizeControl: true,
+        positionControl: true,
+        moveControl: true,
+        autoheightButton: true,
+        compactButton: true,
+        searchControl: true
+    };
+    this.zoom = 100;
+
+    _.extend(this.componentsConfig, args.componentsConfig);
+    delete args.componentsConfig;
 
     //set instantiation args, must be last
     _.extend(this, args);
+
 
     //set new region object
     this.region = new Region(this.region);
@@ -24632,7 +26939,10 @@ function NavigationBar(args) {
 
     this.on(this.handlers);
 
+
+    this.els = {};
     this.zoomChanging = false;
+    this.regionChanging = false;
 
     this.rendered = false;
     if (this.autoRender) {
@@ -24653,6 +26963,9 @@ NavigationBar.prototype = {
 
         var navgationHtml = '' +
             '<div style="width: 1350px">' +
+            '   <div class="btn-group">' +
+            '       <button id="leftSideButton" class="btn btn-default btn-xs custom-xs" type="button"><span class="glyphicon glyphicon glyphicon-th-list"></span></button>' +
+            '   </div>' +
             '   <div class="btn-group">' +
             '       <button id="restoreDefaultRegionButton" class="btn btn-default btn-xs custom-xs" type="button"><span class="glyphicon glyphicon-repeat"></span></button>' +
             '   </div>' +
@@ -24684,12 +26997,14 @@ NavigationBar.prototype = {
 
 
             '   <div id="zoomControl" class="btn-group" style="margin-left:5px;">' +
+            '       <button id="zoomMinButton" class="btn btn-default custom-xs" type="button" style="width:31px"> 0 </button>' +
             '       <button id="zoomOutButton" class="btn btn-default custom-xs" type="button"><span class="glyphicon glyphicon-minus"></span></button>' +
             '       <div id="progressBarCont" class="progress pull-left" style="width:120px;height:22px;margin:0px;background-color: #d5d5d5;border-radius: 0px;">' +
-            '           <div id="progressBar" class="progress-bar" role="progressbar" aria-valuenow="45" aria-valuemin="0" aria-valuemax="100" style="width: 100%">' +
+            '           <div id="progressBar" class="progress-bar" role="progressbar" aria-valuenow="45" aria-valuemin="0" aria-valuemax="100" style="width: '+this.zoom+'%">' +
             '           </div>' +
             '       </div>' +
             '       <button id="zoomInButton" class="btn btn-default custom-xs" type="button"><span class="glyphicon glyphicon-plus"></span></button>' +
+            '       <button id="zoomMaxButton" class="btn btn-default custom-xs" type="button" style="width:40px"> 100 </button>' +
             '   </div>' +
 
 
@@ -24732,7 +27047,7 @@ NavigationBar.prototype = {
             '       <datalist id="searchDataList">' +
             '       </datalist>' +
             '       <div class="input-group-btn">' +
-            '           <button id="goButton" class="btn btn-default btn-sm custom-xs" type="button"><span class="glyphicon glyphicon-search"></span></button>' +
+            '           <button id="quickSearchButton" class="btn btn-default btn-sm custom-xs" type="button"><span class="glyphicon glyphicon-search"></span></button>' +
             '       </div>' +
             '   </div>' +
             '   </div>' +
@@ -24752,138 +27067,115 @@ NavigationBar.prototype = {
             '';
 
 
-        this.div = $('<div id="navigation-bar" class="gv-navigation-bar unselectable">' + navgationHtml + '</div>')[0];
+        this.div = $('<div id="navigation-bar" class="ocb-gv-navigation-bar unselectable">' + navgationHtml + '</div>')[0];
         $(this.div).css({
             height: '32px'
         });
         $(this.targetDiv).append(this.div);
 
         $(this.div).find('.custom-xs').css({
-            padding:'2px 4px',
-            height:'22px',
+            padding: '2px 4px',
+            height: '22px',
             lineHeight: '16px',
-            fontSize: '14px'
+            fontSize: '13px'
         });
 
-        this.restoreDefaultRegionButton = $(this.div).find('#restoreDefaultRegionButton')[0];
-
-        this.regionHistoryButton = $(this.div).find('#regionHistoryButton')[0];
-        this.regionHistoryMenu = $(this.div).find('#regionHistoryMenu')[0];
-
-        this.speciesButton = $(this.div).find('#speciesButton')[0];
-        this.speciesText = $(this.div).find('#speciesText')[0];
-        this.speciesMenu = $(this.div).find('#speciesMenu')[0];
-
-        this.chromosomesButton = $(this.div).find('#chromosomesButton')[0];
-        this.chromosomesText = $(this.div).find('#chromosomesText')[0];
-        this.chromosomesMenu = $(this.div).find('#chromosomesMenu')[0];
-
-        this.karyotypeButton = $(this.div).find('#karyotypeButton')[0];
-        this.chromosomeButton = $(this.div).find('#chromosomeButton')[0];
-        this.regionButton = $(this.div).find('#regionButton')[0];
-
-        this.progressBar = $(this.div).find('#progressBar')[0];
-        this.progressBarCont = $(this.div).find('#progressBarCont')[0];
-        this.zoomOutButton = $(this.div).find('#zoomOutButton')[0];
-        this.zoomInButton = $(this.div).find('#zoomInButton')[0];
-
-        this.regionField = $(this.div).find('#regionField')[0];
-        this.goButton = $(this.div).find('#goButton')[0];
-
-        this.moveFurtherLeftButton = $(this.div).find('#moveFurtherLeftButton');
-        this.moveFurtherRightButton = $(this.div).find('#moveFurtherRightButton');
-        this.moveLeftButton = $(this.div).find('#moveLeftButton');
-        this.moveRightButton = $(this.div).find('#moveRightButton');
-
-        this.autoheightButton = $(this.div).find('#autoheightButton');
-        this.compactButton = $(this.div).find('#compactButton');
-
-        this.searchField = $(this.div).find('#searchField')[0];
-//        this.quickSearchMenu = $(this.div).find('#quickSearchMenu')[0];
-        this.searchDataList = $(this.div).find('#searchDataList')[0];
-        this.quickSearchButton = $(this.div).find('#quickSearchButton')[0];
-        this.windowSizeField = $(this.div).find('#windowSizeField')[0];
-
-
+        var els = $(this.div).find('*[id]');
+        for (var i = 0; i < els.length; i++) {
+            var elid = els[i].getAttribute('id');
+            if (elid) {
+                this.els[elid] = els[i];
+            }
+        }
 
         /**Check components config**/
-        for(var key in this.componentsConfig){
-            if(!this.componentsConfig[key]){
-                $(this.div).find('#'+key).css('display','none');
+        for (var key in this.componentsConfig) {
+            if (!this.componentsConfig[key]) {
+                $(this.els[key]).hide();
             }
         }
         /*****/
 
         /*** ***/
-        $(this.restoreDefaultRegionButton).click(function (e) {
+        $(this.els.leftSideButton).click(function (e) {
+            _this.trigger('leftSideButton:click', {clickEvent: e, sender: {}})
+        });
+
+        $(this.els.restoreDefaultRegionButton).click(function (e) {
             _this.trigger('restoreDefaultRegion:click', {clickEvent: e, sender: {}})
         });
 
         this._addRegionHistoryMenuItem(this.region);
         this._setChromosomeMenu();
         this._setSpeciesMenu();
-        $(this.chromosomesText).text(this.region.chromosome);
-        $(this.speciesText).text(this.species.text);
+        $(this.els.chromosomesText).text(this.region.chromosome);
+        $(this.els.speciesText).text(this.species.text);
 
 
-        $(this.karyotypeButton).click(function () {
+        $(this.els.karyotypeButton).click(function () {
             _this.trigger('karyotype-button:change', {selected: $(this).hasClass('active'), sender: _this});
         });
-        $(this.chromosomeButton).click(function () {
+        $(this.els.chromosomeButton).click(function () {
             _this.trigger('chromosome-button:change', {selected: $(this).hasClass('active'), sender: _this});
         });
-        $(this.regionButton).click(function () {
+        $(this.els.regionButton).click(function () {
             _this.trigger('region-button:change', {selected: $(this).hasClass('active'), sender: _this});
         });
 
 
-        $(this.zoomOutButton).click(function () {
+        $(this.els.zoomOutButton).click(function () {
             _this._handleZoomOutButton();
         });
-        $(this.zoomInButton).click(function () {
+        $(this.els.zoomInButton).click(function () {
             _this._handleZoomInButton();
         });
-        $(this.progressBarCont).click(function (e) {
+        $(this.els.zoomMaxButton).click(function () {
+            _this._handleZoomSlider(100);
+        });
+        $(this.els.zoomMinButton).click(function () {
+            _this._handleZoomSlider(0);
+        });
+        $(this.els.progressBarCont).click(function (e) {
             var offsetX = e.clientX - $(this).offset().left;
-            console.log('offsetX '+offsetX);
-            console.log('e.offsetX '+ e.offsetX);
+            console.log('offsetX ' + offsetX);
+            console.log('e.offsetX ' + e.offsetX);
             var zoom = 100 / $(this).width() * offsetX;
-            if (!_this.zoomChanging) {
-                $(_this.progressBar).width(offsetX);
-                _this.zoomChanging = true;
-                setTimeout(function () {
-                    _this._handleZoomSlider(zoom);
-                    _this.zoomChanging = false;
-                }, 500);
+            _this._handleZoomSlider(zoom);
+        });
+
+        $(this.els.regionField).val(this.region.toString());
+        $(this.els.regionField).bind("keyup", function (event) {
+            if (event.which === 13) {
+                _this._triggerRegionChange({region: new Region($(_this.els.regionField).val()), sender: _this});
+//                _this._goRegion();
             }
         });
-        $(this.regionField).val(this.region.toString());
-
-        $(this.goButton).click(function () {
-            _this._goRegion($(_this.regionField).val());
+        $(this.els.goButton).click(function () {
+            _this._triggerRegionChange({region: new Region($(_this.els.regionField).val()), sender: _this});
+//            _this._goRegion($(_this.els.regionField).val());
         });
 
-        $(this.moveFurtherLeftButton).click(function () {
+        $(this.els.moveFurtherLeftButton).click(function () {
             _this._handleMoveRegion(10);
         });
 
-        $(this.moveFurtherRightButton).click(function () {
+        $(this.els.moveFurtherRightButton).click(function () {
             _this._handleMoveRegion(-10);
         });
 
-        $(this.moveLeftButton).click(function () {
+        $(this.els.moveLeftButton).click(function () {
             _this._handleMoveRegion(1);
         });
 
-        $(this.moveRightButton).click(function () {
+        $(this.els.moveRightButton).click(function () {
             _this._handleMoveRegion(-1);
         });
 
-        $(this.autoheightButton).click(function (e) {
+        $(this.els.autoheightButton).click(function (e) {
             _this.trigger('autoHeight-button:click', {clickEvent: e, sender: _this});
         });
 
-        $(this.compactButton).click(function (e) {
+        $(this.els.compactButton).click(function (e) {
             _this.trigger('autoHeight-button:click', {clickEvent: e, sender: _this});
             $(".ocb-compactable").toggle();
         });
@@ -24891,6 +27183,7 @@ NavigationBar.prototype = {
 
 //        var speciesCode = Utils.getSpeciesCode(this.species.text).substr(0, 3);
 //        var url = CellBaseManager.url({
+//              host: this.cellBaseHost,
 //            host: 'http://ws.bioinfo.cipf.es/cellbase/rest',
 //            species: speciesCode,
 //            version: 'latest',
@@ -24924,7 +27217,7 @@ NavigationBar.prototype = {
 //        });
 
         var lastQuery = '';
-        $(this.searchField).bind("keyup", function (event) {
+        $(this.els.searchField).bind("keyup", function (event) {
             var query = $(this).val();
             if (query.length > 2 && lastQuery !== query && event.which !== 13) {
                 _this._setQuickSearchMenu(query);
@@ -24936,24 +27229,25 @@ NavigationBar.prototype = {
             }
         });
 
-        $(this.quickSearchButton).click(function () {
-            var query = $(_this.searchField).val();
+        $(this.els.quickSearchButton).click(function () {
+            var query = $(_this.els.searchField).val();
             var item = _this.quickSearchDataset[query];
             _this.trigger('quickSearch:go', {item: item, sender: _this});
         });
 
-        $(this.windowSizeField).val(this.region.length());
-        $(this.windowSizeField).bind("keyup", function (event) {
+        $(this.els.windowSizeField).val(this.region.length());
+        $(this.els.windowSizeField).bind("keyup", function (event) {
             var value = $(this).val();
             var pattern = /^([0-9])+$/;
             if (event.which === 13 && pattern.test(value)) {
                 var regionSize = parseInt(value);
                 var haflRegionSize = Math.floor(regionSize / 2);
-                var start = _this.region.center() - haflRegionSize;
-                var end = _this.region.center() + haflRegionSize;
-                _this.region.start = start;
-                _this.region.end = end;
-                _this.trigger('region:change', {region: _this.region});
+                var region = new Region({
+                    chromosome: _this.region.chromosome,
+                    start: _this.region.center() - haflRegionSize,
+                    end: _this.region.center() + haflRegionSize
+                });
+                _this._triggerRegionChange({region: region, sender: _this})
             }
         });
         this.rendered = true;
@@ -24962,19 +27256,16 @@ NavigationBar.prototype = {
     _addRegionHistoryMenuItem: function (region) {
         var _this = this;
         var menuEntry = $('<li role="presentation"><a tabindex="-1" role="menuitem">' + region.toString() + '</a></li>')[0];
-        $(this.regionHistoryMenu).append(menuEntry);
+        $(this.els.regionHistoryMenu).append(menuEntry);
         $(menuEntry).click(function () {
-            _this.region.parse($(this).text());
-            $(_this.chromosomesText).text(_this.region.chromosome);
-            $(_this.regionField).val(_this.region.toString());
-            _this.trigger('region:change', {region: _this.region, sender: _this});
-            console.log($(this).text());
+            var region = new Region($(this).text());
+            _this._triggerRegionChange({region: region, sender: _this})
         });
     },
 
     _setQuickSearchMenu: function (query) {
         if (typeof this.quickSearchResultFn === 'function') {
-            $(this.searchDataList).empty();
+            $(this.els.searchDataList).empty();
             this.quickSearchDataset = {};
             var items = this.quickSearchResultFn(query);
             for (var i = 0; i < items.length; i++) {
@@ -24985,7 +27276,7 @@ NavigationBar.prototype = {
                 }
                 this.quickSearchDataset[itemKey] = item;
                 var menuEntry = $('<option value="' + itemKey + '">')[0];
-                $(this.searchDataList).append(menuEntry);
+                $(this.els.searchDataList).append(menuEntry);
             }
         } else {
             console.log('the quickSearchResultFn function is not valid');
@@ -24995,7 +27286,7 @@ NavigationBar.prototype = {
     _setChromosomeMenu: function () {
         var _this = this;
 
-        $(this.chromosomesMenu).empty();
+        $(this.els.chromosomesMenu).empty();
 
         //find species object
         var list = [];
@@ -25013,14 +27304,14 @@ NavigationBar.prototype = {
         //add bootstrap elements to the menu
         for (var i in list) {
             var menuEntry = $('<li role="presentation"><a tabindex="-1" role="menuitem">' + list[i] + '</a></li>')[0];
-            $(this.chromosomesMenu).append(menuEntry);
+            $(this.els.chromosomesMenu).append(menuEntry);
             $(menuEntry).click(function () {
-                _this.region.chromosome = $(this).text();
-                $(_this.chromosomesText).text($(this).text());
-                $(_this.regionField).val(_this.region.toString());
-                _this._addRegionHistoryMenuItem(_this.region);
-                _this.trigger('region:change', {region: _this.region, sender: _this});
-                console.log($(this).text());
+                var region = new Region({
+                    chromosome: $(this).text(),
+                    start: _this.region.start,
+                    end: _this.region.end
+                });
+                _this._triggerRegionChange({region: region, sender: _this})
             });
         }
     },
@@ -25030,10 +27321,10 @@ NavigationBar.prototype = {
 
         var createEntry = function (species) {
             var menuEntry = $('<li role="presentation"><a tabindex="-1" role="menuitem">' + species.text + '</a></li>')[0];
-            $(_this.speciesMenu).append(menuEntry);
+            $(_this.els.speciesMenu).append(menuEntry);
             $(menuEntry).click(function () {
                 _this.species = species;
-                $(_this.speciesText).text($(this).text());
+                $(_this.els.speciesText).text($(this).text());
                 _this._setChromosomeMenu();
                 _this.trigger('species:change', {species: species, sender: _this});
             });
@@ -25050,14 +27341,10 @@ NavigationBar.prototype = {
     _goRegion: function (value) {
         var reg = new Region();
         if (!reg.parse(value) || reg.start < 0 || reg.end < 0 || _.indexOf(this.currentChromosomeList, reg.chromosome) == -1) {
-            $(this.regionField).css({opacity: 0.0});
-            $(this.regionField).animate({opacity: 1}, 700);
+            $(this.els.regionField).css({opacity: 0.0});
+            $(this.els.regionField).animate({opacity: 1}, 700);
         } else {
-            this.region.load(reg);
-            $(this.windowSizeField).val(this.region.length());
-            $(this.chromosomesText).text(this.region.chromosome);
-            this._addRegionHistoryMenuItem(this.region);
-            this.trigger('region:change', {region: this.region, sender: this});
+            this._triggerRegionChange({region: reg, sender: this});
         }
     },
 
@@ -25065,8 +27352,17 @@ NavigationBar.prototype = {
         this._handleZoomSlider(Math.max(0, this.zoom - 1));
     },
     _handleZoomSlider: function (value) {
-        this.zoom = value;
-        this.trigger('zoom:change', {zoom: this.zoom, sender: this});
+        var _this = this;
+        if (!this.zoomChanging) {
+            this.zoomChanging = true;
+            /**/
+            this.zoom = value;
+            this.trigger('zoom:change', {zoom: this.zoom, sender: this});
+            /**/
+            setTimeout(function () {
+                _this.zoomChanging = false;
+            }, 700);
+        }
     },
     _handleZoomInButton: function () {
         this._handleZoomSlider(Math.min(100, this.zoom + 1));
@@ -25083,7 +27379,7 @@ NavigationBar.prototype = {
 
     setVisible: function (obj) {
         for (key in obj) {
-            var query = $(this.div).find('#' + key);
+            var query = $(this.els[key]);
             if (obj[key]) {
                 query.show();
             } else {
@@ -25092,32 +27388,51 @@ NavigationBar.prototype = {
         }
     },
 
-    setRegion: function (region) {
+    setRegion: function (region, zoom) {
         this.region.load(region);
-        $(this.chromosomesText).text(this.region.chromosome);
-        $(this.regionField).val(this.region.toString());
-        $(this.windowSizeField).val(this.region.length());
+        if (zoom) {
+            this.zoom = zoom;
+        }
+        this.updateRegionControls();
         this._addRegionHistoryMenuItem(region);
     },
     moveRegion: function (region) {
         this.region.load(region);
-        $(this.chromosomesText).text(this.region.chromosome);
-        $(this.regionField).val(this.region.toString());
+        $(this.els.chromosomesText).text(this.region.chromosome);
+        $(this.els.regionField).val(this.region.toString());
     },
 
     setWidth: function (width) {
         this.width = width;
-    },
-    setZoom: function (zoom) {
-        this.zoom = zoom;
-        $(this.progressBar).css("width", this.zoom + '%');
     },
     draw: function () {
         if (!this.rendered) {
             console.info(this.id + ' is not rendered yet');
             return;
         }
+    },
+
+    _triggerRegionChange: function (event) {
+        var _this = this;
+        if (!this.regionChanging) {
+            this.regionChanging = true;
+            /**/
+            this.trigger('region:change', event);
+            /**/
+            setTimeout(function () {
+                _this.regionChanging = false;
+            }, 700);
+        } else {
+            this.updateRegionControls();
+        }
+    },
+    updateRegionControls: function () {
+        $(this.els.chromosomesText).text(this.region.chromosome);
+        $(this.els.regionField).val(this.region.toString());
+        $(this.els.windowSizeField).val(this.region.length());
+        $(this.els.progressBar).css("width", this.zoom + '%');
     }
+
 }
 
 /*
@@ -25148,6 +27463,11 @@ function ChromosomePanel(args) {
 
     this.id = Utils.genId('ChromosomePanel');
 
+    this.target;
+    this.autoRender = true;
+    this.cellBaseHost = 'http://www.ebi.ac.uk/cellbase/webservices/rest';
+    this.cellBaseVersion = 'v3';
+
     this.pixelBase;
     this.species = 'hsapiens';
     this.width = 600;
@@ -25166,6 +27486,8 @@ function ChromosomePanel(args) {
     this.data;
 
     this.on(this.handlers);
+
+    this.regionChanging = false;
 
     this.rendered = false;
     if (this.autoRender) {
@@ -25203,7 +27525,7 @@ ChromosomePanel.prototype = {
     },
     setTitle: function (title) {
         if ('titleDiv' in this) {
-            $(this.titleDiv).first().html(title);
+            $(this.titleTextDiv).html(title);
         }
     },
     setWidth: function (width) {
@@ -25211,31 +27533,24 @@ ChromosomePanel.prototype = {
         this.svg.setAttribute("width", width);
 //        this.tracksViewedRegion = this.width / Utils.getPixelBaseByZoom(this.zoom);
 
-        if(typeof this.data !== 'undefined'){
+        if (typeof this.data !== 'undefined') {
             this.clean();
             this._drawSvg(this.data);
         }
     },
 
-    render: function (targetId) {
+    render: function () {
         var _this = this;
-        this.targetId = (targetId) ? targetId : this.targetId;
-        this.targetDiv = (this.targetId instanceof HTMLElement ) ? this.targetId : $('#' + this.targetId)[0];
-        if (this.targetDiv === 'undefined') {
-            console.log('targetId not found');
-            return;
-        }
 
         this.div = $('<div id="chromosome-panel"></div>')[0];
-        $(this.targetDiv).append(this.div);
 
         if ('title' in this && this.title !== '') {
-            this.titleDiv = $('<div id="tl-title" class="gv-panel-title unselectable"><span style="line-height: 24px;margin-left: 5px;">' + this.title + '</span></div>')[0];
-            $(this.div).append(this.titleDiv);
+            var titleDiv = $('<div id="tl-title" class="ocb-gv-panel-title unselectable"></div>')[0];
+            $(this.div).append(titleDiv);
 
             if (this.collapsible == true) {
-                this.collapseDiv = $('<div type="button" class="btn btn-default btn-xs pull-right" style="display:inline;margin:2px;height:20px"><span class="glyphicon glyphicon-minus"></span></div>');
-                $(this.titleDiv).dblclick(function () {
+                this.collapseDiv = $('<div class="ocb-gv-panel-collapse-control"><span class="glyphicon glyphicon-minus"></span></div>');
+                $(titleDiv).dblclick(function () {
                     if (_this.collapsed) {
                         _this.showContent();
                     } else {
@@ -25249,9 +27564,11 @@ ChromosomePanel.prototype = {
                         _this.hideContent();
                     }
                 });
-                $(this.titleDiv).append(this.collapseDiv);
+                $(titleDiv).append(this.collapseDiv);
             }
 
+            this.titleTextDiv = $('<div class="ocb-gv-panel-text">' + this.title + '</div>');
+            $(titleDiv).append(this.titleTextDiv);
         }
 
         this.svg = SVG.init(this.div, {
@@ -25271,21 +27588,25 @@ ChromosomePanel.prototype = {
         $(this.svg).empty();
     },
     draw: function () {
-        if (!this.rendered) {
-            console.info(this.id + ' is not rendered yet');
+        var _this = this;
+        this.targetDiv = ( this.target instanceof HTMLElement ) ? this.target : document.querySelector('#' + this.target);
+        if (!this.targetDiv) {
+            console.log('target not found');
             return;
         }
-        var _this = this;
+        this.targetDiv.appendChild(this.div);
 
         this.clean();
 
         CellBaseManager.get({
+            host: this.cellBaseHost,
+            version: this.cellBaseVersion,
             species: this.species,
             category: 'genomic',
             subCategory: 'chromosome',
             query: this.region.chromosome,
             resource: 'info',
-            async:false,
+            async: false,
             success: function (data) {
                 _this.data = data.response[0].result.chromosomes;
                 _this.data.cytobands.sort(function (a, b) {
@@ -25296,7 +27617,6 @@ ChromosomePanel.prototype = {
         });
 
         this.lastChromosome = this.region.chromosome;
-
 
         if (this.collapsed) {
             _this.hideContent();
@@ -25364,7 +27684,7 @@ ChromosomePanel.prototype = {
             }
         }
 
-        if(typeof cytobandsByStain['acen'] !== 'undefined'){
+        if (typeof cytobandsByStain['acen'] !== 'undefined') {
             var firstStain = cytobandsByStain['acen'][0];
             var lastStain = cytobandsByStain['acen'][1];
             var backrect = SVG.addChild(group, 'rect', {
@@ -25400,7 +27720,7 @@ ChromosomePanel.prototype = {
         });
 
         // selection box, will appear when selection is detected
-        var selBox = SVG.addChild(this.svg, "rect", {
+        this.selBox = SVG.addChild(this.svg, "rect", {
             "x": 0,
             "y": 2,
             "stroke-width": "2",
@@ -25428,73 +27748,41 @@ ChromosomePanel.prototype = {
         });
 
 
-        var resizeLeft = SVG.addChild(positionGroup, 'rect', {
+        this.resizeLeft = SVG.addChild(positionGroup, 'rect', {
             'x': pointerPosition - (positionBoxWidth / 2),
             'y': 2,
-            'width': 5,
+            'width': 7,
             'height': _this.height - 3,
             'opacity': 0.5,
             'fill': 'orangered',
             'visibility': 'hidden'
         });
-        $(resizeLeft).on('mousedown', function (event) {
+        $(this.resizeLeft).on('mousedown', function (event) {
             status = 'resizePositionBoxLeft';
         });
 
-        var resizeRight = SVG.addChild(positionGroup, 'rect', {
+        this.resizeRight = SVG.addChild(positionGroup, 'rect', {
             'x': positionBoxWidth - 5,
             'y': 2,
-            'width': 5,
+            'width': 7,
             'height': _this.height - 3,
             'opacity': 0.5,
             'fill': 'orangered',
             'visibility': 'hidden'
         });
-        $(resizeRight).on('mousedown', function (event) {
+        $(this.resizeRight).on('mousedown', function (event) {
             status = 'resizePositionBoxRight';
         });
 
         $(this.positionBox).off('mouseenter');
         $(this.positionBox).off('mouseleave');
 
-        var recalculateResizeControls = function () {
-            var postionBoxX = parseInt(_this.positionBox.getAttribute('x'));
-            var postionBoxWidth = parseInt(_this.positionBox.getAttribute('width'));
-            resizeLeft.setAttribute('x', postionBoxX - 5);
-            resizeRight.setAttribute('x', (postionBoxX + postionBoxWidth));
-            $(resizeLeft).css({"cursor": "ew-resize"});
-            $(resizeRight).css({"cursor": "ew-resize"});
-        };
-
-        var hideResizeControls = function () {
-            resizeLeft.setAttribute('visibility', 'hidden');
-            resizeRight.setAttribute('visibility', 'hidden');
-        };
-
-        var showResizeControls = function () {
-            resizeLeft.setAttribute('visibility', 'visible');
-            resizeRight.setAttribute('visibility', 'visible');
-        };
-
-        var recalculatePositionBox = function () {
-            var genomicLength = _this.region.length();
-            var pixelWidth = genomicLength * _this.pixelBase;
-            var x = (_this.region.start * _this.pixelBase) + 20;//20 is the margin
-            _this.positionBox.setAttribute("x", x);
-            _this.positionBox.setAttribute("width", pixelWidth);
-        };
-        var limitRegionToChromosome = function (args) {
-            args.start = (args.start < 1) ? 1 : args.start;
-            args.end = (args.end > _this.chromosomeLength) ? _this.chromosomeLength : args.end;
-            return args;
-        };
-
         $(positionGroup).mouseenter(function (event) {
-            recalculateResizeControls();
-            showResizeControls();
+            _this._recalculateResizeControls();
+            _this._showResizeControls();
         });
         $(positionGroup).mouseleave(function (event) {
-            hideResizeControls();
+            _this._hideResizeControls();
         });
 
 
@@ -25512,18 +27800,17 @@ ChromosomePanel.prototype = {
         var downY, downX, moveX, moveY, lastX, increment;
 
         $(this.svg).mousedown(function (event) {
-//            downX = (event.pageX - $(_this.svg).offset().left);
+
             downX = (event.clientX - $(this).parent().offset().left); //using parent offset works well on firefox and chrome. Could be because it is a div instead of svg
-            selBox.setAttribute("x", downX);
+            _this.selBox.setAttribute("x", downX);
             lastX = _this.positionBox.getAttribute("x");
             if (status == '') {
                 status = 'setRegion'
             }
-            hideResizeControls();
+            _this._hideResizeControls();
             $(this).mousemove(function (event) {
-//                moveX = (event.pageX - $(_this.svg).offset().left);
                 moveX = (event.clientX - $(this).parent().offset().left); //using parent offset works well on firefox and chrome. Could be because it is a div instead of svg
-                hideResizeControls();
+                _this._hideResizeControls();
                 switch (status) {
                     case 'resizePositionBoxLeft' :
                         var inc = moveX - downX;
@@ -25535,7 +27822,8 @@ ChromosomePanel.prototype = {
                         downX = moveX;
                         break;
                     case 'resizePositionBoxRight' :
-                        var inc = moveX - downX;SVG
+                        var inc = moveX - downX;
+                        SVG
                         var newWidth = parseInt(_this.positionBox.getAttribute("width")) + inc;
                         if (newWidth > 0) {
                             _this.positionBox.setAttribute("width", newWidth);
@@ -25551,10 +27839,10 @@ ChromosomePanel.prototype = {
                     case 'selectingRegion' :
                         status = 'selectingRegion';
                         if (moveX < downX) {
-                            selBox.setAttribute("x", moveX);
+                            _this.selBox.setAttribute("x", moveX);
                         }
-                        selBox.setAttribute("width", Math.abs(moveX - downX));
-                        selBox.setAttribute("height", _this.height - 3);
+                        _this.selBox.setAttribute("width", Math.abs(moveX - downX));
+                        _this.selBox.setAttribute("height", _this.height - 3);
                         break;
                 }
 
@@ -25563,6 +27851,7 @@ ChromosomePanel.prototype = {
 
 
         $(this.svg).mouseup(function (event) {
+
             $(this).off('mousemove');
             if (downX != null) {
 
@@ -25578,54 +27867,36 @@ ChromosomePanel.prototype = {
                             var pixE = x + w;
                             var bioS = (pixS - offset) / _this.pixelBase;
                             var bioE = (pixE - offset) / _this.pixelBase;
-                            var se = limitRegionToChromosome({start:bioS,end:bioE});// returns object with start and end
-                            _this.region.start = Math.round(se.start);
-                            _this.region.end = Math.round(se.end);
-                            recalculatePositionBox();
-                            recalculateResizeControls();
-                            showResizeControls();
-                            _this.trigger('region:change', {region: _this.region, sender: _this});
-                            recalculateResizeControls();
-                            showResizeControls();
+
+                            _this._triggerRegionChange({region: new Region({chromosome: _this.region.chromosome, start: bioS, end: bioE}), sender: _this});
                         }
                         break;
                     case 'setRegion' :
-                        if(downX > offset && downX < (_this.width - offset)){
+                        if (downX > offset && downX < (_this.width - offset)) {
                             var w = _this.positionBox.getAttribute("width");
-
-                            _this.positionBox.setAttribute("x", downX - (w / 2));
 
                             var pixS = downX - (w / 2);
                             var pixE = downX + (w / 2);
                             var bioS = (pixS - offset) / _this.pixelBase;
                             var bioE = (pixE - offset) / _this.pixelBase;
-                            var se = limitRegionToChromosome({start: bioS, end: bioE});// returns object with start and end
-                            _this.region.start = Math.round(se.start);
-                            _this.region.end = Math.round(se.end);
-                            recalculatePositionBox();
-                            _this.trigger('region:change', {region: _this.region, sender: _this});
+
+                            _this._triggerRegionChange({region: new Region({chromosome: _this.region.chromosome, start: bioS, end: bioE}), sender: _this});
                         }
                         break;
                     case 'selectingRegion' :
                         var bioS = (downX - offset) / _this.pixelBase;
                         var bioE = (moveX - offset) / _this.pixelBase;
-                        var start = Math.min(bioS,bioE);
-                        var end = Math.max(bioS,bioE);
-                        var se = limitRegionToChromosome({start:start,end:end});// returns object with start and end
-                        _this.region.start = parseInt(se.start);
-                        _this.region.end = parseInt(se.end);
-                        recalculatePositionBox();
-//                        var w = Math.abs(downX - moveX);
-//                        _this.positionBox.setAttribute("width", w);
-//                        _this.positionBox.setAttribute("x", Math.abs((downX + moveX) / 2) - (w / 2));
-                        _this.trigger('region:change', {region: _this.region, sender: _this});
+                        var start = Math.min(bioS, bioE);
+                        var end = Math.max(bioS, bioE);
+
+                        _this.selBox.setAttribute("width", 0);
+                        _this.selBox.setAttribute("height", 0);
+                        _this._triggerRegionChange({region: new Region({chromosome: _this.region.chromosome, start: start, end: end}), sender: _this});
                         break;
                 }
                 status = '';
 
             }
-            selBox.setAttribute("width", 0);
-            selBox.setAttribute("height", 0);
             downX = null;
             moveX = null;
             lastX = _this.positionBox.getAttribute("x");
@@ -25635,8 +27906,8 @@ ChromosomePanel.prototype = {
             if (lastX != null) {
                 _this.positionBox.setAttribute("x", lastX);
             }
-            selBox.setAttribute("width", 0);
-            selBox.setAttribute("height", 0);
+            _this.selBox.setAttribute("width", 0);
+            _this.selBox.setAttribute("height", 0);
             downX = null;
             moveX = null;
             lastX = null;
@@ -25645,7 +27916,70 @@ ChromosomePanel.prototype = {
             selectingRegion = false;
         });
     },
+
+    _triggerRegionChange: function (event) {
+        var _this = this;
+        if (!this.regionChanging) {
+            this.regionChanging = true;
+
+            /**/
+            this._limitRegionToChromosome(event.region);
+            this.trigger('region:change', event);
+            /**/
+            setTimeout(function () {
+                _this.regionChanging = false;
+            }, 700);
+        } else {
+            this.updateRegionControls();
+        }
+    },
+
+
+    _recalculatePositionBox: function (region) {
+        var genomicLength = region.length();
+        var pixelWidth = genomicLength * this.pixelBase;
+        var x = (region.start * this.pixelBase) + 20;//20 is the margin
+        this.positionBox.setAttribute("x", x);
+        this.positionBox.setAttribute("width", pixelWidth);
+    },
+    _recalculateSelectionBox: function (region) {
+        var genomicLength = region.length();
+        var pixelWidth = genomicLength * this.pixelBase;
+        var x = (region.start * this.pixelBase) + 20;//20 is the margin
+        this.selBox.setAttribute("x", x);
+        this.selBox.setAttribute("width", pixelWidth);
+    },
+    _recalculateResizeControls: function () {
+        var postionBoxX = parseInt(this.positionBox.getAttribute('x'));
+        var postionBoxWidth = parseInt(this.positionBox.getAttribute('width'));
+        this.resizeLeft.setAttribute('x', postionBoxX - 5);
+        this.resizeRight.setAttribute('x', (postionBoxX + postionBoxWidth));
+        $(this.resizeLeft).css({"cursor": "ew-resize"});
+        $(this.resizeRight).css({"cursor": "ew-resize"});
+    },
+    _hideResizeControls: function () {
+        this.resizeLeft.setAttribute('visibility', 'hidden');
+        this.resizeRight.setAttribute('visibility', 'hidden');
+    },
+    _showResizeControls: function () {
+        this.resizeLeft.setAttribute('visibility', 'visible');
+        this.resizeRight.setAttribute('visibility', 'visible');
+    },
+    _limitRegionToChromosome: function (region) {
+        region.start = (region.start < 1) ? 1 : region.start;
+        region.end = (region.end > this.chromosomeLength) ? this.chromosomeLength : region.end;
+    },
+
+    updateRegionControls: function () {
+        this.selBox.setAttribute("width", 0);
+        this.selBox.setAttribute("height", 0);
+        this._recalculatePositionBox(this.region);
+        this._recalculateResizeControls();
+    },
+
     setRegion: function (region) {//item.chromosome, item.region
+
+        console.log('region modified chromosome')
         this.region.load(region);
         var needDraw = false;
 
@@ -25656,13 +27990,7 @@ ChromosomePanel.prototype = {
             this.draw();
         }
 
-        //recalculate positionBox
-        var genomicLength = this.region.length();
-        var pixelWidth = genomicLength * this.pixelBase;
-        var x = (this.region.start * this.pixelBase) + 20;//20 is the margin
-        this.positionBox.setAttribute("x", x);
-        this.positionBox.setAttribute("width", pixelWidth);
-
+        this.updateRegionControls();
     }
 }
 /*
@@ -25691,7 +28019,12 @@ function KaryotypePanel(args) {
 
     _.extend(this, Backbone.Events);
 
+    this.target;
+    this.autoRender = true;
     this.id = Utils.genId('KaryotypePanel');
+
+    this.cellBaseHost = 'http://www.ebi.ac.uk/cellbase/webservices/rest';
+    this.cellBaseVersion = 'v3';
 
     this.pixelBase;
     this.species;
@@ -25702,7 +28035,7 @@ function KaryotypePanel(args) {
 
 
 //set instantiation args, must be last
-        _.extend(this, args);
+    _.extend(this, args);
 
     //set own region object
     this.region = new Region(this.region);
@@ -25713,6 +28046,8 @@ function KaryotypePanel(args) {
     this.data2;
 
     this.on(this.handlers);
+
+    this.regionChanging = false;
 
     this.rendered = false;
     if (this.autoRender) {
@@ -25750,7 +28085,7 @@ KaryotypePanel.prototype = {
     },
     setTitle: function (title) {
         if ('titleDiv' in this) {
-            $(this.titleDiv).children().first().html(title);
+            $(this.titleTextDiv).html(title);
         }
     },
     setWidth: function (width) {
@@ -25758,31 +28093,25 @@ KaryotypePanel.prototype = {
         this.svg.setAttribute("width", width);
 
 
-        if(typeof this.chromosomeList !== 'undefined'){
+        if (typeof this.chromosomeList !== 'undefined') {
             this.clean();
             this._drawSvg(this.chromosomeList, this.data2);
         }
     },
 
-    render: function (targetId) {
+    render: function () {
         var _this = this;
-        this.targetId = (targetId) ? targetId : this.targetId;
-        this.targetDiv = (this.targetId instanceof HTMLElement ) ? this.targetId : $('#' + this.targetId)[0];
-        if (this.targetDiv === 'undefined') {
-            console.log('targetId not found');
-            return;
-        }
 
         this.div = $('<div id="karyotype-panel"></div>')[0];
-        $(this.targetDiv).append(this.div);
 
         if ('title' in this && this.title !== '') {
-            this.titleDiv = $('<div id="tl-title" class="gv-panel-title unselectable"><span style="line-height: 24px;margin-left: 5px;">' + this.title + '</span></div>')[0];
-            $(this.div).append(this.titleDiv);
 
-            if(this.collapsible == true){
-                this.collapseDiv = $('<div type="button" class="btn btn-default btn-xs pull-right" style="display:inline;margin:2px;height:20px"><span class="glyphicon glyphicon-minus"></span></div>');
-                $(this.titleDiv).dblclick(function () {
+            var titleDiv = $('<div id="tl-title" class="ocb-gv-panel-title unselectable"></div>')[0];
+            $(this.div).append(titleDiv);
+
+            if (this.collapsible == true) {
+                this.collapseDiv = $('<div class="ocb-gv-panel-collapse-control"><span class="glyphicon glyphicon-minus"></span></div>');
+                $(titleDiv).dblclick(function () {
                     if (_this.collapsed) {
                         _this.showContent();
                     } else {
@@ -25796,8 +28125,11 @@ KaryotypePanel.prototype = {
                         _this.hideContent();
                     }
                 });
-                $(this.titleDiv).append(this.collapseDiv);
+                $(titleDiv).append(this.collapseDiv);
             }
+
+            this.titleTextDiv = $('<div class="ocb-gv-panel-text">' + this.title + '</div>');
+            $(titleDiv).append(this.titleTextDiv);
         }
 
         this.svg = SVG.init(this.div, {
@@ -25820,11 +28152,13 @@ KaryotypePanel.prototype = {
         $(this.svg).empty();
     },
     draw: function () {
-        if (!this.rendered) {
-            console.info(this.id + ' is not rendered yet');
+        var _this = this;
+        this.targetDiv = ( this.target instanceof HTMLElement ) ? this.target : document.querySelector('#' + this.target);
+        if (!this.targetDiv) {
+            console.log('target not found');
             return;
         }
-        var _this = this;
+        this.targetDiv.appendChild(this.div);
 
         this.clean();
 
@@ -25840,11 +28174,13 @@ KaryotypePanel.prototype = {
         };
 
         CellBaseManager.get({
+            host: this.cellBaseHost,
+            version: this.cellBaseVersion,
             species: this.species,
             category: 'genomic',
             subCategory: 'chromosome',
             resource: 'all',
-            async:false,
+            async: false,
             success: function (data) {
                 _this.chromosomeList = data.response.result.chromosomes;
                 _this.chromosomeList.sort(sortfunction);
@@ -25878,37 +28214,31 @@ KaryotypePanel.prototype = {
 
         for (var i = 0, len = chromosomeList.length; i < len; i++) { //loop over chromosomes
             var chromosome = chromosomeList[i];
-//		var chr = chromosome.name;
+
             var chrSize = chromosome.size * _this.pixelBase;
             var y = yMargin + (biggerChr * _this.pixelBase) - chrSize;
             _this.chrOffsetY[chromosome.name] = y;
             var firstCentromere = true;
 
-            var centerPosition = _this.region.center();
-            var pointerPosition = (centerPosition * _this.pixelBase);
 
             var group = SVG.addChild(_this.svg, "g", {"cursor": "pointer", "chr": chromosome.name});
             $(group).click(function (event) {
                 var chrClicked = this.getAttribute("chr");
-//			for ( var k=0, len=chromosomeList.length; k<len; k++) {
-//			var offsetX = (event.pageX - $(_this.svg).offset().left);
-//			if(offsetX > _this.chrOffsetX[chromosomeList[k]]) chrClicked = chromosomeList[k];
-//			}
+                //			for ( var k=0, len=chromosomeList.length; k<len; k++) {
+                //			var offsetX = (event.pageX - $(_this.svg).offset().left);
+                //			if(offsetX > _this.chrOffsetX[chromosomeList[k]]) chrClicked = chromosomeList[k];
+                //			}
 
                 var offsetY = (event.pageY - $(_this.svg).offset().top);
-//			var offsetY = event.originalEvent.layerY - 3;
-
-                _this.positionBox.setAttribute("x1", _this.chrOffsetX[chrClicked] - 10);
-                _this.positionBox.setAttribute("x2", _this.chrOffsetX[chrClicked] + 23);
-                _this.positionBox.setAttribute("y1", offsetY);
-                _this.positionBox.setAttribute("y2", offsetY);
+                //			var offsetY = event.originalEvent.layerY - 3;
 
                 var clickPosition = parseInt((offsetY - _this.chrOffsetY[chrClicked]) / _this.pixelBase);
-                _this.region.chromosome = chrClicked;
-                _this.region.start = clickPosition;
-                _this.region.end = clickPosition;
-
-                _this.trigger('region:change', {region: _this.region, sender: _this});
+                var region = new Region({
+                    chromosome: chrClicked,
+                    start: clickPosition,
+                    end: clickPosition
+                });
+                _this._triggerRegionChange({region: region, sender: _this});
             });
 
             for (var j = 0, lenJ = chromosome.cytobands.length; j < lenJ; j++) { //loop over chromosome objects
@@ -25962,20 +28292,50 @@ KaryotypePanel.prototype = {
             _this.chrOffsetX[chromosome.name] = x;
             x += xOffset;
         }
-        _this.positionBox = SVG.addChild(_this.svg, "line", {
-            "x1": _this.chrOffsetX[_this.region.chromosome] - 10,
-            "y1": pointerPosition + _this.chrOffsetY[_this.region.chromosome],
-            "x2": _this.chrOffsetX[_this.region.chromosome] + 23,
-            "y2": pointerPosition + _this.chrOffsetY[_this.region.chromosome],
+
+
+        this.positionBox = SVG.addChild(this.svg, "line", {
+            "x1": 0,
+            "y1": 0,
+            "x2": 0,
+            "y2": 0,
             "stroke": "orangered",
             "stroke-width": 2,
             "opacity": 0.5
         });
+        this._recalculatePositionBox(this.region);
 
-        _this.rendered = true;
-        _this.trigger('after:render',{sender:_this});
+
+        this.rendered = true;
+        this.trigger('after:render', {sender: this});
     },
 
+
+    _triggerRegionChange: function (event) {
+        var _this = this;
+        if (!this.regionChanging) {
+            this.regionChanging = true;
+            /**/
+            this.trigger('region:change', event);
+            /**/
+            setTimeout(function () {
+                _this.regionChanging = false;
+            }, 700);
+        } else {
+            this.updateRegionControls();
+        }
+    },
+    _recalculatePositionBox: function (region) {
+        var centerPosition = region.center();
+        var pointerPosition = centerPosition * this.pixelBase + this.chrOffsetY[region.chromosome];
+        this.positionBox.setAttribute("x1", this.chrOffsetX[region.chromosome] - 10);
+        this.positionBox.setAttribute("x2", this.chrOffsetX[region.chromosome] + 23);
+        this.positionBox.setAttribute("y1", pointerPosition);
+        this.positionBox.setAttribute("y2", pointerPosition);
+    },
+    updateRegionControls: function () {
+        this._recalculatePositionBox(this.region);
+    },
 
     setRegion: function (region) {//item.chromosome, item.position, item.species
         this.region.load(region);
@@ -25986,13 +28346,7 @@ KaryotypePanel.prototype = {
             this.lastSpecies = this.species;
         }
 
-        //recalculate positionBox
-        var centerPosition = this.region.center();
-        var pointerPosition = centerPosition * this.pixelBase + this.chrOffsetY[this.region.chromosome];
-        this.positionBox.setAttribute("x1", this.chrOffsetX[this.region.chromosome] - 10);
-        this.positionBox.setAttribute("x2", this.chrOffsetX[this.region.chromosome] + 23);
-        this.positionBox.setAttribute("y1", pointerPosition);
-        this.positionBox.setAttribute("y2", pointerPosition);
+        this.updateRegionControls();
 
         if (needDraw) {
             this.draw();
@@ -26000,15 +28354,15 @@ KaryotypePanel.prototype = {
     },
 
 
-    updatePositionBox: function () {
-        this.positionBox.setAttribute("x1", this.chrOffsetX[this.region.chromosome] - 10);
-        this.positionBox.setAttribute("x2", this.chrOffsetX[this.region.chromosome] + 23);
-
-        var centerPosition = Utils.centerPosition(this.region);
-        var pointerPosition = centerPosition * this.pixelBase + this.chrOffsetY[this.region.chromosome];
-        this.positionBox.setAttribute("y1", pointerPosition);
-        this.positionBox.setAttribute("y2", pointerPosition);
-    },
+//    updatePositionBox: function () {
+//        this.positionBox.setAttribute("x1", this.chrOffsetX[this.region.chromosome] - 10);
+//        this.positionBox.setAttribute("x2", this.chrOffsetX[this.region.chromosome] + 23);
+//
+//        var centerPosition = Utils.centerPosition(this.region);
+//        var pointerPosition = centerPosition * this.pixelBase + this.chrOffsetY[this.region.chromosome];
+//        this.positionBox.setAttribute("y1", pointerPosition);
+//        this.positionBox.setAttribute("y2", pointerPosition);
+//    },
 
     addMark: function (item) {//item.chromosome, item.position
         var _this = this;
@@ -26035,7 +28389,7 @@ KaryotypePanel.prototype = {
         if (this.rendered) {
             mark();
         } else {
-            _this.on('after:render',function (e) {
+            _this.on('after:render', function (e) {
                 mark();
             });
         }
@@ -26076,55 +28430,53 @@ function StatusBar(args) {
 
     this.id = Utils.genId("StatusBar");
 
+    this.target;
+    this.autoRender = true;
+
     //set instantiation args, must be last
     _.extend(this, args);
 
     //set new region object
     this.region = new Region(this.region);
 
-    this.rendered=false;
-    if(this.autoRender){
+    this.rendered = false;
+    if (this.autoRender) {
         this.render();
     }
 };
 
 StatusBar.prototype = {
-    render: function (targetId) {
-        this.targetId = (targetId) ? targetId : this.targetId;
-        this.targetDiv = (this.targetId instanceof HTMLElement ) ? this.targetId : $('#' + this.targetId)[0];
-        if (this.targetDiv === 'undefined') {
-            console.log('targetId not found');
-            return;
-        }
+    render: function () {
 
-        this.div = $('<div id="' + this.id + '" class="gv-status-bar" align="right"></div>')[0];
-        $(this.targetDiv).append(this.div);
+        this.div = $('<div id="' + this.id + '" class="ocb-gv-status-bar"></div>')[0];
 
-        this.mousePositionDiv = $('<div id="' + this.id + 'position" style="display: inline">&nbsp;</div>')[0];
-        $(this.mousePositionDiv).css({
-            'margin-left': '5px',
-            'margin-right': '5px',
-            'font-size':'12px'
-        });
+        this.rightDiv = $('<div class="ocb-gv-status-right" id="' + this.id + 'position"</div>')[0];
+        this.leftDiv = $('<div class="ocb-gv-status-left" id="' + this.id + 'position"></div>')[0];
+        $(this.div).append(this.leftDiv);
+        $(this.div).append(this.rightDiv);
 
-        this.versionDiv = $('<div id="' + this.id + 'version" style="display: inline">' + this.version + '</div>')[0];
-        $(this.versionDiv).css({
-            'margin-left': '5px',
-            'margin-right': '5px'
-        });
-
-
-        $(this.div).append(this.mousePositionDiv);
-        $(this.div).append(this.versionDiv);
+        this.mousePositionEl = $('<span id="' + this.id + 'position">&nbsp;</span>')[0];
+        this.versionEl = $('<span id="' + this.id + 'version">' + this.version + '</span>')[0];
+        $(this.rightDiv).append(this.mousePositionEl);
+        $(this.leftDiv).append(this.versionEl);
 
         this.rendered = true;
     },
+    draw: function () {
+        var _this = this;
+        this.targetDiv = ( this.target instanceof HTMLElement ) ? this.target : document.querySelector('#' + this.target);
+        if (!this.targetDiv) {
+            console.log('target not found');
+            return;
+        }
+        this.targetDiv.appendChild(this.div);
+    },
     setRegion: function (event) {
         this.region.load(event.region);
-        $(this.mousePositionDiv).html(Utils.formatNumber(event.region.center()));
+        $(this.mousePositionEl).html(Utils.formatNumber(event.region.center()));
     },
     setMousePosition: function (event) {
-        $(this.mousePositionDiv).html(event.baseHtml+' '+this.region.chromosome+':'+Utils.formatNumber(event.mousePos));
+        $(this.mousePositionEl).html(event.baseHtml + ' ' + this.region.chromosome + ':' + Utils.formatNumber(event.mousePos));
     }
 
 }
@@ -26155,15 +28507,20 @@ function TrackListPanel(args) {//parent is a DOM div element
     // Using Underscore 'extend' function to extend and add Backbone Events
     _.extend(this, Backbone.Events);
 
+    this.cellBaseHost = 'http://www.ebi.ac.uk/cellbase/webservices/rest';
+    this.cellBaseVersion = 'v3';
+
     //set default args
+    this.target;
+    this.autoRender = true;
     this.id = Utils.genId("TrackListPanel");
     this.collapsed = false;
     this.collapsible = false;
 
     this.fontClass = 'ocb-font-sourcesanspro ocb-font-size-14';
 
-    this.trackSvgList = [];
-    this.swapHash = {};
+    this.tracks = [];
+    this.tracksIndex = {};
 
     this.parentLayout;
     this.mousePosition;
@@ -26193,6 +28550,8 @@ function TrackListPanel(args) {//parent is a DOM div element
     /********/
 
     this.on(this.handlers);
+
+    this.regionChanging = false;
 
     this.rendered = false;
     if (this.autoRender) {
@@ -26237,27 +28596,20 @@ TrackListPanel.prototype = {
         $(this.collapseDiv).children().first().removeClass('glyphicon-minus');
         $(this.collapseDiv).children().first().addClass('glyphicon-plus');
     },
-    render: function (targetId) {
+    render: function () {
         var _this = this;
-        this.targetId = (targetId) ? targetId : this.targetId;
-        this.targetDiv = (this.targetId instanceof HTMLElement ) ? this.targetId : $('#' + this.targetId)[0];
-        if (this.targetDiv === 'undefined') {
-            console.log('targetId not found');
-            return;
-        }
-
-
         this.div = $('<div id="tracklist-panel" style="height:100%;position: relative;"></div>')[0];
-        $(this.targetDiv).append(this.div);
 
         if ('title' in this && this.title !== '') {
-            var titleDiv = $('<div id="tl-title" class="gv-panel-title unselectable"><div style="display:inline-block;line-height: 24px;margin-left: 5px;width:120px">' + this.title + '</div></div>')[0];
+
+            var titleDiv = $('<div id="tl-title" class="ocb-gv-panel-title unselectable"></div>')[0];
             $(this.div).append(titleDiv);
-            var windowSizeDiv = $('<div style="display:inline;margin-left:35%" id="windowSizeSpan"></div>');
+
+            var windowSizeDiv = $('<div class="ocb-gv-tracklist-windowsize" id="windowSizeSpan"></div>');
             $(titleDiv).append(windowSizeDiv);
 
             if (this.collapsible == true) {
-                this.collapseDiv = $('<div type="button" class="btn btn-default btn-xs pull-right" style="display:inline;margin:2px;height:20px"><span class="glyphicon glyphicon-minus"></span></div>');
+                this.collapseDiv = $('<div class="ocb-gv-panel-collapse-control"><span class="glyphicon glyphicon-minus"></span></div>');
                 $(titleDiv).dblclick(function () {
                     if (_this.collapsed) {
                         _this.showContent();
@@ -26275,6 +28627,8 @@ TrackListPanel.prototype = {
                 $(titleDiv).append(this.collapseDiv);
             }
 
+            var titleTextDiv = $('<div class="ocb-gv-panel-text">' + this.title + '</div>');
+            $(titleDiv).append(titleTextDiv);
         }
 
         var tlHeaderDiv = $('<div id="tl-header" class="unselectable"></div>')[0];
@@ -26370,7 +28724,7 @@ TrackListPanel.prototype = {
             'position': 'absolute',
             'left': mid - 1,
             'top': 0,
-            'width': this.pixelBase,
+            'width': this.pixelBase + 1,
 //            'height': '100%',
             'height': 'calc(100% - 8px)',
             'opacity': 0.5,
@@ -26386,7 +28740,7 @@ TrackListPanel.prototype = {
             'position': 'absolute',
             'left': -20,
             'top': 0,
-            'width': this.pixelBase,
+            'width': this.pixelBase + 2,
             'height': 'calc(100% - 8px)',
             'border': '1px solid lightgray',
             'opacity': 0.7,
@@ -26425,7 +28779,7 @@ TrackListPanel.prototype = {
                 'top': 0,
                 'width': regionOverviewDarkBoxWidth,
                 'height': 'calc(100% - 8px)',
-                'border': '1px solid gray',
+//                'border': '1px solid gray',
                 'opacity': 0.5,
                 //            'visibility': 'hidden',
                 'background-color': 'lightgray'
@@ -26437,11 +28791,13 @@ TrackListPanel.prototype = {
                 'top': 0,
                 'width': regionOverviewDarkBoxWidth,
                 'height': 'calc(100% - 8px)',
-                'border': '1px solid gray',
+//                'border': '1px solid gray',
                 'opacity': 0.5,
                 //            'visibility': 'hidden',
                 'background-color': 'lightgray'
             });
+            this.regionOverviewBoxLeft = regionOverviewBoxLeft;
+            this.regionOverviewBoxRight = regionOverviewBoxRight;
         }
 
 
@@ -26461,9 +28817,21 @@ TrackListPanel.prototype = {
         });
 
         $(this.tlTracksDiv).dblclick(function (event) {
-            var halfLength = _this.region.length() / 2;
-            var mouseRegion = new Region({chromosome: _this.region.chromosome, start: _this.mousePosition - halfLength, end: _this.mousePosition + halfLength})
-            _this.trigger('region:change', {region: mouseRegion, sender: _this});
+            if (!_this.regionChanging) {
+                _this.regionChanging = true;
+                /**/
+                /**/
+                /**/
+                var halfLength = _this.region.length() / 2;
+                var mouseRegion = new Region({chromosome: _this.region.chromosome, start: _this.mousePosition - halfLength, end: _this.mousePosition + halfLength})
+                _this.trigger('region:change', {region: mouseRegion, sender: _this});
+                /**/
+                /**/
+                /**/
+                setTimeout(function () {
+                    _this.regionChanging = false;
+                }, 700);
+            }
         });
 
         var downX, moveX;
@@ -26634,7 +29002,7 @@ TrackListPanel.prototype = {
         var mid = this.width / 2;
         this._setPixelBase();
 
-        $(this.centerLine).css({'left': mid - 1, 'width': this.pixelBase});
+        $(this.centerLine).css({'left': mid - 1, 'width': this.pixelBase + 2});
         $(this.mouseLine).css({'width': this.pixelBase});
 
         this.svgTop.setAttribute('width', this.width);
@@ -26648,6 +29016,19 @@ TrackListPanel.prototype = {
         this.trigger('trackWidth:change', {width: this.width, sender: this})
 
         this._setTextPosition();
+
+        if (this.showRegionOverviewBox) {
+            var regionOverviewBoxWidth = this.region.length() * this.pixelBase;
+            var regionOverviewDarkBoxWidth = (this.width - regionOverviewBoxWidth) / 2;
+            $(this.regionOverviewBoxLeft).css({
+                'width': regionOverviewDarkBoxWidth
+            });
+            $(this.regionOverviewBoxRight).css({
+                'left': (regionOverviewDarkBoxWidth + regionOverviewBoxWidth),
+                'width': regionOverviewDarkBoxWidth
+            });
+        }
+
     },
 
     highlight: function (event) {
@@ -26675,8 +29056,8 @@ TrackListPanel.prototype = {
         //get pixelbase by Region
 
 
-        $(this.centerLine).css({'width': this.pixelBase});
-        $(this.mouseLine).css({'width': this.pixelBase});
+        $(this.centerLine).css({'width': this.pixelBase + 2});
+        $(this.mouseLine).css({'width': this.pixelBase + 2});
 
         this.windowSize = "Window size: " + Utils.formatNumber(this.region.length()) + " nts";
         this.viewNtsText.textContent = this.viewNtsText.textContent;
@@ -26686,14 +29067,14 @@ TrackListPanel.prototype = {
 
 //        if (region.species != null) {
 //            //check species and modify CellBaseAdapter, clean cache
-//            for (i in this.trackSvgList) {
-//                if (this.trackSvgList[i].trackData.adapter instanceof CellBaseAdapter ||
-//                    this.trackSvgList[i].trackData.adapter instanceof SequenceAdapter
+//            for (i in this.tracks) {
+//                if (this.tracks[i].trackData.adapter instanceof CellBaseAdapter ||
+//                    this.tracks[i].trackData.adapter instanceof SequenceAdapter
 //                    ) {
-//                    this.trackSvgList[i].trackData.adapter.species = region.species;
-//                    //this.trackSvgList[i].trackData.adapter.featureCache.clear();
+//                    this.tracks[i].trackData.adapter.species = region.species;
+//                    //this.tracks[i].trackData.adapter.featureCache.clear();
 //
-//                    this.trackSvgList[i].trackData.adapter.clearData();
+//                    this.tracks[i].trackData.adapter.clearData();
 //                }
 //            }
 //        }
@@ -26710,22 +29091,29 @@ TrackListPanel.prototype = {
     },
 
     draw: function () {
+        var _this = this;
+        this.targetDiv = ( this.target instanceof HTMLElement ) ? this.target : document.querySelector('#' + this.target);
+        if (!this.targetDiv) {
+            console.log('target not found');
+            return;
+        }
+        this.targetDiv.appendChild(this.div);
+
         this.trigger('track:draw', {sender: this});
     },
-    checkTracksReady: function () {
-        var _this = this;
-        /************ Loading ************/
-        var checkAllTrackStatus = function (status) {
-            for (i in _this.trackSvgList) {
-                if (_this.trackSvgList[i].status != status) return false;
-            }
-            return true;
-        };
-        if (checkAllTrackStatus('ready')) {
-//            console.log('all ready')
-            this.status = 'ready';
-            _this.trigger('tracks:ready', {sender: _this});
+    _checkAllTrackStatus: function (status) {
+        for (var i in this.tracks) {
+            if (this.tracks[i].status != status) return false;
         }
+        return true;
+    },
+    checkTracksReady: function () {
+        return this._checkAllTrackStatus('ready');
+//        if (this._checkAllTrackStatus('ready')) {
+//            this.status = 'ready';
+//            console.log('all ready')
+//            this.trigger('tracks:ready', {sender: this});
+//        }
 //        var checkStatus = function () {
 //            if (checkAllTrackStatus('ready')) {
 //                _this.trigger('tracks:ready', {sender: _this});
@@ -26734,7 +29122,6 @@ TrackListPanel.prototype = {
 //            }
 //        };
 //        setTimeout(checkStatus, 10);
-        /***************************/
     },
     addTrack: function (track) {
         if (_.isArray(track)) {
@@ -26752,9 +29139,26 @@ TrackListPanel.prototype = {
         }
         var _this = this;
 
-        var i = this.trackSvgList.push(track);
-        this.swapHash[track.id] = {index: i - 1, visible: true};
+        if (track == null) {
+            return false
+        }
+        // Check if already exists
+        if (this.containsTrack(track)) {
+            return false;
+        }
 
+
+        var length = this.tracks.push(track);
+        var insertPosition = length - 1;
+        this.tracksIndex[track.id] = insertPosition;
+
+
+        if (typeof track.dataAdapter.host === 'undefined') {
+            track.dataAdapter.host = this.cellBaseHost;
+        }
+        if (typeof track.dataAdapter.version === 'undefined') {
+            track.dataAdapter.version = this.cellBaseVersion;
+        }
         track.set('pixelBase', this.pixelBase);
         track.set('region', this.visualRegion);
         track.set('width', this.width);
@@ -26834,6 +29238,16 @@ TrackListPanel.prototype = {
             }
         });
 
+        track.on('track:close', function (event) {
+            _this.removeTrack(event.sender);
+        });
+        track.on('track:up', function (event) {
+            _this._reallocateAbove(event.sender);
+        });
+        track.on('track:down', function (event) {
+            _this._reallocateUnder(event.sender);
+        });
+
         this.on('track:draw', track.get('track:draw'));
         this.on('trackSpecies:change', track.get('trackSpecies:change'));
         this.on('trackRegion:change', track.get('trackRegion:change'));
@@ -26841,20 +29255,61 @@ TrackListPanel.prototype = {
         this.on('trackWidth:change', track.get('trackWidth:change'));
         this.on('trackFeature:highlight', track.get('trackFeature:highlight'));
 
-        track.on('track:ready', function () {
-            _this.checkTracksReady();
-        });
+//        track.on('track:ready', function () {
+//            _this.checkTracksReady();
+//        });
+    },
+    enableAutoHeight: function () {
+        for (var i = 0; i < this.tracks.length; i++) {
+            var track = this.tracks[i];
+            track.enableAutoHeight();
+        }
+    },
+    updateHeight: function () {
+        for (var i = 0; i < this.tracks.length; i++) {
+            var track = this.tracks[i];
+            track.updateHeight(true);
+        }
     },
 
-    removeTrack: function (trackId) {
+    containsTrack: function (track) {
+        if (typeof this.tracksIndex[track.id] !== 'undefined') {
+            return true;
+        } else {
+            return false;
+        }
+    },
+    getTrackIndex: function (track) {
+        return this.tracksIndex[track.id];
+    },
+    _updateTracksIndex: function () {
+        //update index with correct index after splice
+        for (var i = 0; i < this.tracks.length; i++) {
+            var track = this.tracks[i];
+            this.tracksIndex[track.id] = i;
+        }
+    },
+    refreshTracksDom: function () {
+        for (var i = 0; i < this.tracks.length; i++) {
+            var track = this.tracks[i];
+            $(track.div).detach();
+            if (track.visible) {
+                $(this.tlTracksDiv).append(track.div);
+            }
+        }
+    },
+    removeTrack: function (track) {
+        if (!this.containsTrack(track)) {
+            return false;
+        }
         // first hide the track
-        this._hideTrack(trackId);
+        this.hideTrack(track);
 
-        var i = this.swapHash[trackId].index;
-
+        var index = this.getTrackIndex(track);
         // remove track from list and hash data
-        var track = this.trackSvgList.splice(i, 1)[0];
-        delete this.swapHash[trackId];
+        this.tracks.splice(index, 1)[0];
+        delete this.tracksIndex[track.id];
+        this._updateTracksIndex();
 
         // delete listeners
         this.off('track:draw', track.get('track:draw'));
@@ -26864,149 +29319,121 @@ TrackListPanel.prototype = {
         this.off('trackWidth:change', track.set('trackWidth:change'));
         this.off('trackFeature:highlight', track.get('trackFeature:highlight'));
 
-
-        //uddate swapHash with correct index after splice
-        for (var i = 0; i < this.trackSvgList.length; i++) {
-            this.swapHash[this.trackSvgList[i].id].index = i;
-        }
+        this.refreshTracksDom();
         return track;
     },
 
     restoreTrack: function (track, index) {
-        var _this = this;
+        if (this.containsTrack((track))) {
+            return false;
+        }
 
         this.addTrack(track);
-
-        if (index != null) {
-            this.setTrackIndex(track.id, index);
+        if (typeof index !== 'undefined') {
+            this.setTrackIndex(track, index);
         }
-//        this._showTrack(track.id);
+        track.show();
+        this.refreshTracksDom();
     },
 
-    enableAutoHeight: function () {
-        for (var i = 0; i < this.trackSvgList.length; i++) {
-            var track = this.trackSvgList[i];
-            track.enableAutoHeight();
-        }
-    },
-    updateHeight: function () {
-        for (var i = 0; i < this.trackSvgList.length; i++) {
-            var track = this.trackSvgList[i];
-            track.updateHeight(true);
-        }
-    },
-
-    _redraw: function () {
-        $(this.tlTracksDiv)
-        for (var i = 0; i < this.trackSvgList.length; i++) {
-            var track = this.trackSvgList[i];
-            $(track.div).detach();
-            if (this.swapHash[track.id].visible) {
-                $(this.tlTracksDiv).append(track.div);
-            }
-        }
-    },
 
     //This routine is called when track order is modified
-    _reallocateAbove: function (trackId) {
-        var i = this.swapHash[trackId].index;
+    _reallocateAbove: function (track) {
+        if (!this.containsTrack((track))) {
+            return false;
+        }
+
+        var i = this.getTrackIndex(track);
         console.log(i + " wants to move up");
         if (i > 0) {
-            var aboveTrack = this.trackSvgList[i - 1];
-            var underTrack = this.trackSvgList[i];
+            var aboveTrack = this.tracks[i - 1];
+            var underTrack = this.tracks[i];
 
             var y = parseInt(aboveTrack.main.getAttribute("y"));
             var h = parseInt(underTrack.main.getAttribute("height"));
             aboveTrack.main.setAttribute("y", y + h);
             underTrack.main.setAttribute("y", y);
 
-            this.trackSvgList[i] = aboveTrack;
-            this.trackSvgList[i - 1] = underTrack;
-            this.swapHash[aboveTrack.id].index = i;
-            this.swapHash[underTrack.id].index = i - 1;
+            this.tracks[i] = aboveTrack;
+            this.tracks[i - 1] = underTrack;
+            this.tracksIndex[aboveTrack.id] = i;
+            this.tracksIndex[underTrack.id] = i - 1;
+            this.refreshTracksDom();
         } else {
             console.log("is at top");
         }
     },
 
     //This routine is called when track order is modified
-    _reallocateUnder: function (trackId) {
-        var i = this.swapHash[trackId].index;
+    _reallocateUnder: function (track) {
+        if (!this.containsTrack((track))) {
+            return false;
+        }
+
+        var i = this.getTrackIndex(track);
         console.log(i + " wants to move down");
-        if (i + 1 < this.trackSvgList.length) {
-            var aboveTrack = this.trackSvgList[i];
-            var underTrack = this.trackSvgList[i + 1];
+        if (i + 1 < this.tracks.length) {
+            var aboveTrack = this.tracks[i];
+            var underTrack = this.tracks[i + 1];
 
             var y = parseInt(aboveTrack.main.getAttribute("y"));
             var h = parseInt(underTrack.main.getAttribute("height"));
             aboveTrack.main.setAttribute("y", y + h);
             underTrack.main.setAttribute("y", y);
 
-            this.trackSvgList[i] = underTrack;
-            this.trackSvgList[i + 1] = aboveTrack;
-            this.swapHash[underTrack.id].index = i;
-            this.swapHash[aboveTrack.id].index = i + 1;
-
+            this.tracks[i] = underTrack;
+            this.tracks[i + 1] = aboveTrack;
+            this.tracksIndex[underTrack.id] = i;
+            this.tracksIndex[aboveTrack.id] = i + 1;
+            this.refreshTracksDom();
         } else {
             console.log("is at bottom");
         }
     },
 
-    setTrackIndex: function (trackId, newIndex) {
-        var oldIndex = this.swapHash[trackId].index;
+    setTrackIndex: function (track, newIndex) {
+        if (!this.containsTrack((track))) {
+            return false;
+        }
+
+        var oldIndex = this.getTrackIndex(track);
 
         //remove track from old index
-        var track = this.trackSvgList.splice(oldIndex, 1)[0]
+        this.tracks.splice(oldIndex, 1)[0];
 
         //add track at new Index
-        this.trackSvgList.splice(newIndex, 0, track);
+        this.tracks.splice(newIndex, 0, track);
 
-        //uddate swapHash with correct index after slice
-        for (var i = 0; i < this.trackSvgList.length; i++) {
-            this.swapHash[this.trackSvgList[i].id].index = i;
-        }
+        this._updateTracksIndex();
 
         //update track div positions
-        this._redraw();
+        this.refreshTracksDom();
     },
 
-    scrollToTrack: function (trackId) {
-        var swapTrack = this.swapHash[trackId];
-        if (swapTrack != null) {
-            var i = swapTrack.index;
-            var track = this.trackSvgList[i];
-            var y = $(track.div).position().top;
-            $(this.tlTracksDiv).scrollTop(y);
-
-//            $(this.svg).parent().parent().scrollTop(track.main.getAttribute("y"));
+    scrollToTrack: function (track) {
+        if (!this.containsTrack((track))) {
+            return false;
         }
+
+        var y = $(track.div).position().top;
+        $(this.tlTracksDiv).scrollTop(y);
     },
 
 
-    _hideTrack: function (trackId) {
-        this.swapHash[trackId].visible = false;
-        var i = this.swapHash[trackId].index;
-        var track = this.trackSvgList[i];
-
+    hideTrack: function (track) {
+        if (!this.containsTrack((track))) {
+            return false;
+        }
         track.hide();
-
-//        this.setHeight(this.height - track.getHeight());
-
-        this._redraw();
+        this.refreshTracksDom();
     },
 
-    _showTrack: function (trackId) {
-        this.swapHash[trackId].visible = true;
-        var i = this.swapHash[trackId].index;
-        var track = this.trackSvgList[i];
-
+    showTrack: function (track) {
+        if (!this.containsTrack((track))) {
+            return false;
+        }
         track.show();
-
-//        this.svg.appendChild(track.main);
-
-//        this.setHeight(this.height + track.getHeight());
-
-        this._redraw();
+        this.refreshTracksDom();
     },
     _setPixelBase: function () {
         this.pixelBase = this.width / this.region.length();
@@ -27034,17 +29461,16 @@ TrackListPanel.prototype = {
 //        this.viewNtsTextBack.setAttribute('width', $(this.viewNtsText).width() + 15);
     },
 
-    getTrackSvgById: function (trackId) {
-        if (this.swapHash[trackId] != null) {
-            var position = this.swapHash[trackId].index;
-            return this.trackSvgList[position];
+    getTrackById: function (trackId) {
+        if (typeof this.tracksIndex[trackId] !== 'undefined') {
+            var i = this.tracksIndex[trackId];
+            return this.tracks[i];
         }
-        return null;
     },
     getSequenceTrack: function () {
         //if multiple, returns the first found
-        for (var i = 0; i < this.trackSvgList.length; i++) {
-            var track = this.trackSvgList[i];
+        for (var i = 0; i < this.tracks.length; i++) {
+            var track = this.tracks[i];
             if (track instanceof SequenceTrack) {
                 return track;
             }
@@ -27101,21 +29527,21 @@ TrackListPanel.prototype = {
  */
 
 function Track(args) {
-    this.width = 200;
-    this.height = 200;
 
-
+    this.id = Utils.genId('track');
     this.dataAdapter;
     this.renderer;
     this.resizable = true;
     this.autoHeight = false;
     this.targetId;
-    this.id;
     this.title;
     this.minHistogramRegionSize = 300000000;
     this.maxLabelRegionSize = 300000000;
+    this.width = 200;
     this.height = 100;
     this.visibleRegionSize;
+    this.visible = true;
+    this.closable = false;
     this.fontClass = 'ocb-font-sourcesanspro ocb-font-size-14';
 
     _.extend(this, args);
@@ -27162,9 +29588,11 @@ Track.prototype = {
         this[attr] = value;
     },
     hide: function () {
+        this.visible = false;
         $(this.div).css({display: 'hidden'});
     },
     show: function () {
+        this.visible = true;
         $(this.div).css({display: 'auto'});
     },
     hideContent: function () {
@@ -27179,6 +29607,15 @@ Track.prototype = {
         $(this.svgdiv).toggle('hidden');
         $(this.resizeDiv).toggle('hidden');
         $(this.configBtn).toggle('hidden');
+    },
+    close: function () {
+        this.trigger('track:close', {sender: this});
+    },
+    up: function () {
+        this.trigger('track:up', {sender: this});
+    },
+    down: function () {
+        this.trigger('track:down', {sender: this});
     },
     setSpecies: function (species) {
         this.species = species;
@@ -27204,9 +29641,7 @@ Track.prototype = {
 //            'cursor': 'pointer'
 //        });
         if (this.resizable) {
-            if (this.histogram) {
-                $(this.svgdiv).css({'height': this.height + 10});
-            } else {
+            if (!this.histogram) {
                 var x = this.pixelPosition;
                 var width = this.width;
                 var lastContains = 0;
@@ -27220,7 +29655,11 @@ Track.prototype = {
 //                this.rrr.setAttribute('x', x);
 //                this.rrr.setAttribute('y', divHeight);
 //                this.rrr.setAttribute('width', width);
+
             }
+        }
+        if (this.histogram) {
+            $(this.svgdiv).css({'height': this.height + 10});
         }
     },
     _updateSVGHeight: function () {
@@ -27230,29 +29669,36 @@ Track.prototype = {
             this.svgCanvasFeatures.setAttribute('height', renderedHeight);
             this.hoverRect.setAttribute('height', renderedHeight);
         }
+        if (this.histogram) {
+            this.main.setAttribute('height', this.height);
+            this.svgCanvasFeatures.setAttribute('height', this.height);
+            this.hoverRect.setAttribute('height', this.height);
+        }
     },
     updateHeight: function (ignoreAutoHeight) {
         this._updateSVGHeight();
         if (this.autoHeight || ignoreAutoHeight) {
             this._updateDIVHeight();
         }
+//        if (this.histogram) {
+//
+//        }
     },
     enableAutoHeight: function () {
         this.autoHeight = true;
         this.updateHeight();
     },
     setTitle: function (title) {
-        $(this.titlediv).html(title);
+        $(this.titleText).html(title);
     },
 
     setLoading: function (bool) {
         if (bool) {
-            this.svgLoading.setAttribute("visibility", "visible");
             this.status = "rendering";
+            $(this.loadingEl).html('&nbsp; &nbsp;<i class="fa fa-spinner fa-spin"></i> <span class="ocb-light">Loading...</span></span>');
         } else {
-            this.svgLoading.setAttribute("visibility", "hidden");
             this.status = "ready";
-            this.trigger('track:ready', {sender: this});
+            $(this.loadingEl).html('');
         }
     },
 
@@ -27262,11 +29708,13 @@ Track.prototype = {
             this.histogramLogarithm = true;
             this.histogramMax = 500;
             this.interval = Math.ceil(10 / this.pixelBase);//server interval limit 512
+            $(this.histogramEl).html('&nbsp;<i class="fa fa-signal"></i>');
         } else {
             this.histogram = undefined;
             this.histogramLogarithm = undefined;
             this.histogramMax = undefined;
             this.interval = undefined;
+            $(this.histogramEl).html('');
         }
 
 //        if (this.histogramRenderer) {
@@ -27292,22 +29740,40 @@ Track.prototype = {
 
         var _this = this;
         var div = $('<div id="' + this.id + '-div"></div>')[0];
-        var titleBardiv = $('' +
-            '<div>' +
-            '   <div class="btn-group btn-group-xs">' +
-            '   <button id="configBtn" type="button" class="btn btn-xs btn-primary"><span class="glyphicon glyphicon-cog"></span></button>' +
-            '   <button id="titleBtn" type="button" class="btn btn-xs btn-default" data-toggle="button"><span id="titleDiv">' + this.title + '</span></button>' +
-            '   </div>' +
-            '</div>')[0];
+        var titleBarHtml = '';
+        titleBarHtml += '   <div class="ocb-gv-track-title">';
+//      titleBarHtml+=       '   <button id="configBtn" type="button" class="btn btn-xs btn-primary"><span class="glyphicon glyphicon-cog"></span></button>' ;
+        titleBarHtml += '   <div class="ocb-gv-track-title-el">';
+        titleBarHtml += '       <span class="ocb-gv-track-title-text">' + this.title + '</span>';
+        titleBarHtml += '       <span class="ocb-gv-track-title-histogram"></span>';
+        titleBarHtml += '       <span class="ocb-gv-track-title-down"><i class="fa fa-chevron-down"></i></span>';
+        titleBarHtml += '       <span class="ocb-gv-track-title-up"><i class="fa fa-chevron-up"></i></span>';
 
-        if (_.isUndefined(this.title)) {
+        if (this.closable == true) {
+            titleBarHtml += '       <span class="ocb-gv-track-title-close"><i class="fa fa-times"></i></span>';
+        }
+
+        titleBarHtml += '       <span class="ocb-gv-track-title-loading"></span>';
+        titleBarHtml += '   </div>';
+        titleBarHtml += '   </div>';
+
+
+        var titleBardiv = $(titleBarHtml)[0];
+
+
+        if (typeof this.title === 'undefined') {
             $(titleBardiv).addClass("hidden");
         }
 
-        var titlediv = $(titleBardiv).find('#titleDiv')[0];
-        var titleBtn = $(titleBardiv).find('#titleBtn')[0];
-        var configBtn = $(titleBardiv).find('#configBtn')[0];
+        var titlediv = $(titleBardiv).find('.ocb-gv-track-title')[0];
+        this.titleEl = $(titleBardiv).find('.ocb-gv-track-title-el')[0];
 
+        this.titleText = $(titleBardiv).find('.ocb-gv-track-title-text')[0];
+        this.histogramEl = $(titleBardiv).find('.ocb-gv-track-title-histogram')[0];
+        this.loadingEl = $(titleBardiv).find('.ocb-gv-track-title-loading')[0];
+        this.closeEl = $(titleBardiv).find('.ocb-gv-track-title-close')[0];
+        this.upEl = $(titleBardiv).find('.ocb-gv-track-title-up')[0];
+        this.downEl = $(titleBardiv).find('.ocb-gv-track-title-down')[0];
 
         var svgdiv = $('<div id="' + this.id + '-svgdiv"></div>')[0];
         var resizediv = $('<div id="' + this.id + '-resizediv" class="ocb-track-resize"></div>')[0];
@@ -27324,9 +29790,19 @@ Track.prototype = {
             .on('dblclick', function (e) {
                 e.stopPropagation();
             });
-        $(titleBtn).click(function (e) {
+        $(this.titleText).click(function (e) {
             _this.toggleContent();
         });
+        $(this.closeEl).click(function (e) {
+            _this.close();
+        });
+        $(this.upEl).click(function (e) {
+            _this.up();
+        });
+        $(this.downEl).click(function (e) {
+            _this.down();
+        });
+
 
         /** svg div **/
         $(svgdiv).css({
@@ -27425,40 +29901,11 @@ Track.prototype = {
         });
         this.invalidZoomText.textContent = "Zoom in to view the sequence";
 
-
-        var loadingImg = '<?xml version="1.0" encoding="utf-8"?>' +
-            '<svg version="1.1" width="22px" height="22px" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">' +
-            '<defs>' +
-            '<g id="pair">' +
-            '<ellipse cx="7" cy="0" rx="4" ry="1.7" style="fill:#ccc; fill-opacity:0.5;"/>' +
-            '<ellipse cx="-7" cy="0" rx="4" ry="1.7" style="fill:#aaa; fill-opacity:1.0;"/>' +
-            '</g>' +
-            '</defs>' +
-            '<g transform="translate(11,11)">' +
-            '<g>' +
-            '<animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="1.5s" repeatDur="indefinite"/>' +
-            '<use xlink:href="#pair"/>' +
-            '<use xlink:href="#pair" transform="rotate(45)"/>' +
-            '<use xlink:href="#pair" transform="rotate(90)"/>' +
-            '<use xlink:href="#pair" transform="rotate(135)"/>' +
-            '</g>' +
-            '</g>' +
-            '</svg>';
-
-        this.svgLoading = SVG.addChildImage(main, {
-            "xlink:href": "data:image/svg+xml," + encodeURIComponent(loadingImg),
-            "x": 10,
-            "y": 0,
-            "width": 22,
-            "height": 22,
-            "visibility": "hidden"
-        });
-
         this.div = div;
         this.svgdiv = svgdiv;
         this.titlediv = titlediv;
         this.resizeDiv = resizediv;
-        this.configBtn = configBtn;
+//        this.configBtn = configBtn;
 
         this.main = main;
         this.hoverRect = hoverRect;
@@ -27901,12 +30348,11 @@ FeatureTrack.prototype.render = function (targetId) {
             maxLabelRegionSize: _this.maxLabelRegionSize,
             width: _this.width,
             pixelPosition: _this.pixelPosition,
-            resource:_this.resource,
-            species:_this.species,
-            featureType:_this.featureType
+            resource: _this.resource,
+            species: _this.species,
+            featureType: _this.featureType
         });
         _this.updateHeight();
-        _this.setLoading(false);
     });
 };
 
@@ -27925,6 +30371,7 @@ FeatureTrack.prototype.draw = function () {
         this.dataType = 'histogram';
     }
 
+
     if (typeof this.visibleRegionSize === 'undefined' || this.region.length() < this.visibleRegionSize) {
         this.setLoading(true);
         this.dataAdapter.getData({
@@ -27939,6 +30386,9 @@ FeatureTrack.prototype.draw = function () {
                 histogramLogarithm: this.histogramLogarithm,
                 histogramMax: this.histogramMax,
                 interval: this.interval
+            },
+            done: function () {
+                _this.setLoading(false);
             }
         });
 
@@ -27984,6 +30434,9 @@ FeatureTrack.prototype.move = function (disp) {
                     histogramLogarithm: this.histogramLogarithm,
                     histogramMax: this.histogramMax,
                     interval: this.interval
+                },
+                done: function () {
+
                 }
             });
             this.svgCanvasLeftLimit = parseInt(this.svgCanvasLeftLimit - this.svgCanvasOffset);
@@ -28002,7 +30455,11 @@ FeatureTrack.prototype.move = function (disp) {
                     histogramLogarithm: this.histogramLogarithm,
                     histogramMax: this.histogramMax,
                     interval: this.interval
+                },
+                done: function () {
+
                 }
+
             });
             this.svgCanvasRightLimit = parseInt(this.svgCanvasRightLimit + this.svgCanvasOffset);
         }
@@ -28052,7 +30509,6 @@ function GeneTrack(args) {
     _.extend(this, args);
 
     this.exclude;
-
 };
 
 GeneTrack.prototype.render = function (targetId) {
@@ -28074,7 +30530,6 @@ GeneTrack.prototype.render = function (targetId) {
         }
         _this.renderer.render(features, {
             svgCanvasFeatures: _this.svgCanvasFeatures,
-            featureTypes: _this.featureTypes,
             renderedArea: _this.renderedArea,
             pixelBase: _this.pixelBase,
             position: _this.region.center(),
@@ -28085,11 +30540,6 @@ GeneTrack.prototype.render = function (targetId) {
 
         });
         _this.updateHeight();
-        _this.setLoading(false);
-    });
-
-    this.renderer.on('feature:click', function (event) {
-        _this.showInfoWidget(event);
     });
 };
 
@@ -28138,6 +30588,9 @@ GeneTrack.prototype.draw = function () {
                 histogramMax: this.histogramMax,
                 interval: this.interval,
                 exclude: this.exclude
+            },
+            done: function () {
+                _this.setLoading(false);
             }
         });
 
@@ -28182,7 +30635,7 @@ GeneTrack.prototype.move = function (disp) {
     if (typeof this.visibleRegionSize === 'undefined' || this.region.length() < this.visibleRegionSize) {
 
         if (disp > 0 && virtualStart < this.svgCanvasLeftLimit) {
-            console.log('left')
+//          left
             this.dataAdapter.getData({
                 dataType: this.dataType,
                 region: new Region({
@@ -28196,13 +30649,16 @@ GeneTrack.prototype.move = function (disp) {
                     histogramMax: this.histogramMax,
                     interval: this.interval,
                     exclude: this.exclude
+                },
+                done: function () {
+
                 }
             });
             this.svgCanvasLeftLimit = parseInt(this.svgCanvasLeftLimit - this.svgCanvasOffset);
         }
 
         if (disp < 0 && virtualEnd > this.svgCanvasRightLimit) {
-            console.log('right')
+//          right
             this.dataAdapter.getData({
                 dataType: this.dataType,
                 region: new Region({
@@ -28216,26 +30672,15 @@ GeneTrack.prototype.move = function (disp) {
                     histogramMax: this.histogramMax,
                     interval: this.interval,
                     exclude: this.exclude
+                },
+                done: function () {
+
                 }
             });
             this.svgCanvasRightLimit = parseInt(this.svgCanvasRightLimit + this.svgCanvasOffset);
         }
     }
 };
-
-GeneTrack.prototype.showInfoWidget = function (args) {
-    switch (args.featureType) {
-        case "gene":
-            new GeneInfoWidget(null, this.dataAdapter.species).draw(args);
-            break;
-        case "transcript":
-            new TranscriptInfoWidget(null, this.dataAdapter.species).draw(args);
-            break;
-        default:
-            break;
-    }
-};
-
 /*
  * Copyright (c) 2012 Francisco Salavert (ICM-CIPF)
  * Copyright (c) 2012 Ruben Sanchez (ICM-CIPF)
@@ -28443,7 +30888,7 @@ function BamRenderer(args) {
     _.extend(this, Backbone.Events);
 
     this.fontClass = 'ocb-font-sourcesanspro ocb-font-size-12';
-    this.toolTipfontClass = 'ocb-font-default';
+    this.toolTipfontClass = 'ocb-tooltip-font';
 
     if (_.isObject(args)) {
         _.extend(this, args);
@@ -29005,7 +31450,7 @@ function FeatureClusterRenderer(args) {
 //    this.multiplier = this.histogramHeight / this.maxValue;
 
     this.fontClass = 'ocb-font-sourcesanspro ocb-font-size-12';
-    this.toolTipfontClass = 'ocb-font-default';
+    this.toolTipfontClass = 'ocb-tooltip-font';
 
     //set instantiation args
     _.extend(this, args);
@@ -29152,7 +31597,7 @@ function FeatureRenderer(args) {
     _.extend(this, Backbone.Events);
 
     this.fontClass = 'ocb-font-sourcesanspro ocb-font-size-12';
-    this.toolTipfontClass = 'ocb-font-default';
+    this.toolTipfontClass = 'ocb-tooltip-font';
 
      if (_.isObject(args)) {
         _.extend(this, args);
@@ -29313,7 +31758,7 @@ function GeneRenderer(args) {
     _.extend(this, Backbone.Events);
 
     this.fontClass = 'ocb-font-sourcesanspro ocb-font-size-12';
-    this.toolTipfontClass = 'ocb-font-default';
+    this.toolTipfontClass = 'ocb-tooltip-font';
 
     if (_.isObject(args)) {
         _.extend(this, args);
@@ -29662,37 +32107,15 @@ function HistogramRenderer(args) {
 
 };
 
-
-HistogramRenderer.prototype.render = function (features, args) {
-    var middle = args.width / 2;
-    var points = '';
-    if (features.length > 0) {//Force first point at this.histogramHeight
-        var firstFeature = features[0].value;
-        var width = (firstFeature.end - firstFeature.start + 1) * args.pixelBase;
-        var x = args.pixelPosition + middle - ((args.position - parseInt(firstFeature.start)) * args.pixelBase);
-        points = (x + (width / 2)) + ',' + this.histogramHeight + ' ';
-    }
-
-    var maxValue = 0;
-
-    for (var i = 0, len = features.length; i < len; i++) {
-
-        var feature = features[i].value;
-        feature.start = parseInt(feature.start);
-        feature.end = parseInt(feature.end);
-        var width = (feature.end - feature.start + 1) * args.pixelBase;
-        //get type settings object
-
-        var x = args.pixelPosition + middle - ((args.position - feature.start) * args.pixelBase);
-
-        if (feature.features_count == null) {
+HistogramRenderer.prototype._checkFeatureValue = function (feature) {
+    if (feature.features_count == null) {
 //            var height = Math.log(features[i].absolute);
-            if (feature.absolute != 0) {
-                feature.features_count = Math.log(features[i].absolute);
-            } else {
-                feature.features_count = 0;
-            }
+        if (feature.absolute != 0) {
+            feature.features_count = Math.log(feature.absolute);
+        } else {
+            feature.features_count = 0;
         }
+    }
 
 //        var height = features[i].features_count;
 //        if (height == null) {
@@ -29700,27 +32123,59 @@ HistogramRenderer.prototype.render = function (features, args) {
 //            height = this.histogramHeight * height;
 //        } else {
 //        }
-        var height = feature.features_count * this.multiplier;
+}
 
+HistogramRenderer.prototype.render = function (features, args) {
+    var middle = args.width / 2;
+    console.log(middle)
+    var points = '';
+    if (features.length > 0) {
+        var firstFeature = features[0].value;
+        var width = (firstFeature.end - firstFeature.start + 1) * args.pixelBase;
+        var x = args.pixelPosition + middle - ((args.position - parseInt(firstFeature.start)) * args.pixelBase);
+
+        this._checkFeatureValue(firstFeature);
+        var height = firstFeature.features_count * this.multiplier;
+
+        points = (x - (width / 2)) + ',' + this.histogramHeight + ' ';
+        points += (x - (width / 2)) + ',' + (this.histogramHeight - height) + ' ';
+    }
+
+    for (var i = 0, len = features.length; i < len; i++) {
+        var feature = features[i].value;
+        feature.start = parseInt(feature.start);
+        feature.end = parseInt(feature.end);
+        var width = (feature.end - feature.start + 1) * args.pixelBase;
+        var x = args.pixelPosition + middle - ((args.position - feature.start) * args.pixelBase);
+
+        this._checkFeatureValue(feature);
+        var height = feature.features_count * this.multiplier;
 
         points += (x + (width / 2)) + "," + (this.histogramHeight - height) + " ";
 
     }
-    if (features.length > 0) {//force last point at this.histogramHeight
+    if (features.length > 0) {
         var lastFeature = features[features.length - 1].value;
         var width = (lastFeature.end - lastFeature.start + 1) * args.pixelBase;
         var x = args.pixelPosition + middle - ((args.position - parseInt(lastFeature.start)) * args.pixelBase);
-        points += (x + (width / 2)) + ',' + this.histogramHeight + ' ';
 
+        this._checkFeatureValue(lastFeature);
+        var height = lastFeature.features_count * this.multiplier;
+
+        points += (x + (width)) + ',' + (this.histogramHeight - height) + ' ';
+        points += (x + (width)) + ',' + this.histogramHeight + ' ';
     }
 
-    var pol = SVG.addChild(args.svgCanvasFeatures, "polyline", {
-        "points": points,
-        "stroke": "#000000",
-        "stroke-width": 0.2,
-        "fill": '#9493b1',
-        "cursor": "pointer"
-    });
+    if (points !== '') {
+        SVG.addChild(args.svgCanvasFeatures, "polyline", {
+            "points": points,
+            //        "stroke": "#000000",
+            //        "stroke-width": 0.2,
+            "fill": '#428bca',
+            "cursor": "pointer"
+        });
+
+    }
 };
 
 /*
@@ -29752,7 +32207,7 @@ function SequenceRenderer(args){
     _.extend(this, Backbone.Events);
 
     this.fontClass = 'ocb-font-ubuntumono ocb-font-size-16';
-    this.toolTipfontClass = 'ocb-font-default';
+    this.toolTipfontClass = 'ocb-tooltip-font';
 
     _.extend(this, args);
 
@@ -29821,7 +32276,7 @@ function VcfMultisampleRenderer(args) {
     _.extend(this, Backbone.Events);
 
     this.fontClass = 'ocb-font-sourcesanspro ocb-font-size-12';
-    this.toolTipfontClass = 'ocb-font-default';
+    this.toolTipfontClass = 'ocb-tooltip-font';
 
     if (_.isObject(args)) {
         _.extend(this, args);
@@ -30008,8 +32463,15 @@ function GenomeViewer(args) {
     this.id = Utils.genId("GenomeViewer");
 
     //set default args
-    this.version = 'Genome Viewer';
-    this.targetId;
+    this.autoRender = true;
+    this.version = 'Powered by <a target="_blank" href="http://www.genomemaps.org/">Genome Maps</a>';
+    this.target;
+
+    this.width;
+    this.height;
+
+    this.cellBaseHost = 'http://www.ebi.ac.uk/cellbase/webservices/rest';
+    this.cellBaseVersion = 'v3';
 
     this.quickSearchResultFn;
     this.quickSearchDisplayKey;
@@ -30017,7 +32479,7 @@ function GenomeViewer(args) {
     this.drawNavigationBar = true;
     this.drawKaryotypePanel = true;
     this.drawChromosomePanel = true;
-    this.drawRegionOverviewPanel = true;
+    this.drawOverviewTrackListPanel = true;
     this.overviewZoomMultiplier = 8;
     this.karyotypePanelConfig = {
         collapsed: false,
@@ -30035,7 +32497,6 @@ function GenomeViewer(args) {
 
     };
     this.drawStatusBar = true;
-    this.border = true;
     this.resizable = true;
     this.sidePanel = true;//enable or disable sidePanel at construction
     this.trackListTitle = 'Detailed information';//enable or disable sidePanel at construction
@@ -30063,8 +32524,6 @@ function GenomeViewer(args) {
 
     this.defaultRegion = new Region(this.region);
 
-    this.width;
-    this.height;
     this.sidePanelWidth = (this.sidePanel) ? 25 : 0;
 
 
@@ -30074,6 +32533,7 @@ function GenomeViewer(args) {
     this.fullscreen = false;
     this.resizing = false;
 
+    this.changingRegion = false;
 
     this.rendered = false;
     if (this.autoRender) {
@@ -30082,69 +32542,57 @@ function GenomeViewer(args) {
 }
 
 GenomeViewer.prototype = {
-
-    render: function (targetId) {
+    render: function () {
         var _this = this;
-        this.targetId = (targetId) ? targetId : this.targetId;
-        this.targetDiv = (this.targetId instanceof HTMLElement ) ? this.targetId : $('#' + this.targetId)[0];
-        if (this.targetDiv === 'undefined') {
-            console.log('targetId not found');
-            return;
-        }
+        console.log("Initializing Genome Viewer");
 
-        this.div = $('<div class="bootstrap ocb-gv ocb-box-vertical" id="' + this.id + '"></div>')[0];
+        //HTML skel
+        this.div = document.createElement('div');
+        this.div.setAttribute('id', this.id);
+        this.div.setAttribute('class', 'ocb-gv ocb-box-vertical');
 
-        if (this.border) {
-            var border = (_.isString(this.border)) ? this.border : '1px solid lightgray';
-            $(this.targetDiv).css({border: border});
-        }
+        this.navigationbarDiv = document.createElement('div');
+        this.navigationbarDiv.setAttribute('class', 'bootstrap ocb-gv-navigation');
+        this.div.appendChild(this.navigationbarDiv);
 
-        if (typeof this.width === 'undefined') {
-            //try to define a width
-            this.width = $(this.targetDiv).innerWidth();
-            if(this.width === 0){
-                this.width = $('body').width();
-            }
-        }
-        $(this.div).width(this.width);
-        $(this.targetDiv).width(this.width);
+        this.centerPanelDiv = document.createElement('div');
+        this.centerPanelDiv.setAttribute('class', 'ocb-gv-center');
+        this.div.appendChild(this.centerPanelDiv);
 
-        if (typeof this.height !== 'undefined') {
-            $(this.div).height(this.height);
-            $(this.targetDiv).height(this.height);
-        }
+        this.statusbarDiv = document.createElement('div');
+        this.statusbarDiv.setAttribute('class', 'ocb-gv-status');
+        this.div.appendChild(this.statusbarDiv);
 
 
-        this.navigationbarDiv = $('<div id="navigation-' + this.id + '" class="ocb-gv-navigation"></div>')[0];
-        $(this.div).append(this.navigationbarDiv);
+        this.rightSidebarDiv = document.createElement('div');
+        this.rightSidebarDiv.setAttribute('class', 'ocb-gv-right-side');
+        this.centerPanelDiv.appendChild(this.rightSidebarDiv);
 
-        this.centerPanelDiv = $('<div id="center-' + this.id + '" class="ocb-gv-center"></div>')[0];
-        $(this.div).append(this.centerPanelDiv);
-
-        this.statusbarDiv = $('<div id="statusbar-' + this.id + '" class="ocb-gv-status"></div>')[0];
-        $(this.div).append(this.statusbarDiv);
-
-
-        this.rightSidebarDiv = $('<div id="rightsidebar-' + this.id + '" style="position:absolute; z-index:50;right:0px;"></div>')[0];
-        this.leftSidebarDiv = $('<div id="leftsidebar-' + this.id + '" style="position:absolute; z-index:50;left:0px;"></div>')[0];
-        $(this.centerPanelDiv).append(this.rightSidebarDiv);
-        $(this.centerPanelDiv).append(this.leftSidebarDiv);
+        this.leftSidebarDiv = document.createElement('div');
+        this.leftSidebarDiv.setAttribute('class', 'ocb-gv-left-side');
+        this.centerPanelDiv.appendChild(this.leftSidebarDiv);
 
 
-        this.karyotypeDiv = $('<div id="karyotype-' + this.id + '"></div>')[0];
-        $(this.centerPanelDiv).append(this.karyotypeDiv);
+        this.karyotypeDiv = document.createElement('div');
+        this.karyotypeDiv.setAttribute('class', 'ocb-gv-karyotype');
+        this.centerPanelDiv.appendChild(this.karyotypeDiv);
 
-        this.chromosomeDiv = $('<div id="chromosome-' + this.id + '"></div>')[0];
-        $(this.centerPanelDiv).append(this.chromosomeDiv);
+        this.chromosomeDiv = document.createElement('div');
+        this.chromosomeDiv.setAttribute('class', 'ocb-gv-chromosome');
+        this.centerPanelDiv.appendChild(this.chromosomeDiv);
 
-        this.trackListPanelsDiv = $('<div id="trackListPanels-' + this.id + '" class="trackListPanels" ></div>')[0];
-        $(this.centerPanelDiv).append(this.trackListPanelsDiv);
 
-        this.regionDiv = $('<div id="region-' + this.id + '" ></div>')[0];
-        $(this.trackListPanelsDiv).append(this.regionDiv);
+        this.trackListPanelsDiv = document.createElement('div');
+        this.trackListPanelsDiv.setAttribute('class', 'ocb-gv-track');
+        this.centerPanelDiv.appendChild(this.trackListPanelsDiv);
 
-        this.tracksDiv = $('<div id="tracks-' + this.id + '" ></div>')[0];
-        $(this.trackListPanelsDiv).append(this.tracksDiv);
+        this.regionDiv = document.createElement('div');
+        this.regionDiv.setAttribute('class', 'ocb-gv-overview');
+        this.trackListPanelsDiv.appendChild(this.regionDiv);
+
+        this.tracksDiv = document.createElement('div');
+        this.tracksDiv.setAttribute('class', 'ocb-gv-detailed');
+        this.trackListPanelsDiv.appendChild(this.tracksDiv);
 
 
         /****************************/
@@ -30154,8 +32602,7 @@ GenomeViewer.prototype = {
 
         this.chromosomes = this.getChromosomes();
 
-        this._setWidth(this.width);
-        this.setMinRegion(this.region, this.getSVGCanvasWidth());
+        this._checkAndSetMinimumRegion(this.region, this.getSVGCanvasWidth());
         this.zoom = this._calculateZoomByRegion(this.region);
 
         // Resize
@@ -30164,7 +32611,7 @@ GenomeViewer.prototype = {
                 if (event.target == window) {
                     if (!_this.resizing) {//avoid multiple resize events
                         _this.resizing = true;
-                        _this._setWidth($(_this.targetDiv).width());
+                        _this.setWidth($(_this.targetDiv).width());
                         setTimeout(function () {
                             _this.resizing = false;
                         }, 400);
@@ -30183,7 +32630,6 @@ GenomeViewer.prototype = {
         /* Navigation Bar */
         if (this.drawNavigationBar) {
             this.navigationBar = this._createNavigationBar(this.navigationbarDiv);
-            this.navigationBar.setZoom(this.zoom);
         }
 
 
@@ -30198,8 +32644,8 @@ GenomeViewer.prototype = {
         }
 
         /* Region Panel, is a TrackListPanel Class */
-        if (this.drawRegionOverviewPanel) {
-            this.regionOverviewPanel = this._createRegionOverviewPanel(this.regionDiv);
+        if (this.drawOverviewTrackListPanel) {
+            this.overviewTrackListPanel = this._createOverviewTrackListPanel(this.regionDiv);
         }
         /*TrackList Panel*/
         this.trackListPanel = this._createTrackListPanel(this.tracksDiv);
@@ -30212,10 +32658,16 @@ GenomeViewer.prototype = {
 
         this.on('region:change region:move', function (event) {
             if (event.sender != _this) {
-                _this._setRegion(event.region);
+                _this.region.load(event.region);
             }
         });
-
+        this.on('width:change', function (event) {
+            if (event.sender != _this) {
+                _this.width = event.width;
+                $(_this.div).width(event.width);
+                $(_this.targetDiv).width(event.width);
+            }
+        });
         this.on('species:change', function (event) {
             _this.species = event.species;
             _this.chromosomes = _this.getChromosomes();
@@ -30246,13 +32698,13 @@ GenomeViewer.prototype = {
         this.rendered = true;
     },
     draw: function () {
-        if (!this.rendered) {
-            console.info('Genome Viewer is not rendered yet');
+        this.targetDiv = ( this.target instanceof HTMLElement ) ? this.target : document.querySelector('#' + this.target);
+        if (!this.targetDiv) {
+            console.log('target not found');
             return;
         }
-        $(this.targetDiv).append(this.div);
+        this.targetDiv.appendChild(this.div);
     },
-
     destroy: function () {
         $(this.div).remove();
         this.off();
@@ -30276,6 +32728,8 @@ GenomeViewer.prototype = {
             chromosomes = saveChromosomes(this.chromosomeList);
         } else {
             CellBaseManager.get({
+                host: this.cellBaseHost,
+                version: this.cellBaseVersion,
                 species: this.species,
                 category: 'genomic',
                 subCategory: 'chromosome',
@@ -30304,7 +32758,9 @@ GenomeViewer.prototype = {
                 var speciesCode = Utils.getSpeciesCode(this.species.text).substr(0, 3);
 
                 CellBaseManager.get({
-                    host: 'http://ws.bioinfo.cipf.es/cellbase/rest',
+                    host: _this.cellBaseHost,
+                    version: _this.cellBaseVersion,
+//                    host: 'http://ws.bioinfo.cipf.es/cellbase/rest',
                     species: speciesCode,
                     version: 'latest',
                     category: 'feature',
@@ -30332,6 +32788,8 @@ GenomeViewer.prototype = {
                 } else {
                     console.log(featureName);
                     CellBaseManager.get({
+                        host: _this.cellBaseHost,
+                        version: _this.cellBaseVersion,
                         species: _this.species,
                         category: 'feature',
                         subCategory: 'gene',
@@ -30342,13 +32800,8 @@ GenomeViewer.prototype = {
                         },
                         success: function (data) {
                             var feat = data.response[0].result[0];
-                            var regionStr = feat.chromosome + ":" + feat.start + "-" + feat.end;
-                            var region = new Region();
-                            region.parse(regionStr);
-                            region = _this._checkRegion(region);
-                            _this.setMinRegion(region, _this.getSVGCanvasWidth());
-                            _this.region = region;
-                            _this.trigger('region:change', {region: _this.region, sender: _this});
+                            var region = new Region(feat);
+                            _this._regionChangeHandler({region: region});
                         }
                     });
                 }
@@ -30357,24 +32810,32 @@ GenomeViewer.prototype = {
 
         var navigationBar = new NavigationBar({
             targetId: targetId,
+            cellBaseHost: this.cellBaseHost,
+            cellBaseVersion: this.cellBaseVersion,
             availableSpecies: this.availableSpecies,
             species: this.species,
             region: this.region,
             width: this.width,
             svgCanvasWidthOffset: this.trackPanelScrollWidth + this.sidePanelWidth,
             autoRender: true,
+            zoom: this.zoom,
             quickSearchResultFn: this.quickSearchResultFn,
             quickSearchDisplayKey: this.quickSearchDisplayKey,
             componentsConfig: this.navigationBarConfig.componentsConfig,
             handlers: {
                 'region:change': function (event) {
-                    event.region = _this._checkRegion(event.region);
-                    _this.setMinRegion(event.region, _this.getSVGCanvasWidth());
-                    _this.trigger('region:change', event);
+                    _this._regionChangeHandler(event);
+                },
+                'region:move': function (event) {
+                    _this._regionMoveHandler(event);
                 },
                 'zoom:change': function (event) {
-                    _this.trigger('zoom:change', event);
+                    _this._zoomChangeHandler(event);
                 },
+                'species:change': function (event) {
+                    _this._speciesChangeHandler(event);
+                },
+
                 'karyotype-button:change': function (event) {
                     if (event.selected) {
                         _this.karyotypePanel.show();
@@ -30391,17 +32852,10 @@ GenomeViewer.prototype = {
                 },
                 'region-button:change': function (event) {
                     if (event.selected) {
-                        _this.regionOverviewPanel.show();
+                        _this.overviewTrackListPanel.show();
                     } else {
-                        _this.regionOverviewPanel.hide();
+                        _this.overviewTrackListPanel.hide();
                     }
-                },
-                'region:move': function (event) {
-                    _this.trigger('region:move', event);
-                },
-                'species:change': function (event) {
-                    _this.trigger('species:change', event);
-                    _this.setRegion(event.species.region);
                 },
                 'fullscreen:click': function (event) {
                     if (_this.fullscreen) {
@@ -30415,10 +32869,11 @@ GenomeViewer.prototype = {
                     }
                 },
                 'restoreDefaultRegion:click': function (event) {
-                    event.region = _this._checkRegion(event.region);
-                    _this.setMinRegion(_this.defaultRegion, _this.getSVGCanvasWidth());
-                    event.region = _this.defaultRegion;
-                    _this.trigger('region:change', event);
+                    _this._regionChangeHandler(event);
+//                    event.region = _this._checkRegion(event.region);
+//                    _this.setMinRegion(_this.defaultRegion, _this.getSVGCanvasWidth());
+//                    event.region = _this.defaultRegion;
+//                    _this.trigger('region:change', event);
                 },
                 'autoHeight-button:click': function (event) {
                     _this.enableAutoHeight();
@@ -30435,18 +32890,8 @@ GenomeViewer.prototype = {
 
         this.on('region:change', function (event) {
 //            if (event.sender != navigationBar) {
-            _this.navigationBar.setRegion(event.region);
+            _this.navigationBar.setRegion(event.region, _this.zoom);
 //            }
-            _this.zoom = _this._calculateZoomByRegion(event.region);
-            _this.navigationBar.setZoom(_this.zoom);
-        });
-        this.on('zoom:change', function (event) {
-            _this.navigationBar.setZoom(event.zoom);
-            _this.region.load(_this._calculateRegionByZoom(event.zoom));
-            if (event.sender != navigationBar) {
-                _this.navigationBar.setRegion(_this.region);
-            }
-            _this.setRegion(_this.region);
         });
         this.on('region:move', function (event) {
             if (event.sender != navigationBar) {
@@ -30462,10 +32907,12 @@ GenomeViewer.prototype = {
         return navigationBar;
     },
 
-    _drawKaryotypePanel: function (targetId) {
+    _drawKaryotypePanel: function (target) {
         var _this = this;
         karyotypePanel = new KaryotypePanel({
-            targetId: targetId,
+            target: target,
+            cellBaseHost: this.cellBaseHost,
+            cellBaseVersion: this.cellBaseVersion,
             width: this.width - this.sidePanelWidth,
             height: 125,
             species: this.species,
@@ -30476,23 +32923,19 @@ GenomeViewer.prototype = {
             autoRender: true,
             handlers: {
                 'region:change': function (event) {
-                    event.region = _this._checkRegion(event.region);
-                    _this.setMinRegion(event.region, _this.getSVGCanvasWidth());
-                    _this.trigger('region:change', event);
+                    _this._regionChangeHandler(event);
                 }
             }
         });
 
         this.on('region:change region:move', function (event) {
-            if (event.sender != karyotypePanel) {
-                karyotypePanel.setRegion(event.region);
-            }
+//            if (event.sender != karyotypePanel) {
+            karyotypePanel.setRegion(event.region);
+//            }
         });
-
         this.on('width:change', function (event) {
             karyotypePanel.setWidth(event.width - _this.sidePanelWidth);
         });
-
         this.on('species:change', function (event) {
             karyotypePanel.setSpecies(event.species);
         });
@@ -30502,12 +32945,13 @@ GenomeViewer.prototype = {
         return karyotypePanel;
     },
 
-    _drawChromosomePanel: function (targetId) {
+    _drawChromosomePanel: function (target) {
         var _this = this;
 
-
         var chromosomePanel = new ChromosomePanel({
-            targetId: targetId,
+            target: target,
+            cellBaseHost: this.cellBaseHost,
+            cellBaseVersion: this.cellBaseVersion,
             autoRender: true,
             width: this.width - this.sidePanelWidth,
             height: 65,
@@ -30518,22 +32962,19 @@ GenomeViewer.prototype = {
             region: this.region,
             handlers: {
                 'region:change': function (event) {
-                    event.region = _this._checkRegion(event.region);
-                    _this.trigger('region:change', event);
+                    _this._regionChangeHandler(event);
                 }
             }
         });
 
         this.on('region:change region:move', function (event) {
-            if (event.sender != chromosomePanel) {
-                chromosomePanel.setRegion(event.region);
-            }
+//            if (event.sender != chromosomePanel) {
+            chromosomePanel.setRegion(event.region);
+//            }
         });
-
         this.on('width:change', function (event) {
             chromosomePanel.setWidth(event.width - _this.sidePanelWidth);
         });
-
         this.on('species:change', function (event) {
             chromosomePanel.setSpecies(event.species);
         });
@@ -30543,10 +32984,12 @@ GenomeViewer.prototype = {
         return chromosomePanel;
     },
 
-    _createRegionOverviewPanel: function (targetId) {
+    _createOverviewTrackListPanel: function (target) {
         var _this = this;
         var trackListPanel = new TrackListPanel({
-            targetId: targetId,
+            cellBaseHost: this.cellBaseHost,
+            cellBaseVersion: this.cellBaseVersion,
+            target: target,
             autoRender: true,
             width: this.width - this.sidePanelWidth,
             zoomMultiplier: this.overviewZoomMultiplier,
@@ -30556,16 +32999,11 @@ GenomeViewer.prototype = {
             region: this.region,
             handlers: {
                 'region:change': function (event) {
-                    event.sender = {};
-                    event.region = _this._checkRegion(event.region);
-                    _this.setMinRegion(event.region, _this.getSVGCanvasWidth())
-                    _this.trigger('region:change', event);
+                    event.sender = undefined;
+                    _this._regionChangeHandler(event);
                 },
                 'region:move': function (event) {
-                    _this.trigger('region:move', event);
-                },
-                'tracks:ready': function () {
-                    _this.checkTrackListReady();
+                    _this._regionMoveHandler(event);
                 }
             }
         });
@@ -30575,50 +33013,42 @@ GenomeViewer.prototype = {
                 trackListPanel.setRegion(event.region);
             }
         });
-
         this.on('region:move', function (event) {
             if (event.sender != trackListPanel) {
                 trackListPanel.moveRegion(event);
             }
         });
-
         this.on('width:change', function (event) {
             trackListPanel.setWidth(event.width - _this.sidePanelWidth);
         });
-
         this.on('species:change', function (event) {
             trackListPanel.setSpecies(event.species);
         });
 
+        trackListPanel.draw();
+
         return  trackListPanel;
     },
 
-    _createTrackListPanel: function (targetId) {
+    _createTrackListPanel: function (target) {
         var _this = this;
         var trackListPanel = new TrackListPanel({
-            targetId: targetId,
+            target: target,
+            cellBaseHost: this.cellBaseHost,
+            cellBaseVersion: this.cellBaseVersion,
             autoRender: true,
             width: this.width - this.sidePanelWidth,
             title: this.trackListTitle,
             region: this.region,
             handlers: {
                 'region:change': function (event) {
-                    event.sender = {};
-                    event.region = _this._checkRegion(event.region);
-                    _this.setMinRegion(event.region, _this.getSVGCanvasWidth());
-                    _this.trigger('region:change', event);
+                    event.sender = undefined;
+                    _this._regionChangeHandler(event);
                 },
                 'region:move': function (event) {
-                    _this.trigger('region:move', event);
-                },
-                'tracks:ready': function () {
-                    _this.checkTrackListReady();
+                    _this._regionMoveHandler(event);
                 }
             }
-        });
-
-        this.on('feature:highlight', function (event) {
-            trackListPanel.highlight(event);
         });
 
         this.on('region:change', function (event) {
@@ -30626,7 +33056,6 @@ GenomeViewer.prototype = {
                 trackListPanel.setRegion(event.region);
             }
         });
-
         this.on('region:move', function (event) {
             if (event.sender != trackListPanel) {
                 trackListPanel.moveRegion(event);
@@ -30635,58 +33064,292 @@ GenomeViewer.prototype = {
         this.on('width:change', function (event) {
             trackListPanel.setWidth(event.width - _this.sidePanelWidth);
         });
-
         this.on('species:change', function (event) {
             trackListPanel.setSpecies(event.species);
         });
 
+        this.on('feature:highlight', function (event) {
+            trackListPanel.highlight(event);
+        });
+
+        trackListPanel.draw();
+
         return  trackListPanel;
     },
 
-    _createStatusBar: function (targetId) {
+    _createStatusBar: function (target) {
         var _this = this;
         var statusBar = new StatusBar({
-            targetId: targetId,
+            target: target,
             autoRender: true,
             region: this.region,
             width: this.width,
             version: this.version
         });
 
-        this.trackListPanel.on('mousePosition:change', function (event) {
-            statusBar.setMousePosition(event);
-        });
         this.on('region:change', function (event) {
             statusBar.setRegion(event);
         });
 
+
+        this.trackListPanel.on('mousePosition:change', function (event) {
+            statusBar.setMousePosition(event);
+        });
+
+        statusBar.draw();
         return  statusBar;
     },
 
-    checkTrackListReady: function () {
-        var _this = this;
-        var checkAllTrackListStatus = function (status) {
-            if (_this.regionOverviewPanel && _this.regionOverviewPanel.status != status) {
-                return false;
+
+    /*****************/
+    /** PRIVATE HELPER METHODS **/
+    /*****************/
+    _checkAndSetNewChromosomeRegion: function (region) {
+        var newChr = this.chromosomes[region.chromosome];
+        if (region.chromosome !== this.region.chromosome) {
+            if (region.start > newChr.size || region.end > newChr.size) {
+                region.start = Math.round(newChr.size / 2);
+                region.end = Math.round(newChr.size / 2);
             }
-            if (_this.trackListPanel.status != status) {
-                return false;
-            }
-            return true;
-        };
-        if (checkAllTrackListStatus('ready')) {
-//            console.log('-------------all tracklist ready')
-            _this.trigger('tracks:ready', {sender: _this});
         }
-//        var checkStatus = function () {
-//            if (checkAllTrackStatus('ready')) {
-//                _this.trigger('tracks:ready', {sender: _this});
-//            } else {
-//                setTimeout(checkStatus, 100);
-//            }
-//        };
-//        setTimeout(checkStatus, 10);
     },
+    _checkAndSetMinimumRegion: function (region, width) {
+        var minLength = Math.floor(width / 10);
+        if (region.length() < minLength) {
+            var centerPosition = region.center();
+            var aux = Math.ceil((minLength / 2) - 1);
+            region.start = Math.floor(centerPosition - aux);
+            region.end = Math.floor(centerPosition + aux);
+        }
+    },
+    _calculateRegionByZoom: function (zoom) {
+        // mrl = minimum region length
+        // zlm = zoom level multiplier
+
+        // mrl * zlm ^ 100 = chr.size
+        // zlm = (chr.size/mrl)^(1/100)
+        // zlm = (chr.size/mrl)^0.01
+
+        var minNtPixels = 10; // 10 is the minimum pixels per nt
+        var chr = this.chromosomes[this.region.chromosome];
+        var minRegionLength = this.getSVGCanvasWidth() / minNtPixels;
+        var zoomLevelMultiplier = Math.pow(chr.size / minRegionLength, 0.01); // 0.01 = 1/100  100 zoom levels
+
+//      regionLength = mrl * (Math.pow(zlm,ZOOM))
+        var regionLength = minRegionLength * (Math.pow(zoomLevelMultiplier, 100 - zoom)); // invert   100 - zoom
+
+        var centerPosition = this.region.center();
+        var aux = Math.ceil((regionLength / 2) - 1);
+        var start = Math.floor(centerPosition - aux);
+        var end = Math.floor(centerPosition + aux);
+
+        return {start: start, end: end};
+    },
+    _calculateZoomByRegion: function (region) {
+        var minNtPixels = 10; // 10 is the minimum pixels per nt
+        var chr = this.chromosomes[this.region.chromosome];
+        var minRegionLength = this.getSVGCanvasWidth() / minNtPixels;
+        var zoomLevelMultiplier = Math.pow(chr.size / minRegionLength, 0.01); // 0.01 = 1/100  100 zoom levels
+
+        var regionLength = region.length();
+
+//      zoom = Math.log(REGIONLENGTH/mrl) / Math.log(zlm);
+        var zoom = Math.log(regionLength / minRegionLength) / Math.log(zoomLevelMultiplier);
+        return 100 - zoom;
+    },
+    /*****************/
+    /*****************/
+    /*****************/
+
+
+
+    /*****************/
+//    _startRegionChange: function () {
+//        if (this.changingRegion === true) {
+////            return false;
+//            return true
+//        } else {
+//            this.changingRegion = true;
+//            return true;
+//        }
+//    },
+//    _endRegionChange: function () {
+//        this.changingRegion = false;
+//    },
+
+//    _checkStatus: function () {
+//        var ok = true;
+//        if (typeof this.overviewTrackListPanel !== 'undefined') {
+//            if (this.overviewTrackListPanel.status !== 'ready') {
+//                ok = false;
+//            }
+//        }
+//        if (typeof this.trackListPanel !== 'undefined') {
+//            if (this.trackListPanel.status !== 'ready') {
+//                ok = false;
+//            }
+//        }
+//        if (ok) {
+//            this._endRegionChange();
+//        }
+//    },
+//    checkTrackListReady: function () {
+//        var _this = this;
+//        var checkAllTrackListStatus = function (status) {
+//            if (_this.overviewTrackListPanel && _this.overviewTrackListPanel.status != status) {
+//                return false;
+//            }
+//            if (_this.trackListPanel.status != status) {
+//                return false;
+//            }
+//            return true;
+//        };
+//        if (checkAllTrackListStatus('ready')) {
+////            console.log('-------------all tracklist ready')
+//            _this.trigger('tracks:ready', {sender: _this});
+//        }
+////        var checkStatus = function () {
+////            if (checkAllTrackStatus('ready')) {
+////                _this.trigger('tracks:ready', {sender: _this});
+////            } else {
+////                setTimeout(checkStatus, 100);
+////            }
+////        };
+////        setTimeout(checkStatus, 10);
+//    },
+
+    _checkChangingRegion: function () {
+        if (typeof this.overviewTrackListPanel !== 'undefined') {
+            if (!this.overviewTrackListPanel.checkTracksReady()) {
+                return false;
+            }
+        }
+        if (typeof this.trackListPanel !== 'undefined') {
+            if (!this.trackListPanel.checkTracksReady()) {
+                return false;
+            }
+        }
+        return true;
+    },
+
+    /*****************/
+
+
+
+
+    /*****************/
+    /** EVENT METHODS **/
+    /*****************/
+    _regionChangeHandler: function (event) {
+        if (this._checkChangingRegion()) {
+
+            /**/
+            this._checkAndSetNewChromosomeRegion(event.region);
+            this._checkAndSetMinimumRegion(event.region, this.getSVGCanvasWidth());
+            this.zoom = this._calculateZoomByRegion(event.region);
+            //Relaunch
+            this.trigger('region:change', event);
+            /**/
+            return true;
+        } else {
+            if (event.sender) {
+                if (event.sender.updateRegionControls) {
+                    event.sender.updateRegionControls();
+                }
+            }
+            console.log('****************************');
+            console.log('**************************** region change already in progress');
+            console.log('****************************');
+            return false;
+        }
+
+    },
+    _regionMoveHandler: function (event) {
+        //Relaunch
+        this.trigger('region:move', event);
+    },
+    _zoomChangeHandler: function (event) {
+        event.zoom = Math.min(100, event.zoom);
+        event.zoom = Math.max(0, event.zoom);
+        this.zoom = event.zoom;
+        this.region.load(this._calculateRegionByZoom(event.zoom));
+        this.setRegion(this.region);
+    },
+    _speciesChangeHandler: function (event) {
+        //Relaunch
+        this.trigger('species:change', event);
+        this.setRegion(event.species.region);
+    },
+
+    /*****************/
+    /*****************/
+    /*****************/
+    /*****************/
+    /** API METHODS **/
+    /*****************/
+    setRegion: function (region) {
+        return this._regionChangeHandler({region: new Region(region)});
+    },
+    moveRegion: function (disp) {
+        this.region.start += disp;
+        this.region.end += disp;
+        this.trigger('region:move', {region: this.region, disp: -disp, sender: this});
+    },
+    setWidth: function (width) {
+        this.trigger('width:change', {width: width});
+    },
+    setZoom: function (zoom) {
+        zoom = Math.min(100, zoom);
+        zoom = Math.max(0, zoom);
+        this.zoom = zoom;
+        this.region.load(this._calculateRegionByZoom(zoom));
+        this.setRegion(this.region);
+    },
+    increaseZoom: function (zoomToIncrease) {
+        var zoom = this.zoom + zoomToIncrease;
+        this.setZoom(zoom);
+    },
+    /*****************/
+    /*****************/
+    getSVGCanvasWidth: function () {
+        return this.width - this.trackPanelScrollWidth - this.sidePanelWidth;
+    },
+    /*****************/
+    /*****************/
+    /*****************/
+
+
+
+
+
+
+
+    mark: function (args) {
+        var attrName = args.attrName || 'feature_id';
+        var cssClass = args.class || 'ocb-feature-mark';
+        if ('attrValues' in args) {
+            args.attrValues = ($.isArray(args.attrValues)) ? args.attrValues : [args.attrValues];
+            for (var key in args.attrValues) {
+                $('rect[' + attrName + '~=' + args.attrValues[key] + ']').attr('class', cssClass);
+            }
+
+        }
+    },
+    unmark: function (args) {
+        var attrName = args.attrName || 'feature_id';
+        if ('attrValues' in args) {
+            args.attrValues = ($.isArray(args.attrValues)) ? args.attrValues : [args.attrValues];
+            for (var key in args.attrValues) {
+                $('rect[' + attrName + '~=' + args.attrValues[key] + ']').attr('class', '');
+            }
+
+        }
+    },
+
+    highlight: function (args) {
+        this.trigger('feature:highlight', args);
+    },
+
 
     getRightSidePanelId: function () {
         return $(this.rightSidebarDiv).attr('id');
@@ -30712,128 +33375,14 @@ GenomeViewer.prototype = {
         _.extend(this.navigationBar, config);
         navigationBar.render(this.getNavigationPanelId());
     },
-    _setWidth: function (width) {
-        this.width = width;
-        this.trigger('width:change', {width: this.width, sender: this});
-    },
-    setWidth: function (width) {
-        $(this.div).width(width);
-        this._setWidth(width);
-    },
-    getSVGCanvasWidth: function () {
-        return this.width - this.trackPanelScrollWidth - this.sidePanelWidth;
-    },
-    _setRegion: function (region) {
-        //update internal parameters
-        this.region.load(region);
-    },
-    setRegion: function (region) {
-        this.region.load(region);
-        this.setMinRegion(this.region, this.getSVGCanvasWidth());
-        this.trigger('region:change', {region: this.region, sender: this});
-    },
-    _checkRegion: function (newRegion) {
-        var newChr = this.chromosomes[newRegion.chromosome];
-        if (newRegion.chromosome !== this.region.chromosome) {
-            newRegion.start = Math.round(newChr.size / 2);
-            newRegion.end = Math.round(newChr.size / 2);
-        }
-        return newRegion;
-    },
-    setMinRegion: function (region, width) {
-        var minLength = Math.floor(width / 10);
-        if (region.length() < minLength) {
-            var centerPosition = region.center();
-            var aux = Math.ceil((minLength / 2) - 1);
-            region.start = Math.floor(centerPosition - aux);
-            region.end = Math.floor(centerPosition + aux);
-        }
-    },
-    setZoom: function (zoom) {
-        this.zoom = zoom;
-        this.zoom = Math.min(100, this.zoom);
-        this.zoom = Math.max(0, this.zoom);
-        this.trigger('zoom:change', {zoom: this.zoom, sender: this});
-    },
-    increaseZoom: function (zoomToIncrease) {
-        this.zoom += zoomToIncrease;
-        this.setZoom(this.zoom);
-    },
-    _calculateRegionByZoom: function (zoom) {
-        // mrl = minimum region length
-        // zlm = zoom level multiplier
-
-        // mrl * zlm ^ 100 = chr.size
-        // zlm = (chr.size/mrl)^(1/100)
-        // zlm = (chr.size/mrl)^0.01
-
-        var minNtPixels = 10; // 10 is the minimum pixels per nt
-        var chr = this.chromosomes[this.region.chromosome];
-        var minRegionLength = this.getSVGCanvasWidth() / minNtPixels;
-        var zoomLevelMultiplier = Math.pow(chr.size / minRegionLength, 0.01); // 0.01 = 1/100  100 zoom levels
-
-//      regionLength = mrl * (Math.pow(zlm,ZOOM))
-        var regionLength = minRegionLength * (Math.pow(zoomLevelMultiplier, 100 - zoom)); // 100 - zoom to change direction
-
-        var centerPosition = this.region.center();
-        var aux = Math.ceil((regionLength / 2) - 1);
-        var start = Math.floor(centerPosition - aux);
-        var end = Math.floor(centerPosition + aux);
-
-        return {start: start, end: end};
-    },
-    _calculateZoomByRegion: function (region) {
-        var minNtPixels = 10; // 10 is the minimum pixels per nt
-        var chr = this.chromosomes[this.region.chromosome];
-        var minRegionLength = this.getSVGCanvasWidth() / minNtPixels;
-        var zoomLevelMultiplier = Math.pow(chr.size / minRegionLength, 0.01); // 0.01 = 1/100  100 zoom levels
-
-        var regionLength = region.length();
-
-//      zoom = Math.log(REGIONLENGTH/mrl) / Math.log(zlm);
-        var zoom = Math.log(regionLength / minRegionLength) / Math.log(zoomLevelMultiplier);
-        return 100 - zoom;
-    },
-    move: function (disp) {
-//        var pixelBase = (this.width-this.svgCanvasWidthOffset) / this.region.length();
-//        var disp = Math.round((disp*10) / pixelBase);
-        this.region.start += disp;
-        this.region.end += disp;
-        this.trigger('region:move', {region: this.region, disp: -disp, sender: this});
-    },
-    mark: function (args) {
-        var attrName = args.attrName || 'feature_id';
-        var cssClass = args.class || 'feature-emph';
-        if ('attrValues' in args) {
-            args.attrValues = ($.isArray(args.attrValues)) ? args.attrValues : [args.attrValues];
-            for (var key in args.attrValues) {
-                $('rect[' + attrName + '~=' + args.attrValues[key] + ']').attr('class', cssClass);
-            }
-
-        }
-    },
-    unmark: function (args) {
-        var attrName = args.attrName || 'feature_id';
-        if ('attrValues' in args) {
-            args.attrValues = ($.isArray(args.attrValues)) ? args.attrValues : [args.attrValues];
-            for (var key in args.attrValues) {
-                $('rect[' + attrName + '~=' + args.attrValues[key] + ']').attr('class', '');
-            }
-
-        }
-    },
-
-    highlight: function (args) {
-        this.trigger('feature:highlight', args);
-    },
 
     enableAutoHeight: function () {
         this.trackListPanel.enableAutoHeight();
-        this.regionOverviewPanel.enableAutoHeight();
+        this.overviewTrackListPanel.enableAutoHeight();
     },
     updateHeight: function () {
         this.trackListPanel.updateHeight();
-        this.regionOverviewPanel.updateHeight();
+        this.overviewTrackListPanel.updateHeight();
     },
 
 
@@ -30856,7 +33405,7 @@ GenomeViewer.prototype = {
     },
 
     setRegionOverviewPanelVisible: function (bool) {
-        this.regionOverviewPanel.setVisible(bool);
+        this.overviewTrackListPanel.setVisible(bool);
         this.navigationBar.setVisible({'region': bool});
     },
     setRegionTextBoxVisible: function (bool) {
@@ -30870,47 +33419,50 @@ GenomeViewer.prototype = {
     },
 
     /*Track management*/
-    addOverviewTrack: function (trackData, args) {
-        this.regionOverviewPanel.addTrack(trackData, args);
+    addOverviewTrack: function (track) {
+        this.overviewTrackListPanel.addTrack(track);
     },
 
-    addTrack: function (trackData, args) {
-        this.trackListPanel.addTrack(trackData, args);
+    addTrack: function (track) {
+        this.trackListPanel.addTrack(track);
     },
 
-    getTrackSvgById: function (trackId) {
-        return this.trackListPanel.getTrackSvgById(trackId);
+    getTrackById: function (trackId) {
+        return this.trackListPanel.getTrackById(trackId);
     },
 
-    removeTrack: function (trackId) {
-        return this.trackListPanel.removeTrack(trackId);
+    removeTrack: function (track) {
+        return this.trackListPanel.removeTrack(track);
     },
 
-    restoreTrack: function (trackSvg, index) {
-        return this.trackListPanel.restoreTrack(trackSvg, index);
+    restoreTrack: function (track, index) {
+        return this.trackListPanel.restoreTrack(track, index);
     },
 
-    setTrackIndex: function (trackId, newIndex) {
-        return this.trackListPanel.setTrackIndex(trackId, newIndex);
+    setTrackIndex: function (track, newIndex) {
+        return this.trackListPanel.setTrackIndex(track, newIndex);
     },
 
-    scrollToTrack: function (trackId) {
-        return this.trackListPanel.scrollToTrack(trackId);
+    scrollToTrack: function (track) {
+        return this.trackListPanel.scrollToTrack(track);
     },
 
-    showTrack: function (trackId) {
-        this.trackListPanel._showTrack(trackId);
+    showTrack: function (track) {
+        this.trackListPanel.showTrack(track);
     },
 
-    hideTrack: function (trackId) {
-        this.trackListPanel._hideTrack(trackId);
+    hideTrack: function (track) {
+        this.trackListPanel.hideTrack(track);
+    },
+    containsTrack: function (track) {
+        return this.trackListPanel.containsTrack(track);
     },
 
+    // TODO - DEPRECATED
     checkRenderedTrack: function (trackId) {
-        if (this.trackListPanel.swapHash[trackId]) {
-            return true;
-        }
-        return false;
+        console.log('DEPRECATED METHOD')
+        console.log(this.checkRenderedTrack);
+        this.trackExists(trackId);
     }
 };
 

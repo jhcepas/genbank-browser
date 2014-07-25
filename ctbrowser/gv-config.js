@@ -81,7 +81,7 @@ FEATURE_TYPES = {
         },
 //		infoWidgetId: "id",
         height: 10,
-		histogramColor:"blue"
+        histogramColor:"blue"
     },
     gene: {
         label: function (f, zoom) {
@@ -92,7 +92,7 @@ FEATURE_TYPES = {
             str += (f.strand > 0 || f.strand == '+') ? ">" : "";
             //if (f.biotype != null && f.biotype != '' && f.biotype != 'gene' && zoom > 25) {
             //    str += " [" + f.biotype + "]";
-                    //}
+            //}
             return str;
         },
         tooltipTitle: function (f) {
@@ -114,7 +114,7 @@ FEATURE_TYPES = {
 
             if (f.pep_img && f.pep_img == 1){
                 html+= '<img width="280px" src="pep_img/svg/' +f.id
-                    + '.svg" onerror="this.src=\'pep_img/png/'+f.id+'.png\';"><br>'; 
+                    + '.svg" onerror="this.src=\'pep_img/png/'+f.id+'.png\';"><br>';
             }
             return html+"</div>";
         },
@@ -128,7 +128,7 @@ FEATURE_TYPES = {
                 return 5;}
             else {
                 return 8;}
-            },
+        },
         histogramColor: "lightblue"
     },
 
@@ -198,4 +198,3 @@ FEATURE_TYPES = {
     },
 
 };
-
