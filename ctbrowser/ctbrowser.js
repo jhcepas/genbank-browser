@@ -726,7 +726,7 @@ function show_gene_info(gene){
                              'pep_img':0, 'length:':0, 'NT Seq':0}) {
                 if (key in data){
                     if (key == 'pep_img'){
-                        h += '<b><a target="_blank" href="http://wlab.ethz.ch/protter/">Protter</a> peptide image:</b><br> <a target="_blank" href="'+data[key]+'"><img height="300" src="'+data[key]+'"></a>'
+                        h += '<b><a target="_blank" href="http://wlab.ethz.ch/protter/">Protter</a> peptide image:</b><br> <a target="_blank" href="'+data[key]+'"><img height="300" src="'+data[key]+'"></a></br>'
                     }
                     else if (key=='qualifiers'){
                         var trans = '';
