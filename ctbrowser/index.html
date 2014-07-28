@@ -37,152 +37,177 @@
             /*position:relative;*/
         }
 
+        body {
+            /*overflow: hidden;*/
+            /*padding:50px;*/
+        }
 
-         .select2-results .select2-highlighted {
-           background-color: #A6BEC1;
-           color:#444;
-         }
+        #application {
+            width: 98%;
+            height: 100%;
+            /*overflow-y: auto;*/
+            /*overflow-x: hidden;*/
+            margin: 10px;
+            border: 1px solid #d3d3d3;
+        }
 
-         .hi{
-           background-color:#FAFFCB;
-           }
-         .s_geneid{
-           font-size:90%;
-           color:black;
-           font-weight:bold;
-           font-family: Arial;
-           }
-         .s_uniprot{
-           font-size:90%;
-           color:black;
-           font-weight:normal;
-           font-family: Arial;
-           }
-         .s_biotype{
-           font-size:90%;  
-           color:steelblue;
+        .select2-results .select2-highlighted {
+            background-color: #A6BEC1;
+            color: #444;
+        }
 
-           }
-         .s_desc{
-           font-size:90%;
-           color:slategrey;
-           }
-         .s_region{
-           font-size:80%;
-           color:grey;
-           font-family: Courier;
-           }
+        .hi {
+            background-color: #FAFFCB;
+        }
 
-         #footer{
-           text-align:center;
-           font-size:80%;
-           }
+        .s_geneid {
+            font-size: 90%;
+            color: black;
+            font-weight: bold;
+            font-family: Arial;
+        }
 
-         #search_panel{
-           margin-top:15px;
-           margin-left:15px;
-           margin-bottom:10px;
-           }
-         #seqid_search{
-           height:70px;
-           }
+        .s_uniprot {
+            font-size: 90%;
+            color: black;
+            font-weight: normal;
+            font-family: Arial;
+        }
 
-         #ph_genes{
-           margin-left:10px;
-           }
+        .s_biotype {
+            font-size: 90%;
+            color: steelblue;
 
-         #page_title{
-           font-size:160%;
-           font-weight:bold;
-           margin-right:10px;
-           color:#FF797E;
-           text-align:right;
-           margin-right:20px;
+        }
 
-           }
-         #subtitle{
-           font-size:80%;
-           font-weight:bold;
-           margin-right:10px;
-           color:lightgrey;
-           padding:0px;
-           margin:0px;
-           vertical-align:middle;
-           }
-         #header{
-           background-color:#1C4E63;
-           }
+        .s_desc {
+            font-size: 90%;
+            color: slategrey;
+        }
 
-         a{
-           cursor:pointer;
-           }
-         
-         .popover {
-           max-width:600px;
-           }
+        .s_region {
+            font-size: 80%;
+            color: grey;
+            font-family: Courier;
+        }
 
-         .popover-title {
-           color: white;
-           background-color: #1C4E63;
-           font-weight:bold;
+        #footer {
+            text-align: center;
+            font-size: 80%;
+        }
 
-         }
-         .popover-content {
-           font-size: 80%;
-           overflow:auto;
-         }
+        #search_panel {
+            margin-top: 15px;
+            margin-left: 15px;
+            margin-bottom: 10px;
+        }
 
-         .popover-content pre {
-           background-color: snow;
-           font-size: 90%;        
-         }
+        #seqid_search {
+            height: 70px;
+        }
 
-         #search_label{
-           color:white;
-           font-weight:bold;
-           }
+        #ph_genes {
+            margin-left: 10px;
+        }
 
-         .close{
-           color:snow;
-           opacity:0.95;
-           }
+        #page_title {
+            font-size: 160%;
+            font-weight: bold;
+            margin-right: 10px;
+            color: #FF797E;
+            text-align: right;
+            margin-right: 20px;
 
-         pre {
-           max-height:200px; 
-           overflow:auto;
-           }
+        }
 
-        </style>
+        #subtitle {
+            font-size: 80%;
+            font-weight: bold;
+            margin-right: 10px;
+            color: lightgrey;
+            padding: 0px;
+            margin: 0px;
+            vertical-align: middle;
+        }
 
-        <script>
-         (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-           (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-                           m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-                           })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
-         ga('create', 'UA-783841-16', 'embl.de');
-         ga('send', 'pageview');
-        </script>
-    </head>
+        #header {
+            background-color: #1C4E63;
+        }
 
-    <body>
-      <div class='container-fluid'>
-        <div class='row' id='header'>
-          <div id='page_title' class='pull-right'><i>Chaetomium thermophilum</i>
+        a {
+            cursor: pointer;
+        }
+
+        .popover {
+            max-width: 600px;
+        }
+
+        .popover-title {
+            color: white;
+            background-color: #1C4E63;
+            font-weight: bold;
+
+        }
+
+        .popover-content {
+            font-size: 80%;
+            overflow: auto;
+        }
+
+        .popover-content pre {
+            background-color: snow;
+            font-size: 90%;
+        }
+
+        #search_label {
+            color: white;
+            font-weight: bold;
+        }
+
+        .close {
+            color: snow;
+            opacity: 0.95;
+        }
+
+    </style>
+
+    <script>
+        (function (i, s, o, g, r, a, m) {
+            i['GoogleAnalyticsObject'] = r;
+            i[r] = i[r] || function () {
+                (i[r].q = i[r].q || []).push(arguments)
+            }, i[r].l = 1 * new Date();
+            a = s.createElement(o),
+                    m = s.getElementsByTagName(o)[0];
+            a.async = 1;
+            a.src = g;
+            m.parentNode.insertBefore(a, m)
+        })(window, document, 'script', '//www.google-analytics.com/analytics.js', 'ga');
+        ga('create', 'UA-783841-16', 'embl.de');
+        ga('send', 'pageview');
+    </script>
+</head>
+
+<body>
+<div class='container-fluid'>
+    <div class='row' id='header'>
+        <div id='page_title' class='pull-right'><i>Chaetomium thermophilum</i>
+
             <div id="subtitle">Genome Browser - <img style='padding-left:0px;' src='embl_logo.png'></div>
-          </div>
-          <div id="search_panel">
-            <div><span id='search_label'>Locate genes:</span> <input id="seqid_search"> 
-            <span id='ph_genes' class='btn btn-default btn-sm'> Pleckstrin domain homologs</a></span></div>
-          </div>
         </div>
-      </div>
-      <div id="application"></div>
-      <div class='row' id="footer">
-           <b>Structural and Computational Biology Unit</b>, <a src='http://embl.de'>EMBL</a><br>
-           <b>web contact</b>: huerta@embl.de<br>
-          Powered by <a src=""> Genome Viewer </a>
-        <br>
-      </div>
+        <div id="search_panel">
+            <div><span id='search_label'>Locate genes:</span> <input id="seqid_search">
+                <span id='ph_genes' class='btn btn-default btn-sm'> Pleckstrin domain homologs</a></span></div>
+        </div>
+    </div>
+</div>
+<div id="application"></div>
+<div class='row' id="footer">
+    <b>Structural and Computational Biology Unit</b>, <a src='http://embl.de'>EMBL</a><br>
+    <b>web contact</b>: huerta@embl.de<br>
+    Powered by <a target="_blank" href="http://www.genomemaps.org/">Genome Maps</a>
+    <br>
+</div>
 
 </body>
 <script type="text/javascript">
