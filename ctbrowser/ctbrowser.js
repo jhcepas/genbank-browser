@@ -737,16 +737,16 @@ function go_to_gene(genename) {
 function show_gene_info(gene) {
     console.log(gene.feature.id);
 
-    $('#regionField').popover({
+    $('#speciesButton').popover({
         html: true,
         placement: "bottom",
         trigger: 'click',
-        title: '<span id="gene_ext_title" style="margin-right:20px;">' + gene.feature.id + '</span><button type="button" id="close" class="close" onclick="$(&quot;#regionField&quot;).popover(&quot;hide&quot;);">&times;</button>',
+        title: '<span id="gene_ext_title" style="margin-right:20px;">' + gene.feature.id + '</span><button type="button" id="close" class="close" onclick="$(&quot;#speciesButton&quot;).popover(&quot;hide&quot;);">&times;</button>',
         content: '<div id="gene_ext_info">Loading... </div>',
         container: "body",
     });
 
-    $('#regionField').popover('show');
+    $('#speciesButton').popover('show');
     $.ajax({
         type: 'POST',
         url: CT_HOST + '/seqid_data/',
