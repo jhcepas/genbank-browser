@@ -720,8 +720,10 @@ function sleep(millis, callback, args) {
 
 function update_search() {
     var locus = $('#seqid_search').select2('data');
+    
     if (locus != undefined) {
-        genomeViewer.setRegion({chromosome: locus.chr,
+        console.log('setting region', locus.chr, parseInt(locus.start) - 2000, parseInt(locus.end) + 2000);
+        genomeViewer.setRegion({chromosome: locus.chr, 
             start: parseInt(locus.start) - 2000,
             end: parseInt(locus.end) + 2000});
     }
@@ -729,6 +731,7 @@ function update_search() {
 
 function go_to_gene(genename) {
     $("#ph_genes").popover('hide');
+    $("#expr_genes").popover('hide');
     console.log('got to gene', genename)
     $("#seqid_search").select2('val', genename);
     sleep(250, update_search);

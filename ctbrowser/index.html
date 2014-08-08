@@ -24,7 +24,7 @@
     <!-- JS from Genome Viewer -->
     <!-- Genome-viewer -->
     <script type="text/javascript" src="gv-config.js"></script>
-    <script type="text/javascript" src="genome-viewer.js"></script>
+    <script type="text/javascript" src="genome-viewer.min.js"></script>
     <!-- ctbrowser custom-->
 
     <script type="text/javascript" src="ct_genome_info.js"></script>
@@ -41,6 +41,12 @@
             /*overflow: hidden;*/
             /*padding:50px;*/
         }
+
+     #genome_version{
+       font-size:60%;
+       color:tomato;
+       font-weight:normal;
+}
 
         #application {
             width: 98%;
@@ -108,6 +114,12 @@
 
         #ph_genes {
             margin-left: 10px;
+       overflow:auto;
+       max-height:500px;
+
+        }
+        #expr_genes {
+            margin-left: 10px;
         }
 
         #page_title {
@@ -139,7 +151,10 @@
         }
 
         .popover {
-            max-width: 600px;
+       max-width: 800px;
+       max-height: 500px;
+       min-width:200px;
+       overflow:auto;
         }
 
         .popover-title {
@@ -191,13 +206,15 @@
 <body>
 <div class='container-fluid'>
     <div class='row' id='header'>
-        <div id='page_title' class='pull-right'><i>Chaetomium thermophilum</i>
+      <div id='page_title' class='pull-right'><i>Chaetomium thermophilum</i><span id='genome_version'> v2.3</span>
 
             <div id="subtitle">Genome Browser - <img style='padding-left:0px;' src='embl_logo.png'></div>
         </div>
         <div id="search_panel">
-            <div><span id='search_label'>Locate genes:</span> <input id="seqid_search">
-                <span id='ph_genes' class='btn btn-default btn-sm'> Pleckstrin domain homologs</a></span></div>
+          <div><span id='search_label'>Locate genes:</span> <input id="seqid_search">
+              <span id='ph_genes' class='btn btn-default btn-sm'> Pleckstrin domain homologs</a></span>
+              <span id='expr_genes' class='btn btn-default btn-sm'> Expressed genes</a></span>
+</div>
         </div>
     </div>
 </div>
@@ -255,7 +272,87 @@
         container: "body",
     });
 
+ var expressed_genes = [
+   ['CTHT_0002980', ''],
+   ['CTHT_0048200', ''],
+   ['CTHT_0000110', 'G0RXR4'],
+   ['CTHT_0000120', 'G0RXR5'],
+   ['CTHT_0000340', 'G0RXT7'],
+   ['CTHT_0000420', 'G0RXU5'],
+   ['CTHT_0000920', 'G0RYX5'],
+   ['CTHT_0001810', 'G0RZ60'],
+   ['CTHT_0001930', 'G0RZ72'],
+   ['CTHT_0002410', 'G0RZB8'],
+   ['CTHT_0002550', 'G0RZD2'],
+   ['CTHT_0002820', 'G0RZF9'],
+   ['CTHT_0003150', 'G0RZJ2'],
+   ['CTHT_0003590', 'G0RZN4'],
+   ['CTHT_0004910', 'G0RY01'],
+   ['CTHT_0005390', 'G0RY46'],
+   ['CTHT_0006170', 'G0RYC2'],
+   ['CTHT_0006820', 'G0RYI5'],
+   ['CTHT_0007300', 'G0RYN3'],
+   ['CTHT_0007350', 'G0RYN8'],
+   ['CTHT_0007620', 'G0RYR5'],
+   ['CTHT_0007640', 'G0RYR6'],
+   ['CTHT_0009460', 'G0S0B8'],
+   ['CTHT_0009650', 'G0S0D7'],
+   ['CTHT_0009720', 'G0S0E4'],
+   ['CTHT_0010000', 'G0S0H1'],
+   ['CTHT_0010120', 'G0S0I3'],
+   ['CTHT_0010300', 'G0S0K1'],
+   ['CTHT_0010430', 'G0S0L4'],
+   ['CTHT_0011110', 'G0S0S9'],
+   ['CTHT_0014460', 'G0S1Q7'],
+   ['CTHT_0020070', 'G0S385'],
+   ['CTHT_0022650', ''],
+   ['CTHT_0023390', 'G0S4S8'],
+   ['CTHT_0023770', 'G0S519'],
+   ['CTHT_0024860', 'G0S5N1'],
+   ['CTHT_0025720', 'G0S672'],
+   ['CTHT_0026540', 'G0S6K5'],
+   ['CTHT_0027440', 'G0S750'],
+   ['CTHT_0031390', 'G0S4L1'],
+   ['CTHT_0032670', ''],
+   ['CTHT_0035790', 'G0S714'],
+   ['CTHT_0040351', ''],
+   ['CTHT_0042720', 'G0SAL6'],
+   ['CTHT_0045120', 'G0S9A4'],
+   ['CTHT_0046320', 'G0S9L5'],
+   ['CTHT_0046700', 'G0S9Q2'],
+   ['CTHT_0048210', 'G0SAY2'],
+   ['CTHT_0050230', 'G0SBG9'],
+   ['CTHT_0055020', 'G0SBW4'],
+   ['CTHT_0057760', 'G0SCM5'],
+   ['CTHT_0058060', 'G0SCQ5'],
+   ['CTHT_0059890', 'G0SEW0'],
+   ['CTHT_0062070', 'G0SE15'],
+   ['CTHT_0064950', 'G0SG41'],
+   ['CTHT_0069670', 'G0SHD8'],
+   ['CTHT_0069671', ''],
+   ['CTHT_0069690', 'G0SHE0']];
+
+ var html_content = '<div>';
+    for (var i = 0; i < expressed_genes.length; i++) {
+        var gene = expressed_genes[i];
+        var html_gene = '<a href="javascript:void(0);" onclick="go_to_gene(\'' + gene[0] + '\')" >' +
+                '<span class="s_geneid">' + gene[0] + '</span>' +
+                '<span class="s_uniprot"> (' + gene[1] + ')</span><br>' ;
+        html_content += html_gene;
+    }
+    html_content += "</div>"
+    $("#expr_genes").popover({
+        html: true,
+        placement: "bottom",
+        trigger: "click",
+        title: 'Expressed genes',
+        content: html_content,
+        container: "body",
+    });
 
 </script>
+
+
+
 
 </html>

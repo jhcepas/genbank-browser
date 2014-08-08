@@ -235,12 +235,12 @@ def read_and_index_genome():
         # Index the global position of every feature in this GBF entry.
         for f in e.features:
             f.parent = e
-            genome_start, genome_end =  genome_pos(f, scaffolds)
+            genome_start, genome_end = genome_pos(f, scaffolds)
             features[f.type].append([target_sca, genome_start, genome_end, f, featureid])
             if f.type == "gene":
                 scaffold_genes[target_sca].add(f)
             featureid += 1
-            
+
     return gbrecords, features, scaffolds, scaffold_genes
 
 # THESE ARE WEB SERVICES PROVIDING JSON DATA TO THE GENOME VIEWER APPLICATION
@@ -781,7 +781,7 @@ if __name__ == '__main__':
     parser.add_argument('--daemon', dest='daemon', action = "store_true",
                         help='Start the service as a daemon')
 
-
+    parser.add_argument('--manual', dest='manual_fixes', type=str)
     
     args = parser.parse_args()
 
@@ -832,9 +832,9 @@ if __name__ == '__main__':
                 print "Unable to load cached data. Try with --refresh"
                 sys.exit(1)
         
-        # print FEATURES['repeat_region'][0]
+
         # FEATURES['repeat_region2'] = parse_gff(REPEATS_GFF_FILE)
-               
+        
         sorted_sca = sorted(SCAFFOLDS.keys(),
                             lambda a,b: cmp(len(SCAFFOLD_GENES[a]), len(SCAFFOLD_GENES[b])),
                             reverse=True)

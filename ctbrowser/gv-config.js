@@ -113,8 +113,8 @@ FEATURE_TYPES = {
                 html += "<b>" + key+ "</b>:&nbsp;" + f.annotations[key] + "<br>";}
 
             if (f.pep_img && f.pep_img == 1){
-                html+= '<img width="280px" src="pep_img/svg/' +f.id
-                    + '.svg" onerror="this.src=\'pep_img/png/'+f.id+'.png\';"><br>';
+                html+= '<img width="280px" src="pep_img/png/' +f.id
+                    + '.png"><br>';
             }
             return html+"</div>";
         },
