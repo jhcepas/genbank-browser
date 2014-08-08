@@ -14,11 +14,12 @@ import textwrap
 
 from Bio import SeqIO
 from Bio.SeqFeature import CompoundLocation
+
 from bottle import Bottle, run, get, post, request, route, response    
+
 from daemonize import Daemonize
 
 BASEPATH = os.path.split(os.path.realpath(__file__))[0]
-sys.path.insert(0, os.path.join(BASEPATH, "sphinx/api/"))
 os.chdir(BASEPATH)
 
 class WhitespaceRemovingFormatter(logging.Formatter):
@@ -29,54 +30,53 @@ class WhitespaceRemovingFormatter(logging.Formatter):
 LOG = logging.getLogger('ctbrowser')
 LOG.setLevel(logging.DEBUG)
 
+sys.path.insert(0, os.path.join(BASEPATH, "sphinx/api/"))
 try:
     import sphinxapi as sphinx
 except ImportError:
     print "Sphinx API could not be imported. Searches will be disabled!"
     
 # Blast DB will be based/upgraded based on these fasta files
-FASTA_FILES = [os.path.join(BASEPATH, "data/v2/C_thermophilum.scaffolds.v2.fa")]
+#FASTA_FILES = [os.path.join(BASEPATH, "data/v2/C_thermophilum.scaffolds.v2.fa")]
 
 # Annotations CDS, rRNA, tRNA and misc_RNA are extracted from the GBF file
-GBF_FILE = os.path.join(BASEPATH, "data/v2/C_thermophilum.annotation.v2.gbf")
+#GBF_FILE = os.path.join(BASEPATH, "data/v2/C_thermophilum.annotation.v2.gbf")
 
 # Additional annotations by locus tag are loaded from here
-EXPR_FILE = os.path.join(BASEPATH, "data/v2/C_thermophilum.expressed.proteins.v1.txt")
-DESC_FILE = os.path.join(BASEPATH, "data/v2/C_thermophilum.additional.descr.v1.txt")
-UNIPROT_CONVERSION = os.path.join(BASEPATH, "data/v2/uniprot2geneid.tsv")
-UNIPROT2GENE = dict([map(strip, line.split('\t')) for line in open(UNIPROT_CONVERSION) if line.strip()])
-GENE2UNIPROT = dict([v, k] for k,v in UNIPROT2GENE.iteritems())
-REPEATS_GFF_FILE = os.path.join(BASEPATH, "data/v2/Predicted_repeats_C_thermophilum.scaffolds.fa.out.gff")
+#EXPR_FILE = os.path.join(BASEPATH, "data/v2/C_thermophilum.expressed.proteins.v1.txt")
+#DESC_FILE = os.path.join(BASEPATH, "data/v2/C_thermophilum.additional.descr.v1.txt")
+#UNIPROT_CONVERSION = os.path.join(BASEPATH, "data/v2/uniprot2geneid.tsv")
+#UNIPROT2GENE = dict([map(strip, line.split('\t')) for line in open(UNIPROT_CONVERSION) if line.strip()])
+#GENE2UNIPROT = dict([v, k] for k,v in UNIPROT2GENE.iteritems())
+#REPEATS_GFF_FILE = os.path.join(BASEPATH, "data/v2/Predicted_repeats_C_thermophilum.scaffolds.fa.out.gff")
     
-PEP_IMGS_DIR = os.path.join(BASEPATH, "ctbrowser/pep_img/")
+#PEP_IMGS_DIR = os.path.join(BASEPATH, "ctbrowser/pep_img/")
     
 # Where all parsed information is sotored
 DBFILE = os.path.join(BASEPATH, "cache/genome.db.pkl")
-JS_VARS_FILE = os.path.join(BASEPATH, "ctbrowser/ct_genome_info.js") # init vars for the js browsers
+JS_VARS_FILE = os.path.join(BASEPATH, "genome_view/ct_genome_info.js") # init vars for the js browsers
 BLAST_DB_PATH = os.path.join(BASEPATH, "blastDB/")
 BLAST_CMD = os.path.join("blast2")
 FORMATDB_CMD = os.path.join("formatdb")
 
-WEBSERVICE_PORT = 9000 # needs to be externally open or bypassed with apache
-                       # proxy. Currently bound to ctbrowser.embl.de.
-PID_FILE=os.path.join(BASEPATH, "ct_daemon.pid")
-
+PID_FILE=os.path.join(BASEPATH, "genbank_daemon.pid")
 # Sphinx configuration (used to index and fast search in annotations and names)
 SEARCHD = os.path.join(BASEPATH, "sphinx64/src/searchd")
 INDEXER = os.path.join(BASEPATH, "sphinx64/src/indexer")
 SEARCHER = os.path.join(BASEPATH, "sphinx64/src/search")
-SPHINX_PORT = 9001
-# this file has all de words indexed for each locus
-SPHINX_ANNOTATION_FILE = os.path.join(BASEPATH,"cache/ct_annotations.tab")
-# Define how to index all the words
-SPHINX_CONFIG_FILE = os.path.join(BASEPATH,"ct.sphinx.conf")
 
-# The following data (parsed as GBF entry qualifiers) are not retrieved by
-# web-services 
-AVOIDED_QUALIFIERS = set(["translation"])
+# Address and port information will be overwritten when daemon is started from
+# the command line
+HOST = 'localhost'
+WEBSERVICE_PORT = 50001
+SPHINX_PORT = 50002
+
+# this file has all de words indexed for each locus
+SPHINX_ANNOTATION_FILE = os.path.join(BASEPATH,"cache/annotations.tab")
+# Define how to index all the words
+SPHINX_CONFIG_FILE = os.path.join(BASEPATH,"sphinx.conf")
 
 COMPRESS_DATA = True
-
 def system(cmd):
     print color(cmd, "blue")
     return os.system(cmd)
@@ -95,38 +95,101 @@ def web_return(html, response, min_len=1000):
 
 
 # INDEXING FUNCTIONS (CALLED ONLY WHEN DATABASE NEEDS TO BE UPGRADED)
-def genome_pos(f, scaffolds):
-    ''' Checks and returns the genomic coordinates of a feature'''
-    start = f.location.start + f.parent.scaffold_start
-    end = f.location.end + f.parent.scaffold_start
+# def genome_pos(f, scaffolds):
+#     ''' Checks and returns the genomic coordinates of a feature'''
+#     start = f.location.start + f.parent.scaffold_start
+#     end = f.location.end + f.parent.scaffold_start
 
-    # Test that local and genome region are actually the same seq
-    if isinstance(f.location, CompoundLocation):
-        for loc in f.location.parts:
-            substart = loc.start + f.parent.scaffold_start
-            subend = loc.end + f.parent.scaffold_start
-            seq2 =  scaffolds[f.parent.scaffold][substart:subend]
-            if loc.strand == -1:
-                seq1 = loc.extract(f.parent.seq).reverse_complement()
-            else:
-                seq1 = loc.extract(f.parent.seq)
-            if str(seq1) != str(seq2):
-                print seq1
-                print seq2
-                raw_input("Inconsistency in seqs")
-    else:
-        seq2 =  scaffolds[f.parent.scaffold][start:end]
-        if f.location.strand == -1:
-            seq1 = f.extract(f.parent.seq).reverse_complement()
-        else:
-            seq1 = f.extract(f.parent.seq)
+#     # Test that local and genome region are actually the same seq
+#     if isinstance(f.location, CompoundLocation):
+#         for loc in f.location.parts:
+#             substart = loc.start + f.parent.scaffold_start
+#             subend = loc.end + f.parent.scaffold_start
+#             seq2 =  scaffolds[f.parent.scaffold][substart:subend]
+#             if loc.strand == -1:
+#                 seq1 = loc.extract(f.parent.seq).reverse_complement()
+#             else:
+#                 seq1 = loc.extract(f.parent.seq)
+#             if str(seq1) != str(seq2):
+#                 print seq1
+#                 print seq2
+#                 raw_input("Inconsistency in seqs")
+#     else:
+#         seq2 =  scaffolds[f.parent.scaffold][start:end]
+#         if f.location.strand == -1:
+#             seq1 = f.extract(f.parent.seq).reverse_complement()
+#         else:
+#             seq1 = f.extract(f.parent.seq)
     
-        if str(seq1) != str(seq2):
-            print seq1
-            print seq2
-            raw_input("Inconsistency in seqs")
-    return start, end
+#         if str(seq1) != str(seq2):
+#             print seq1
+#             print seq2
+#             raw_input("Inconsistency in seqs")
+#     return start, end
 
+#def refresh_all_dbs():
+#    gbrecords, features, scaffolds, scaffold_genes = read_and_index_genome()
+#    gene2expr, gene2desc = read_and_index_extra_info()    
+#    return gbrecords, features, scaffolds, scaffold_genes, gene2expr, gene2desc
+
+def refresh_blast_dbs(scaffolds, id2feature):
+    GENEDB = open(os.path.join(BLAST_DB_PATH, 'genes.nt.fa'), 'w')
+    PROTDB = open(os.path.join(BLAST_DB_PATH, 'prots.aa.fa'), 'w')
+    SCAFDB = open(os.path.join(BLAST_DB_PATH, 'scaff.nt.fa'), 'w')
+    SCAFDB.write('\n'.join(['>%s\n%s' %(k, v) for k,v in SCAFFOLDS.iteritems()] ))
+    SCAFDB.close()
+    for fid, f in id2feature.iteritems():
+        if f.type == 'gene':
+            gname = f.qualifiers['locus_tag'][0]
+            location = "%d-%d" %(f.location.start, f.location.end)
+            ename = '%s %s %s {%s}' %(gname, f.parent.id, location, fid)
+            if f.strand == -1:
+                seq = f.location.extract(f.parent.seq).reverse_complement()
+            else:
+                seq = f.location.extract(f.parent.seq)
+            print >>GENEDB, '>%s\n%s' %(gname, seq)
+        elif f.type == 'CDS':
+            gname = f.qualifiers['locus_tag'][0]
+            for ison, protseq in enumerate(f.qualifiers['translation']):
+                location = "%d-%d" %(f.location.start, f.location.end)
+                ename = '%s (CDS-%d) %s %s {%s}' %(gname, ison+1, f.parent.id, location, fid)
+                print >>PROTDB, '>%s\n%s' %(ename, protseq)
+    GENEDB.close()
+    PROTDB.close()
+    
+
+def refresh_sphinx():
+    index = []
+    id2region = {}
+    id2desc = {}
+    id2f = {}
+    
+    for ftype in INDEXED_FEATURES:
+        for fch, fstart, fend, f, fid in FEATURES[ftype]:
+            gname = f.qualifiers.get("locus_tag", ["noName"])[0]
+            txt = []
+            for key, value in f.qualifiers.iteritems():
+                if key in AVOIDED_QUALIFIERS:
+                    continue
+                if isinstance(value, list) and len(value) == 1:
+                    txt.append(value[0])
+                else:
+                    txt.append('; '.join(map(str, value)))
+            index.append([fid, gname, ','.join(LOCUS2NAMES.get(gname, [])), ', '.join(txt)])
+            id2region[fid] = [gname, ftype, "%s:%d-%d" %(fch, fstart, fend)]
+            id2desc[fid] = txt
+            id2f[fid] = f
+            
+    open(SPHINX_ANNOTATION_FILE, "w").write(
+        '\n'.join(map(lambda x: '\t'.join(map(str, x)), index))+"\n")
+    
+    stop_sphinx()
+    print 'Updating sphinx index... '
+    system('cd %s && %s --config %s annotations' %(BASEPATH, INDEXER, SPHINX_CONFIG_FILE))
+   
+    return id2region, id2desc, id2f
+
+    
 def read_and_index_extra_info():
     ''' Read custom files including info about eggnog mappings and expression experiments'''
     gene2expr = defaultdict(dict)
@@ -197,52 +260,29 @@ def read_and_index_genome():
     features = defaultdict(list)
     scaffolds = {}
     scaffold_genes = defaultdict(set)
-    # Reads genome assembly (Scaffolds) 
-    for fasta_file in FASTA_FILES:
-        print color("Reading assembly sequences from", "green"), fasta_file
-        for sca in SeqIO.parse(open(fasta_file, "rU"), "fasta"):
-            if sca.name in scaffolds:
-                raise ValueError("Duplicated scaffold %s" %sca.name)
-            scaffolds[sca.name] = sca.seq
-    print len(scaffolds), "total scaffolds"
+    locus_tag_features = defaultdict(list)
     
-    # Map genebank regions and features into the genome assembly. Every GBF
-    # entry should find a match in a scaffold.
-    print color("Reading annotations from ", "green"), GBF_FILE
-    featureid = 1
+    print color("Reading genome from ", "green"), GBF_FILE
+    
+    featureid = 1 # Used by sphinx to index locus names, desc, etc...
     for e in SeqIO.parse(open(GBF_FILE, "rU"), "genbank"):
         gbrecords[e.id] = e
-        startpos = None
+        scaffolds[e.id] = e.seq
         
-        # Find position of this region in scaffolds
-        for sca, seq in scaffolds.iteritems():
-            try:
-                startpos = str(seq).index(str(e.seq))
-            except ValueError, x:
-                pass
-            else:
-                target_sca = sca
-
-        # Orphan GBF region! If this occurs, manual intervention may be
-        # necessary
-        if startpos == None:
-            print "Skipping GBF region without a match in FASTA files", e.id
-            continue
-            
-        e.scaffold_start = startpos
-        e.scaffold = target_sca
-        
-        # Index the global position of every feature in this GBF entry.
+        # Index the position of every feature in the GBF locus entry by feature type
         for f in e.features:
             f.parent = e
-            genome_start, genome_end = genome_pos(f, scaffolds)
-            features[f.type].append([target_sca, genome_start, genome_end, f, featureid])
+            #genome_start, genome_end = genome_pos(f, scaffolds)
+            features[f.type].append([e.id, f.start, f.end, f, featureid])
             if f.type == "gene":
-                scaffold_genes[target_sca].add(f)
+                scaffold_genes[e.id].add(f)
             featureid += 1
-
-    return gbrecords, features, scaffolds, scaffold_genes
-
+            if "locus_tag" in f.qualifiers:
+                gname = f.qualifiers["locus_tag"][0]
+                locus_tag_features[gname].append(f)
+                
+    return gbrecords, features, scaffolds, scaffold_genes, locus_tag_features
+    
 # THESE ARE WEB SERVICES PROVIDING JSON DATA TO THE GENOME VIEWER APPLICATION
     
 @get('/sequence')
@@ -392,10 +432,9 @@ def search(q=None):
     data['NT Seq'] = str(seq)
     data['length'] = length
     
-    if 'locus_tag' in f.qualifiers:
-        data['name'] = gname = f.qualifiers["locus_tag"][0]
-        if os.path.exists(os.path.join(PEP_IMGS_DIR, "svg", gname+".svg")):
-            data['pep_img'] = "pep_img/png/%s.png" %gname
+    #if 'locus_tag' in f.qualifiers:
+    #    if os.path.exists(os.path.join(PEP_IMGS_DIR, "svg", gname+".svg")):
+    #        data['pep_img'] = "pep_img/png/%s.png" %gname
     print time.time() - t1, "seqid data query" 
     return web_return(json.dumps(data), response)
     
@@ -445,7 +484,7 @@ def search(q=None):
                                            'start':start, 
                                            'end':end,
                                            'reg':region,
-                                           'uniprot':GENE2UNIPROT.get(locus, ''),
+                                           'other names':', '.join(LOCUS2NAMES.get(locus, [])),
                                            })
                 n += 1
     print time.time() - t1, "search query" 
@@ -504,18 +543,18 @@ def get_exons(region, biotypes, exclude_transcripts=False):
             gstrand = parse_strand(gene.location.strand) 
             gname = gene.qualifiers["locus_tag"][0]
             genedict = {"id": gname,
-                        "fid": fid, 
-                        "uniprot": GENE2UNIPROT.get(gname, ''),
+                        "fid": fid,
+                        'other names':', '.join(LOCUS2NAMES.get(locus, [])),
                         "biotype": "gene",
-                        "pep_img": int(os.path.exists(os.path.join(PEP_IMGS_DIR, "svg", gname+".svg"))),
+                        #"pep_img": int(os.path.exists(os.path.join(PEP_IMGS_DIR, "svg", gname+".svg"))),
                         "featureType": "gene",
                         "chromosome":ch,
                         "start":fstart,
                         "end":fend,
                         "strand":gstrand,
                         "source":"",
-                        "annotations": additional_description(gname),
-                        "expression": expr_info(gname),
+                        #"annotations": additional_description(gname),
+                        #"expression": expr_info(gname),
                         "transcripts":[]}
             genes[gname] = genedict
             
@@ -523,7 +562,7 @@ def get_exons(region, biotypes, exclude_transcripts=False):
         return []
     
     # populate transcripts
-    exclude_biotypes = set(['repeat_region', 'misc_feature'])
+    #exclude_biotypes = set(['repeat_region', 'misc_feature'])
     if not exclude_transcripts:
         for ftype in biotypes:
             if ftype in exclude_biotypes:
@@ -593,12 +632,12 @@ def iter_exons(f):
         for loc in f.location.parts:
             substart = loc.start + f.parent.scaffold_start
             subend = loc.end + f.parent.scaffold_start
-            seq = SCAFFOLDS[f.parent.scaffold][substart:subend]
+            seq = SCAFFOLDS[f.parent.id][substart:subend]
             yield substart, subend, loc.strand, seq
     else:
         substart = f.location.start + f.parent.scaffold_start
         subend = f.location.end + f.parent.scaffold_start
-        seq =  SCAFFOLDS[f.parent.scaffold][substart:subend]
+        seq =  SCAFFOLDS[f.parent.id][substart:subend]
         yield substart, subend, f.location.strand, seq
 
 
@@ -610,7 +649,8 @@ def expr_info(locus_name):
     if locus_name in GENE2EXPR:
         for key, value in GENE2EXPR[locus_name].iteritems():
             an[key] = value
-
+    return an
+    
 def additional_description(locus_name):
     an = {}
     if locus_name in GENE2DESC:
@@ -636,69 +676,6 @@ def parse_region(region):
     
 # COMMAND LINE RELATED OPTIONS
     
-def refresh_all_dbs():
-    gbrecords, features, scaffolds, scaffold_genes = read_and_index_genome()
-    gene2expr, gene2desc = read_and_index_extra_info()
-
-    
-    return gbrecords, features, scaffolds, scaffold_genes, gene2expr, gene2desc
-
-
-def refresh_blast_dbs(scaffolds, id2feature):
-    GENEDB = open(os.path.join(BLAST_DB_PATH, 'genes.nt.fa'), 'w')
-    PROTDB = open(os.path.join(BLAST_DB_PATH, 'prots.aa.fa'), 'w')
-    SCAFDB = open(os.path.join(BLAST_DB_PATH, 'scaff.nt.fa'), 'w')
-    SCAFDB.write('\n'.join(['>%s\n%s' %(k, v) for k,v in SCAFFOLDS.iteritems()] ))
-    SCAFDB.close()
-    for fid, f in id2feature.iteritems():
-        if f.type == 'gene':
-            gname = f.qualifiers['locus_tag'][0]
-            location = "%d-%d" %(f.location.start, f.location.end)
-            ename = '%s %s %s {%s}' %(gname, f.parent.id, location, fid)
-            if f.strand == -1:
-                seq = f.location.extract(f.parent.seq).reverse_complement()
-            else:
-                seq = f.location.extract(f.parent.seq)
-            print >>GENEDB, '>%s\n%s' %(gname, seq)
-        elif f.type == 'CDS':
-            gname = f.qualifiers['locus_tag'][0]
-            for ison, protseq in enumerate(f.qualifiers['translation']):
-                location = "%d-%d" %(f.location.start, f.location.end)
-                ename = '%s (CDS-%d) %s %s {%s}' %(gname, ison+1, f.parent.id, location, fid)
-                print >>PROTDB, '>%s\n%s' %(ename, protseq)
-    GENEDB.close()
-    PROTDB.close()
-    
-
-def refresh_sphinx():
-    index = []
-    id2region = {}
-    id2desc = {}
-    id2f = {}
-    for ftype in ['gene', 'CDS', 'tRNA', 'rRNA', 'misc_RNA',
-                  'repeat_region', 'misc_feature']:
-        for fch, fstart, fend, f, fid in FEATURES[ftype]:
-            gname = f.qualifiers.get("locus_tag", ["NoName"])[0]
-            txt = []
-            for key, value in f.qualifiers.iteritems():
-                if key in AVOIDED_QUALIFIERS: continue
-                if isinstance(value, list) and len(value) == 1:
-                    txt.append(value[0])
-                else:
-                    txt.append('; '.join(map(str, value)))
-            index.append([fid, gname, GENE2UNIPROT.get(gname, ''), ', '.join(txt)])
-            id2region[fid] = [gname, ftype, "%s:%d-%d" %(fch, fstart, fend)]
-            id2desc[fid] = txt
-            id2f[fid] = f
-            
-    open(SPHINX_ANNOTATION_FILE, "w").write(
-        '\n'.join(map(lambda x: '\t'.join(map(str, x)), index))+"\n")
-    
-    stop_sphinx()
-    print 'Updating sphinx index... '
-    system('cd %s && %s --config %s annotations' %(BASEPATH, INDEXER, SPHINX_CONFIG_FILE))
-   
-    return id2region, id2desc, id2f
         
 def start_sphinx():
     stop_sphinx()
@@ -766,38 +743,49 @@ if __name__ == '__main__':
                         help='')
 
     parser.add_argument('--refresh', dest='refresh', action='store_true',
-                        help=('Refreshes all databases to account for changes in'
-                        ' FASTA or GBF files, and start the daemon. This option will'
-                        ' cause blast DB, search sphinx DB, and GBF annotation index'
-                        ' to be updated.'))
+                        help=('Refreshes all databases and refresh cached data.'))
     
-    parser.add_argument('--host', dest='host', type=str,
-                        help=('This option overwrites the HOST file information and'
-                              ' starts the daemon listening in a different address.'))
-
+    parser.add_argument('--host', dest='host', type=str, default='localhost'))
+    parser.add_argument('--port', dest='port', type=int, default=50001))
+    parser.add_argument('--sphinx_port', dest='sphinx_port', type=int, default=50002))
+    
     parser.add_argument('--search', dest='search', type=str,
                         help='test a query search')
 
     parser.add_argument('--daemon', dest='daemon', action = "store_true",
                         help='Start the service as a daemon')
 
-    parser.add_argument('--manual', dest='manual_fixes', type=str)
+    parser.add_argument('--genbank', dest='genbank', type=str, help='Main genbank file to browse')
+
+    parser.add_argument('--id_translation', dest='id_translation', type=str,
+                        help= 'A tab delimited file containing any type of id conversion (locus_tag [TAB] idname)'
+                        'custom id names will be indexed and linked to the corresponding locus tag' )
+
+    parser.add_argument('--locus_annotation', dest='locus_annotation', type=str,
+                        help= 'Allows to bind custom annotation entries to genbank entries and features.'
+                        )
+    parser.add_argument('--indexed_features', dest='indexed_features', type=set, nargs="+",
+                        default=['gene', 'CDS', 'tRNA', 'rRNA', 'misc_RNA', 'repeat_region', 'misc_feature'])
+                    
+    parser.add_argument('--gff3', dest='gff3', type=str, nargs="+", help=='Whatever extra locus information you want to show on top of the base genbank file.')
     
     args = parser.parse_args()
 
     if args.search:
         search(args.search)
         sys.exit(0)
-               
    
-    # starts 
-    try:
-        HOST = open("HOST").readline().strip()
-    except Exception:
-        HOST = "localhost"
-    if args.host:
-        HOST = args.host
+    # setup network info
+    HOST = args.host
+    WEBSERVICE_PORT = args.port
+    SPHINX_PORT = args.sphinx_port
 
+    INDEXED_FEATURES = args.indexed_features
+    # The following data (parsed as GBF entry qualifiers) are not retrieved by
+    # web-services 
+    AVOIDED_QUALIFIERS = set(["translation"])
+    
+    # starts
     action = args.action[0]
     if action == "stop":
         if os.path.exists(PID_FILE):
@@ -812,14 +800,29 @@ if __name__ == '__main__':
         stop_sphinx()
         
         if args.refresh:
-            (GBRECORDS, FEATURES, SCAFFOLDS, SCAFFOLD_GENES, GENE2EXPR,
-             GENE2DESC) = refresh_all_dbs()
+            #(GBRECORDS, FEATURES, SCAFFOLDS, SCAFFOLD_GENES, GENE2EXPR,
+            # GENE2DESC) = refresh_all_dbs()
+            GBRECORDS, FEATURES, SCAFFOLDS, SCAFFOLD_GENES, LOCUS_TAG_FEATURES = read_and_index_genome()
 
-            INDEX2REGION, INDEX2DESC, ID2FEATURE = refresh_sphinx()
+            LOCUS2NAMES = {}
+            if args.id_translation:
+                LOCUS2NAMES = dict([tuple(line.strip().split('\t')) for
+                                    line in open(args.id_translation)])
+            if args.annotations:
+                # feature_type locus_tag annotation_key annotation_value annotation_type (text, img)
+                for line in open(args.annotations):
+                    ftype, locus_tag, akey, avalue, atype = map(strip, line.strip().split('\t'))
+                    for f in LOCUS_TAG_FEATURES.get(locus_tag, []):
+                        if not ftype or ftype == f.type:
+                            if not hasattr(f, "annotations"):
+                                f.annotations = []
+                            f.annotations.append([akey, avalue, atype])
+                    
+            INDEX2REGION, INDEX2DESC, ID2FEATURE = refresh_sphinx()            
             refresh_blast_dbs(SCAFFOLDS, ID2FEATURE)
+            
             # Saves the database for faster loading in the fugture
-            cPickle.dump([GBRECORDS, FEATURES, SCAFFOLDS, SCAFFOLD_GENES, GENE2EXPR,
-                          GENE2DESC, INDEX2REGION, INDEX2DESC, ID2FEATURE],
+            cPickle.dump([GBRECORDS, FEATURES, SCAFFOLDS, SCAFFOLD_GENES, INDEX2REGION, INDEX2DESC, ID2FEATURE, LOCUS2NAMES, LOCUS_TAG_FEATURES],
                          open(DBFILE, "wb"))
 
         else:
@@ -859,15 +862,15 @@ if __name__ == '__main__':
         print color("The following annotations were found:", 'green')
         print '\n'.join(map(lambda x: "  % 20s %d" %(x[0], len(x[1])), sorted(FEATURES.items(), lambda a,b: cmp(len(a[1]), len(b[1])), reverse=True)))
         print color("Additional annotations:", 'green')
-        print "  genes with expression data: ", len(GENE2EXPR)
-        print "  genes with description data:", len(GENE2DESC)
+        #print "  genes with expression data: ", len(GENE2EXPR)
+        #print "  genes with description data:", len(GENE2DESC)
         
         if args.daemon:
             # create logger with 'spam_application'
-            fh = logging.FileHandler('log/ctbrowser_daemon.log')
+            fh = logging.FileHandler('log/genome_browser_daemon.log')
             LOG.addHandler(fh)
             fh.setFormatter(WhitespaceRemovingFormatter())
-            daemon = Daemonize(app="ctbrowser",
+            daemon = Daemonize(app="genome_browser",
                                pid=PID_FILE,
                                action=start_webservices,
                                keep_fds=[3])
@@ -884,16 +887,16 @@ if __name__ == '__main__':
     elif action == "status":
         if os.path.exists(PID_FILE):
             pid = strip(open(PID_FILE).readline())
-            print "CT Browser daemon seems to be UP with PID %s" %pid
+            print "GenBank Browser daemon seems to be UP with PID %s" %pid
         else:
-            print "CT Browser daemon seems to be DOWN"
+            print "GenBank Browser daemon seems to be DOWN"
             
         try:
             pid = strip(open(os.path.join(BASE_PATH, "searchd.pid")).readline())
         except Exception:
-            print "CT Sphinx daemon seems to be DOWN"
+            print "GenBank Sphinx daemon seems to be DOWN"
         else:
-            print "CT Sphinx daemon seems to be UP with PID %s" %pid
+            print "GenBank Sphinx daemon seems to be UP with PID %s" %pid
         
             
     
