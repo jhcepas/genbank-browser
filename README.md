@@ -34,8 +34,13 @@ OTHER FEATURES IN THE ROADMAP
 - Combine genbank with custom GFF3 annotations
 - Easy edition of genbank features 
 
+TEST EXAMPLE
+===============
+  $ python genbank_browser.py --genbank examples/hs_ref_GRCh38_chr3.gbs  --gname gene --refresh start
 
-EXAMPLE
-=============
+
+
+ONLINE EXAMPLE
+==================
 
 http://ct.bork.embl.de/ctbrowser
