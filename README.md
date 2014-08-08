@@ -12,9 +12,9 @@ External Dependencies
 ======================
 Most dependencies are included in this repository to ensure compatibility:
 
+ -  Sphinx **(Require compiling)**: cd sphinx/ &&  ./configure && make
  -  Cherrypy 
  -  Bottle 
- -  Sphinx [require compiling]
  -  BCBio  
 
 In addition, you will need Python 2.6+, BioPython and modern web browser (Chrome recommended).
