@@ -36,22 +36,9 @@ try:
 except ImportError:
     print "Sphinx API could not be imported. Searches will be disabled!"
     
-# Blast DB will be based/upgraded based on these fasta files
+# Sometimes, GB files do not include sequences. They could be loaded from fasta files
 #FASTA_FILES = [os.path.join(BASEPATH, "data/v2/C_thermophilum.scaffolds.v2.fa")]
 
-# Annotations CDS, rRNA, tRNA and misc_RNA are extracted from the GBF file
-#GBF_FILE = os.path.join(BASEPATH, "data/v2/C_thermophilum.annotation.v2.gbf")
-
-# Additional annotations by locus tag are loaded from here
-#EXPR_FILE = os.path.join(BASEPATH, "data/v2/C_thermophilum.expressed.proteins.v1.txt")
-#DESC_FILE = os.path.join(BASEPATH, "data/v2/C_thermophilum.additional.descr.v1.txt")
-#UNIPROT_CONVERSION = os.path.join(BASEPATH, "data/v2/uniprot2geneid.tsv")
-#UNIPROT2GENE = dict([map(strip, line.split('\t')) for line in open(UNIPROT_CONVERSION) if line.strip()])
-#GENE2UNIPROT = dict([v, k] for k,v in UNIPROT2GENE.iteritems())
-#REPEATS_GFF_FILE = os.path.join(BASEPATH, "data/v2/Predicted_repeats_C_thermophilum.scaffolds.fa.out.gff")
-    
-#PEP_IMGS_DIR = os.path.join(BASEPATH, "ctbrowser/pep_img/")
-    
 # Where all parsed information is sotored
 DBFILE = os.path.join(BASEPATH, "cache/genome.db.pkl")
 JS_VARS_FILE = os.path.join(BASEPATH, "genome_viewer/ct_genome_info.js") # init vars for the js browsers
@@ -61,9 +48,9 @@ FORMATDB_CMD = os.path.join("formatdb")
 
 PID_FILE=os.path.join(BASEPATH, "genbank_daemon.pid")
 # Sphinx configuration (used to index and fast search in annotations and names)
-SEARCHD = os.path.join(BASEPATH, "sphinx64/src/searchd")
-INDEXER = os.path.join(BASEPATH, "sphinx64/src/indexer")
-SEARCHER = os.path.join(BASEPATH, "sphinx64/src/search")
+SEARCHD = os.path.join(BASEPATH, "sphinx/src/searchd")
+INDEXER = os.path.join(BASEPATH, "sphinx/src/indexer")
+SEARCHER = os.path.join(BASEPATH, "sphinx/src/search")
 
 # Address and port information will be overwritten when daemon is started from
 # the command line
@@ -127,12 +114,9 @@ def genome_pos(f, scaffolds):
             raw_input("Inconsistency in seqs")
     return start, end
 
-#def refresh_all_dbs():
-#    gbrecords, features, scaffolds, scaffold_genes = read_and_index_genome()
-#    gene2expr, gene2desc = read_and_index_extra_info()    
-#    return gbrecords, features, scaffolds, scaffold_genes, gene2expr, gene2desc
-
 def refresh_blast_dbs(scaffolds, id2feature):
+    ''' BLAST FEATURES NOT FINISHED YET '''
+    
     GENEDB = open(os.path.join(BLAST_DB_PATH, 'genes.nt.fa'), 'w')
     PROTDB = open(os.path.join(BLAST_DB_PATH, 'prots.aa.fa'), 'w')
     SCAFDB = open(os.path.join(BLAST_DB_PATH, 'scaff.nt.fa'), 'w')
@@ -157,6 +141,7 @@ def refresh_blast_dbs(scaffolds, id2feature):
     PROTDB.close()
 
 def refresh_sphinx():
+    ''' Index gene names and descriptions for quick searching '''
     index = []
     id2region = {}
     id2desc = {}
@@ -189,7 +174,11 @@ def refresh_sphinx():
 
     
 def read_and_index_extra_info():
-    ''' Read custom files including info about eggnog mappings and expression experiments'''
+    ''' Read custom files including info about eggnog mappings and expression experiments.
+
+    THIS SHOULD BE MADE MORE GENERIC!!
+    
+    '''
     gene2expr = defaultdict(dict)
     if EXPR_FILE:
         for line in open(EXPR_FILE, "rU"):
@@ -247,12 +236,8 @@ def read_and_index_extra_info():
              
 def read_and_index_genome(genbank_file):
     '''
-    Uses BioPython to parse the GBF and FASTA files, extract all their genes and
-    features and store them in memory. Note that GBF includes many entries, for
-    which gene are in local coordinates. Also, FASTA files provide the final
-    genome assembly, so every GBF entrie is required to be mapped to each
-    scaffold in the FASTA files, and positions converted to the global genomic
-    coordinate system. '''
+    Uses BioPython to parse the GBF, extract all their genes and
+    features and store them in memory. '''
     
     gbrecords = {}
     features = defaultdict(list)
@@ -281,9 +266,13 @@ def read_and_index_genome(genbank_file):
                 gname_features[gname].append(f)
                 
     return gbrecords, features, scaffolds, scaffold_genes, gname_features
-    
+
+# # ############################################################################
+#    
 # THESE ARE WEB SERVICES PROVIDING JSON DATA TO THE GENOME VIEWER APPLICATION
-    
+#
+# # ############################################################################    
+
 @get('/sequence')
 def sequence():
     t1 = time.time()
@@ -638,35 +627,13 @@ def iter_exons(f):
     if isinstance(f.location, CompoundLocation):
         for loc in f.location.parts:
             yield int(loc.start), int(loc.end), loc.strand, loc.extract(f.parent.seq)
-            #substart = loc.start + f.parent.scaffold_start
-            #subend = loc.end + f.parent.scaffold_start
-            #seq = SCAFFOLDS[f.parent.id][substart:subend]
-            #yield substart, subend, loc.strand, seq
     else:
-        #substart = f.location.start + f.parent.scaffold_start
-        #subend = f.location.end + f.parent.scaffold_start
-        #seq =  SCAFFOLDS[f.parent.id][substart:subend]
-        #yield substart, subend, f.location.strand, seq
         loc = f.location
         yield int(loc.start), int(loc.end), loc.strand, loc.extract(f.parent.seq)
 
 def as_json(obj):
     return json.dumps({"response":obj})
 
-def expr_info(locus_name):
-    an = {}
-    if locus_name in GENE2EXPR:
-        for key, value in GENE2EXPR[locus_name].iteritems():
-            an[key] = value
-    return an
-    
-def additional_description(locus_name):
-    an = {}
-    if locus_name in GENE2DESC:
-        for key, value in GENE2DESC[locus_name].iteritems():
-            an[key] = value
-    return an
- 
 def between(pos, start, end):
     pos, start, end = map(int, [pos, start, end])
     if pos>=start and pos<=end:
@@ -748,6 +715,12 @@ class LogStdout(StringIO):
     def write(self, s):
         LOG.info(s.rstrip("\n"))
 
+
+# ######################
+#  COMMAND LINE
+# ######################
+
+        
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
 
@@ -765,25 +738,26 @@ if __name__ == '__main__':
                         help='test a query search')
 
     parser.add_argument('--gname_qualifier', dest='gname_qualifier', type=str,
-                        default='locus_tag', help='feature qualifier used as gene ID')
+                        default='gene', help='feature qualifier used as gene ID')
 
     parser.add_argument('--daemon', dest='daemon', action = "store_true",
                         help='Start the service as a daemon')
 
-    parser.add_argument('--genbank', dest='genbank', type=str, help='Main genbank file to browse')
+    parser.add_argument('--genbank', dest='genbank', type=str, help='Main genbank file to browse',
+                        required=True)
 
     parser.add_argument('--id_translation', dest='id_translation', type=str,
                         help= 'A tab delimited file containing any type of id conversion (locus_tag [TAB] idname)'
                         'custom id names will be indexed and linked to the corresponding locus tag' )
 
     parser.add_argument('--locus_annotations', dest='annotations', type=str,
-                        help= 'Allows to bind custom annotation entries to genbank entries and features.'
+                        help= 'Allows to bind custom annotation entries to genbank entries and features. TO DO!!!!'
                         )
     parser.add_argument('--indexed_features', dest='indexed_features', type=set, nargs="+",
                         default=['gene', 'CDS', 'tRNA', 'rRNA', 'misc_RNA', 'repeat_region', 'misc_feature'])
                     
     parser.add_argument('--gff3', dest='gff3', type=str, nargs="+",
-                        help='Whatever extra locus information you want to show on top of the base genbank file.')
+                        help='Whatever extra locus information you want to show on top of the base genbank file. ALMOST FINISHED!')
     
     args = parser.parse_args()
 
@@ -845,8 +819,8 @@ if __name__ == '__main__':
 
         else:
             try:
-                (GBRECORDS, FEATURES, SCAFFOLDS, SCAFFOLD_GENES, GENE2EXPR, GENE2DESC,
-                 INDEX2REGION, INDEX2DESC, ID2FEATURE) = cPickle.load(open(DBFILE))
+                (GBRECORDS, FEATURES, SCAFFOLDS, SCAFFOLD_GENES, INDEX2REGION, INDEX2DESC,
+                 ID2FEATURE, LOCUS2NAMES, GNAME_FEATURES) = cPickle.load(open(DBFILE))
 
             except Exception, e:
                 print e
@@ -864,8 +838,10 @@ if __name__ == '__main__':
         # port. This call will try to stop any other running instance, but it might
         # fail if the service was started from a different user or directory. Just
         # 'pkill searchd' to kill any running process.
-        
 
+
+        # Setup genome viewer
+        
         default_chr = sorted_sca[0]
         default = list(SCAFFOLD_GENES[default_chr])[0]
         default_chunksize = max([len(seq) for seq in SCAFFOLDS.values()])
@@ -884,19 +860,21 @@ if __name__ == '__main__':
             js.append('{name:"%s",  cytobands: [], isCircular: 0, start: 1, end: %d, size: %d, numberGenes: %d },' \
                           %(sca_name, size, size, ngenes))
             print size, ngenes
-
             
         js.append('];')
         open(JS_VARS_FILE, "w").write("/* Auto-generated file. Do not modify manually. */\n" + ' '.join(js))
+
+
+        # Show some debugging info
+        
         print '\n'.join(js)
         print color("Serving sequences and annotations for the following scaffolds:", 'green')
         print '\n'.join(map(lambda x: '  % 20s (%d sites, %d genes)'%(x, len(SCAFFOLDS[x]), len(SCAFFOLD_GENES[x])), sorted_sca))
         print color("The following annotations were found:", 'green')
         print '\n'.join(map(lambda x: "  % 20s %d" %(x[0], len(x[1])), sorted(FEATURES.items(), lambda a,b: cmp(len(a[1]), len(b[1])), reverse=True)))
         print color("Additional annotations:", 'green')
-        #print "  genes with expression data: ", len(GENE2EXPR)
-        #print "  genes with description data:", len(GENE2DESC)
 
+        # START SERVERS
         start_sphinx()
         
         if args.daemon:
