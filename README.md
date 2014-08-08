@@ -35,3 +35,7 @@ OTHER FEATURES IN THE ROADMAP
 - Easy edition of genbank features 
 
 
+EXAMPLE
+=============
+
+http://ct.bork.embl.de/ctbrowser
