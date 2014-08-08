@@ -10,8 +10,12 @@ This software is written on top of BioPython, Sphinx, and Genome Viewer tools.
 
 External Dependencies
 ======================
-Most of dependencies are included in this package: Cherrypy, Bottle, Sphinx, BCBio. 
-You may need to compile some of them. 
+Most of dependencies are included in this package to ensure compatibility:
+
+ -  Cherrypy 
+ -  Bottle 
+ -  Sphinx [require compiling]
+ -  BCBio  
 
 In addition, you will need Python 2.6+, BioPython and modern web browser (Chrome recommended) to run this software.
 
