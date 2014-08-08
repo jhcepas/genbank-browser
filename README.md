@@ -20,7 +20,7 @@ Most dependencies are included in this repository to ensure compatibility:
 In addition, you will need Python 2.6+, BioPython and modern web browser (Chrome recommended).
 
 
-FEATURES
+Features
 ============
 
 - Automatic indexing of fearures and descriptions
@@ -29,18 +29,17 @@ FEATURES
 - Web service ready: start gbank-browser as a daemon and serve genbank files as a genome browser
 - Combine genbank annotations with your custom cross-linking gene and protein ids. 
 
-OTHER FEATURES IN THE ROADMAP
+Roadmap
 ==============================
 - Combine genbank with custom GFF3 annotations
 - Easy edition of genbank features 
 
-TEST EXAMPLE
+Test example
 ===============
   $ python genbank_browser.py --genbank examples/hs_ref_GRCh38_chr3.gbs  --gname gene --refresh start
 
 
-
-ONLINE EXAMPLE
+Online example
 ==================
 
 http://ct.bork.embl.de/ctbrowser
