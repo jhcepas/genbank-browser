@@ -844,8 +844,8 @@ if __name__ == '__main__':
         
         default_chr = sorted_sca[0]
         default = list(SCAFFOLD_GENES[default_chr])[0]
-        default_chunksize = max([len(seq) for seq in SCAFFOLDS.values()])
-        
+        #default_chunksize = max([len(seq) for seq in SCAFFOLDS.values()])
+        default_chunksize = 50000
                   
         js = ['var CT_HOST="http://%s:%s";\n' %(HOST, WEBSERVICE_PORT)]
         js.append('var default_chr="%s"; var default_start=%d; default_end=%d;' %\
