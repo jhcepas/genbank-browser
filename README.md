@@ -38,6 +38,7 @@ Test example
 ===============
   $ python genbank_browser.py --genbank examples/hs_ref_GRCh38_chr3.gbs  --gname gene --refresh start
 
+(open genome_viewer/index.html with your web browser)
 
 Online example
 ==================
