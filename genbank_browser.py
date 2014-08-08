@@ -27,7 +27,7 @@ class WhitespaceRemovingFormatter(logging.Formatter):
         record.msg = record.msg.strip()
         return super(WhitespaceRemovingFormatter, self).format(record)
     
-LOG = logging.getLogger('ctbrowser')
+LOG = logging.getLogger('genome_browser')
 LOG.setLevel(logging.DEBUG)
 
 sys.path.insert(0, os.path.join(BASEPATH, "sphinx/api/"))
@@ -54,7 +54,7 @@ except ImportError:
     
 # Where all parsed information is sotored
 DBFILE = os.path.join(BASEPATH, "cache/genome.db.pkl")
-JS_VARS_FILE = os.path.join(BASEPATH, "genome_view/ct_genome_info.js") # init vars for the js browsers
+JS_VARS_FILE = os.path.join(BASEPATH, "genome_viewer/ct_genome_info.js") # init vars for the js browsers
 BLAST_DB_PATH = os.path.join(BASEPATH, "blastDB/")
 BLAST_CMD = os.path.join("blast2")
 FORMATDB_CMD = os.path.join("formatdb")
@@ -95,37 +95,37 @@ def web_return(html, response, min_len=1000):
 
 
 # INDEXING FUNCTIONS (CALLED ONLY WHEN DATABASE NEEDS TO BE UPGRADED)
-# def genome_pos(f, scaffolds):
-#     ''' Checks and returns the genomic coordinates of a feature'''
-#     start = f.location.start + f.parent.scaffold_start
-#     end = f.location.end + f.parent.scaffold_start
+def genome_pos(f, scaffolds):
+    ''' Checks and returns the genomic coordinates of a feature'''
+    start = f.location.start + f.parent.scaffold_start
+    end = f.location.end + f.parent.scaffold_start
 
-#     # Test that local and genome region are actually the same seq
-#     if isinstance(f.location, CompoundLocation):
-#         for loc in f.location.parts:
-#             substart = loc.start + f.parent.scaffold_start
-#             subend = loc.end + f.parent.scaffold_start
-#             seq2 =  scaffolds[f.parent.scaffold][substart:subend]
-#             if loc.strand == -1:
-#                 seq1 = loc.extract(f.parent.seq).reverse_complement()
-#             else:
-#                 seq1 = loc.extract(f.parent.seq)
-#             if str(seq1) != str(seq2):
-#                 print seq1
-#                 print seq2
-#                 raw_input("Inconsistency in seqs")
-#     else:
-#         seq2 =  scaffolds[f.parent.scaffold][start:end]
-#         if f.location.strand == -1:
-#             seq1 = f.extract(f.parent.seq).reverse_complement()
-#         else:
-#             seq1 = f.extract(f.parent.seq)
+    # Test that local and genome region are actually the same seq
+    if isinstance(f.location, CompoundLocation):
+        for loc in f.location.parts:
+            substart = loc.start + f.parent.scaffold_start
+            subend = loc.end + f.parent.scaffold_start
+            seq2 =  scaffolds[f.parent.chrname][substart:subend]
+            if loc.strand == -1:
+                seq1 = loc.extract(f.parent.seq).reverse_complement()
+            else:
+                seq1 = loc.extract(f.parent.seq)
+            if str(seq1) != str(seq2):
+                print seq1
+                print seq2
+                raw_input("Inconsistency in seqs")
+    else:
+        seq2 =  scaffolds[f.parent.chrname][start:end]
+        if f.location.strand == -1:
+            seq1 = f.extract(f.parent.seq).reverse_complement()
+        else:
+            seq1 = f.extract(f.parent.seq)
     
-#         if str(seq1) != str(seq2):
-#             print seq1
-#             print seq2
-#             raw_input("Inconsistency in seqs")
-#     return start, end
+        if str(seq1) != str(seq2):
+            print seq1
+            print seq2
+            raw_input("Inconsistency in seqs")
+    return start, end
 
 #def refresh_all_dbs():
 #    gbrecords, features, scaffolds, scaffold_genes = read_and_index_genome()
@@ -139,24 +139,22 @@ def refresh_blast_dbs(scaffolds, id2feature):
     SCAFDB.write('\n'.join(['>%s\n%s' %(k, v) for k,v in SCAFFOLDS.iteritems()] ))
     SCAFDB.close()
     for fid, f in id2feature.iteritems():
+        gname = f.qualifiers.get(GENEID_QUALIFIER, ["noname"])[0]
         if f.type == 'gene':
-            gname = f.qualifiers['locus_tag'][0]
-            location = "%d-%d" %(f.location.start, f.location.end)
-            ename = '%s %s %s {%s}' %(gname, f.parent.id, location, fid)
+            location = "%d-%d" %(int(f.location.start), int(f.location.end))
+            ename = '%s %s %s {%s}' %(gname, f.parent.chrname, location, fid)
             if f.strand == -1:
                 seq = f.location.extract(f.parent.seq).reverse_complement()
             else:
                 seq = f.location.extract(f.parent.seq)
             print >>GENEDB, '>%s\n%s' %(gname, seq)
         elif f.type == 'CDS':
-            gname = f.qualifiers['locus_tag'][0]
-            for ison, protseq in enumerate(f.qualifiers['translation']):
-                location = "%d-%d" %(f.location.start, f.location.end)
-                ename = '%s (CDS-%d) %s %s {%s}' %(gname, ison+1, f.parent.id, location, fid)
+            for ison, protseq in enumerate(f.qualifiers.get('translation', [])):
+                location = "%d-%d" %(int(f.location.start), int(f.location.end))
+                ename = '%s (CDS-%d) %s %s {%s}' %(gname, ison+1, f.parent.chrname, location, fid)
                 print >>PROTDB, '>%s\n%s' %(ename, protseq)
     GENEDB.close()
     PROTDB.close()
-    
 
 def refresh_sphinx():
     index = []
@@ -166,7 +164,7 @@ def refresh_sphinx():
     
     for ftype in INDEXED_FEATURES:
         for fch, fstart, fend, f, fid in FEATURES[ftype]:
-            gname = f.qualifiers.get("locus_tag", ["noName"])[0]
+            gname = f.qualifiers.get(GENEID_QUALIFIER, ["-"])[0]
             txt = []
             for key, value in f.qualifiers.iteritems():
                 if key in AVOIDED_QUALIFIERS:
@@ -247,7 +245,7 @@ def read_and_index_extra_info():
             }
     return gene2expr, gene2eggnog
              
-def read_and_index_genome():
+def read_and_index_genome(genbank_file):
     '''
     Uses BioPython to parse the GBF and FASTA files, extract all their genes and
     features and store them in memory. Note that GBF includes many entries, for
@@ -260,28 +258,29 @@ def read_and_index_genome():
     features = defaultdict(list)
     scaffolds = {}
     scaffold_genes = defaultdict(set)
-    locus_tag_features = defaultdict(list)
+    gname_features = defaultdict(list)
     
-    print color("Reading genome from ", "green"), GBF_FILE
+    print color("Reading genome from ", "green"), genbank_file
     
     featureid = 1 # Used by sphinx to index locus names, desc, etc...
-    for e in SeqIO.parse(open(GBF_FILE, "rU"), "genbank"):
-        gbrecords[e.id] = e
-        scaffolds[e.id] = e.seq
+    for e in SeqIO.parse(open(genbank_file, "rU"), "genbank"):
+        e.chrname = e.id.lower()
+        gbrecords[e.chrname] = e
+        scaffolds[e.chrname] = e.seq
         
         # Index the position of every feature in the GBF locus entry by feature type
         for f in e.features:
             f.parent = e
             #genome_start, genome_end = genome_pos(f, scaffolds)
-            features[f.type].append([e.id, f.start, f.end, f, featureid])
+            features[f.type].append([e.chrname, int(f.location.start), int(f.location.end), f, featureid])
             if f.type == "gene":
-                scaffold_genes[e.id].add(f)
+                scaffold_genes[e.chrname].add(f)
             featureid += 1
-            if "locus_tag" in f.qualifiers:
-                gname = f.qualifiers["locus_tag"][0]
-                locus_tag_features[gname].append(f)
+            if GENEID_QUALIFIER in f.qualifiers:
+                gname = f.qualifiers[GENEID_QUALIFIER][0]
+                gname_features[gname].append(f)
                 
-    return gbrecords, features, scaffolds, scaffold_genes, locus_tag_features
+    return gbrecords, features, scaffolds, scaffold_genes, gname_features
     
 # THESE ARE WEB SERVICES PROVIDING JSON DATA TO THE GENOME VIEWER APPLICATION
     
@@ -370,9 +369,9 @@ def gene():
             for i in xrange(start, end, interval):
                 features = 0 
                 for g in all_genes:
-                    if g["start"] >= i and g["end"] <= i+interval:
+                    if g["start"] >= i and g["end"] <= i + interval:
                         features += 1
-                    elif g["start"] > i+interval:
+                    elif g["start"] > i + interval:
                         break
                 reg_intervals.append({"chromosome":ch,
                                       "start":i,
@@ -439,6 +438,17 @@ def search(q=None):
     return web_return(json.dumps(data), response)
     
 
+def sphinx_search(q):
+    cl = sphinx.SphinxClient()
+    cl.SetServer ('localhost', SPHINX_PORT)
+    cl.SetMatchMode(sphinx.SPH_MATCH_ALL)
+    cl.SetRankingMode(sphinx.SPH_RANK_SPH04)
+    cl.SetSortMode(sphinx.SPH_SORT_RELEVANCE)
+    cl.SetLimits (0, 50, 100)
+    res = cl.Query("*%s*" %q)
+    from pprint import pprint
+    pprint(res)
+    
 @post('/search/')
 def search(q=None):
     t1 = time.time()
@@ -446,7 +456,7 @@ def search(q=None):
     response.content_type = "application/json"
     seqid = request.POST.get('seqid', '')
     cl = sphinx.SphinxClient()
-    cl.SetServer ("localhost", SPHINX_PORT)
+    cl.SetServer ('localhost', SPHINX_PORT)
     cl.SetMatchMode(sphinx.SPH_MATCH_ALL)
     cl.SetRankingMode(sphinx.SPH_RANK_SPH04)
     cl.SetSortMode(sphinx.SPH_SORT_RELEVANCE)
@@ -484,7 +494,7 @@ def search(q=None):
                                            'start':start, 
                                            'end':end,
                                            'reg':region,
-                                           'other names':', '.join(LOCUS2NAMES.get(locus, [])),
+                                           'uniprot':', '.join(LOCUS2NAMES.get(locus, [])),
                                            })
                 n += 1
     print time.time() - t1, "search query" 
@@ -541,10 +551,10 @@ def get_exons(region, biotypes, exclude_transcripts=False):
     for fch, fstart, fend, gene, fid in FEATURES["gene"]:
         if str(fch) == ch and (between(fstart, start, end) or between(fend, start, end)):
             gstrand = parse_strand(gene.location.strand) 
-            gname = gene.qualifiers["locus_tag"][0]
+            gname = gene.qualifiers.get(GENEID_QUALIFIER, ["noName"])[0]
             genedict = {"id": gname,
                         "fid": fid,
-                        'other names':', '.join(LOCUS2NAMES.get(locus, [])),
+                        'uniprot':', '.join(LOCUS2NAMES.get(gname, [])),
                         "biotype": "gene",
                         #"pep_img": int(os.path.exists(os.path.join(PEP_IMGS_DIR, "svg", gname+".svg"))),
                         "featureType": "gene",
@@ -562,7 +572,7 @@ def get_exons(region, biotypes, exclude_transcripts=False):
         return []
     
     # populate transcripts
-    #exclude_biotypes = set(['repeat_region', 'misc_feature'])
+    exclude_biotypes = set(['repeat_region', 'misc_feature'])
     if not exclude_transcripts:
         for ftype in biotypes:
             if ftype in exclude_biotypes:
@@ -570,11 +580,8 @@ def get_exons(region, biotypes, exclude_transcripts=False):
             for fch, fstart, fend, prot, fid in FEATURES[ftype]:
                 if str(fch) == ch and (between(fstart, start, end) or between(fend, start, end)):
                     pstrand = parse_strand(gene.location.strand)
-                    try:
-                        gname = prot.qualifiers["locus_tag"][0]
-                    except KeyError:
-                        print ' not link to LOCUS_TAG for biotype', ftype
-                        continue
+
+                    gname = prot.qualifiers.get(GENEID_QUALIFIER, ["noname"])[0]
                     
                     if gname not in genes:
                         print gname, "gname not found!!!"
@@ -630,16 +637,18 @@ def get_exons(region, biotypes, exclude_transcripts=False):
 def iter_exons(f):
     if isinstance(f.location, CompoundLocation):
         for loc in f.location.parts:
-            substart = loc.start + f.parent.scaffold_start
-            subend = loc.end + f.parent.scaffold_start
-            seq = SCAFFOLDS[f.parent.id][substart:subend]
-            yield substart, subend, loc.strand, seq
+            yield int(loc.start), int(loc.end), loc.strand, loc.extract(f.parent.seq)
+            #substart = loc.start + f.parent.scaffold_start
+            #subend = loc.end + f.parent.scaffold_start
+            #seq = SCAFFOLDS[f.parent.id][substart:subend]
+            #yield substart, subend, loc.strand, seq
     else:
-        substart = f.location.start + f.parent.scaffold_start
-        subend = f.location.end + f.parent.scaffold_start
-        seq =  SCAFFOLDS[f.parent.id][substart:subend]
-        yield substart, subend, f.location.strand, seq
-
+        #substart = f.location.start + f.parent.scaffold_start
+        #subend = f.location.end + f.parent.scaffold_start
+        #seq =  SCAFFOLDS[f.parent.id][substart:subend]
+        #yield substart, subend, f.location.strand, seq
+        loc = f.location
+        yield int(loc.start), int(loc.end), loc.strand, loc.extract(f.parent.seq)
 
 def as_json(obj):
     return json.dumps({"response":obj})
@@ -671,14 +680,17 @@ def parse_strand(strand):
        
 def parse_region(region):
     ch, pos = map(strip, region.split(":"))
+    ch = ch.lower()
     start, end = map(int, pos.split("-"))
     return ch, start, end
     
 # COMMAND LINE RELATED OPTIONS
     
-        
 def start_sphinx():
     stop_sphinx()
+    os.chdir(BASEPATH)
+    tpl = open(SPHINX_CONFIG_FILE+".template").read()
+    open(SPHINX_CONFIG_FILE, 'w').write(tpl.replace('{{SPHINX_PORT}}', str(SPHINX_PORT)))
     print 'Starting sphinx sever... '
     s = system('cd %s && %s --config %s' %(BASEPATH, SEARCHD, SPHINX_CONFIG_FILE))
     if s:
@@ -705,7 +717,7 @@ def parse_gff(fname, ftype='unknown'):
     entries = []
     for e in GFF.parse(fname):
         for f in e.features:
-            entries.append([e.id, f.location.start, f.location.end, f])
+            entries.append([e.id.lower(), int(f.location.start), int(f.location.end), f])
     print len(entries), "entries read from GFF file", fname
     return entries
             
@@ -745,12 +757,15 @@ if __name__ == '__main__':
     parser.add_argument('--refresh', dest='refresh', action='store_true',
                         help=('Refreshes all databases and refresh cached data.'))
     
-    parser.add_argument('--host', dest='host', type=str, default='localhost'))
-    parser.add_argument('--port', dest='port', type=int, default=50001))
-    parser.add_argument('--sphinx_port', dest='sphinx_port', type=int, default=50002))
+    parser.add_argument('--host', dest='host', type=str, default='localhost')
+    parser.add_argument('--port', dest='port', type=int, default=50001)
+    parser.add_argument('--sphinx_port', dest='sphinx_port', type=int, default=50002)
     
     parser.add_argument('--search', dest='search', type=str,
                         help='test a query search')
+
+    parser.add_argument('--gname_qualifier', dest='gname_qualifier', type=str,
+                        default='locus_tag', help='feature qualifier used as gene ID')
 
     parser.add_argument('--daemon', dest='daemon', action = "store_true",
                         help='Start the service as a daemon')
@@ -761,25 +776,28 @@ if __name__ == '__main__':
                         help= 'A tab delimited file containing any type of id conversion (locus_tag [TAB] idname)'
                         'custom id names will be indexed and linked to the corresponding locus tag' )
 
-    parser.add_argument('--locus_annotation', dest='locus_annotation', type=str,
+    parser.add_argument('--locus_annotations', dest='annotations', type=str,
                         help= 'Allows to bind custom annotation entries to genbank entries and features.'
                         )
     parser.add_argument('--indexed_features', dest='indexed_features', type=set, nargs="+",
                         default=['gene', 'CDS', 'tRNA', 'rRNA', 'misc_RNA', 'repeat_region', 'misc_feature'])
                     
-    parser.add_argument('--gff3', dest='gff3', type=str, nargs="+", help=='Whatever extra locus information you want to show on top of the base genbank file.')
+    parser.add_argument('--gff3', dest='gff3', type=str, nargs="+",
+                        help='Whatever extra locus information you want to show on top of the base genbank file.')
     
     args = parser.parse_args()
 
     if args.search:
-        search(args.search)
+        sphinx_search(args.search)
         sys.exit(0)
    
     # setup network info
     HOST = args.host
     WEBSERVICE_PORT = args.port
     SPHINX_PORT = args.sphinx_port
-
+    
+    GENEID_QUALIFIER = args.gname_qualifier
+    
     INDEXED_FEATURES = args.indexed_features
     # The following data (parsed as GBF entry qualifiers) are not retrieved by
     # web-services 
@@ -802,7 +820,7 @@ if __name__ == '__main__':
         if args.refresh:
             #(GBRECORDS, FEATURES, SCAFFOLDS, SCAFFOLD_GENES, GENE2EXPR,
             # GENE2DESC) = refresh_all_dbs()
-            GBRECORDS, FEATURES, SCAFFOLDS, SCAFFOLD_GENES, LOCUS_TAG_FEATURES = read_and_index_genome()
+            GBRECORDS, FEATURES, SCAFFOLDS, SCAFFOLD_GENES, GNAME_FEATURES = read_and_index_genome(args.genbank)
 
             LOCUS2NAMES = {}
             if args.id_translation:
@@ -811,8 +829,8 @@ if __name__ == '__main__':
             if args.annotations:
                 # feature_type locus_tag annotation_key annotation_value annotation_type (text, img)
                 for line in open(args.annotations):
-                    ftype, locus_tag, akey, avalue, atype = map(strip, line.strip().split('\t'))
-                    for f in LOCUS_TAG_FEATURES.get(locus_tag, []):
+                    ftype, gname, akey, avalue, atype = map(strip, line.strip().split('\t'))
+                    for f in GNAME_FEATURES.get(gname, []):
                         if not ftype or ftype == f.type:
                             if not hasattr(f, "annotations"):
                                 f.annotations = []
@@ -822,7 +840,7 @@ if __name__ == '__main__':
             refresh_blast_dbs(SCAFFOLDS, ID2FEATURE)
             
             # Saves the database for faster loading in the fugture
-            cPickle.dump([GBRECORDS, FEATURES, SCAFFOLDS, SCAFFOLD_GENES, INDEX2REGION, INDEX2DESC, ID2FEATURE, LOCUS2NAMES, LOCUS_TAG_FEATURES],
+            cPickle.dump([GBRECORDS, FEATURES, SCAFFOLDS, SCAFFOLD_GENES, INDEX2REGION, INDEX2DESC, ID2FEATURE, LOCUS2NAMES, GNAME_FEATURES],
                          open(DBFILE, "wb"))
 
         else:
@@ -846,17 +864,31 @@ if __name__ == '__main__':
         # port. This call will try to stop any other running instance, but it might
         # fail if the service was started from a different user or directory. Just
         # 'pkill searchd' to kill any running process.
-        start_sphinx()
         
-        js = ['var scaffolds = [%s];\n' %(','.join(map(lambda x: '"%s"'%x, sorted_sca)))]
+
+        default_chr = sorted_sca[0]
+        default = list(SCAFFOLD_GENES[default_chr])[0]
+        default_chunksize = max([len(seq) for seq in SCAFFOLDS.values()])
+        
+                  
+        js = ['var CT_HOST="http://%s:%s";\n' %(HOST, WEBSERVICE_PORT)]
+        js.append('var default_chr="%s"; var default_start=%d; default_end=%d;' %\
+                  (default_chr, int(default.location.start), int(default.location.end)))
+        js.append('var default_species="Custom"; var default_assembly="Assembly xx";')
+        js.append('var default_chunksize=%d;' %default_chunksize)
+        js.append('var scaffolds = [%s];\n' %(','.join(map(lambda x: '"%s"'%x, sorted_sca))))
         js.append('var scaffolds_data = [')
         for sca_name in sorted_sca:
             size = len(SCAFFOLDS[sca_name])
             ngenes = len(SCAFFOLD_GENES[sca_name])
             js.append('{name:"%s",  cytobands: [], isCircular: 0, start: 1, end: %d, size: %d, numberGenes: %d },' \
                           %(sca_name, size, size, ngenes))
+            print size, ngenes
+
+            
         js.append('];')
         open(JS_VARS_FILE, "w").write("/* Auto-generated file. Do not modify manually. */\n" + ' '.join(js))
+        print '\n'.join(js)
         print color("Serving sequences and annotations for the following scaffolds:", 'green')
         print '\n'.join(map(lambda x: '  % 20s (%d sites, %d genes)'%(x, len(SCAFFOLDS[x]), len(SCAFFOLD_GENES[x])), sorted_sca))
         print color("The following annotations were found:", 'green')
@@ -864,6 +896,8 @@ if __name__ == '__main__':
         print color("Additional annotations:", 'green')
         #print "  genes with expression data: ", len(GENE2EXPR)
         #print "  genes with description data:", len(GENE2DESC)
+
+        start_sphinx()
         
         if args.daemon:
             # create logger with 'spam_application'

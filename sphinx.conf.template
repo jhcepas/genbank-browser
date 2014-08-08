@@ -1,7 +1,7 @@
 source tsv_annotations
 {
    type = tsvpipe
-   tsvpipe_command = cat cache/ct_annotations.tab
+   tsvpipe_command = cat cache/annotations.tab
    tsvpipe_field = locus_name
    tsvpipe_field = uniprot
    tsvpipe_field = desc
@@ -10,7 +10,7 @@ source tsv_annotations
 index annotations
 {
     source              = tsv_annotations
-    path                = sphinx_indexes/ct_index
+    path                = sphinx_indexes/gb_index
     docinfo             = extern
     morphology          = none
     stopwords           =
@@ -27,10 +27,10 @@ indexer
 
 searchd
 {
-    port = 9001
+    listen              = {{SPHINX_PORT}}
     log                 = ./log/searchd.log
     query_log           = ./log/query.log
-    binlog_path = # disable logging
+    binlog_path         = # disable logging
     read_timeout        = 5
     max_children        = 100
     pid_file            = ./searchd.pid

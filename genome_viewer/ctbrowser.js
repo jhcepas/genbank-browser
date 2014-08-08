@@ -1,4 +1,9 @@
-CT_HOST = "http://ctbrowser.embl.de";
+/* 
+CT_HOST variable will be defined in the auto-generated config js file. 
+YOu can overwrite it here:
+
+var CT_HOST = 'http://localhost';
+*/
 
 var url = $.url();
 var qregion = url.param('r');
@@ -388,9 +393,9 @@ var run = function () {
         });
     } else {
         var region = new Region({
-            chromosome: "scf7180000011816",
-            start: 379031,
-            end: 404027,
+            chromosome: default_chr, 
+            start: default_start,
+            end: default_end,
         });
     }
     var availableSpecies = {
@@ -400,12 +405,12 @@ var run = function () {
                 "text": "Chaetomium",
                 "items": [
                     {
-                        "text": "Chaetomium thermophilum v2",
-                        "assembly": "EMBL v2.0",
+                        "text": default_species,
+                        "assembly": default_assembly,
                         "region": {
-                            "chromosome": "scf7180000011816",
-                            "start": 379031,
-                            "end": 404027,
+                            "chromosome": default_chr,
+                            "start": default_start,
+                            "end": default_end,
                         },
                         "chromosomes": scaffolds,
                         "url": url,
@@ -505,7 +510,7 @@ var run = function () {
             },
             species: genomeViewer.species,
             cacheConfig: {
-                chunkSize: 500000
+                chunkSize: default_chunksize
             }
         })
     });
@@ -525,7 +530,7 @@ var run = function () {
             species: genomeViewer.species,
             featureCache: {
                 gzip: true,
-                chunkSize: 1000
+                chunkSize: default_chunksize
             }
         })
     });
@@ -548,7 +553,8 @@ var run = function () {
             },
             species: genomeViewer.species,
             cacheConfig: {
-                chunkSize: 500000
+
+                chunkSize: default_chunksize
             }
         })
     });
@@ -569,8 +575,8 @@ var run = function () {
 
     this.repeats = new FeatureTrack({
         title: 'Repeat Regions',
-        maxLabelRegionSize: 2000000000,
-        minTranscriptRegionSize: 100000,
+        maxLabelRegionSize: 999999999999,
+        minTranscriptRegionSize: 10,
         histogramMaxFreqValue: 1,
         height: 400,
 
@@ -584,7 +590,7 @@ var run = function () {
 
             species: genomeViewer.species,
             cacheConfig: {
-                chunkSize: 500000
+                chunkSize: default_chunksize
             }
         })
     });
@@ -598,8 +604,8 @@ var run = function () {
 
     var geneOver = new FeatureTrack({
         //title: 'Region overview',
-        maxLabelRegionSize: 200000000,
-        minTranscriptRegionSize: 100000,
+        maxLabelRegionSize: 999999999999,
+        minTranscriptRegionSize: 1,
         //histogramZoom: 0,
         histogramMaxFreqValue: 1,
         //labelZoom: 40,
@@ -617,7 +623,7 @@ var run = function () {
             },
             species: genomeViewer.species,
             cacheConfig: {
-                chunkSize: 500000
+                chunkSize: default_chunksize
             }
         })
     });
