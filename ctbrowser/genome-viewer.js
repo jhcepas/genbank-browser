@@ -31910,7 +31910,8 @@ GeneRenderer.prototype.render = function (features, args) {
 
 
                         var transcriptGroup = SVG.addChild(args.svgCanvasFeatures, 'g', {
-                            "widgetId": transcript[infoWidgetId]
+                            "widgetId": transcript[infoWidgetId],
+                            "transcriptIndex": i
                         });
 
 
@@ -31942,7 +31943,8 @@ GeneRenderer.prototype.render = function (features, args) {
                         });
                         $(transcriptGroup).click(function (event) {
                             var query = this.getAttribute("widgetId");
-                            _this.trigger('feature:click', {query: query, feature: transcript, featureType: 'transcript', clickEvent: event});
+                            var tid = this.getAttribute("transcriptIndex");
+                            _this.trigger('feature:click', {query: query, feature: feature.transcripts[tid], featureType: 'transcript', clickEvent: event});
                         });
 
                         //paint exons
