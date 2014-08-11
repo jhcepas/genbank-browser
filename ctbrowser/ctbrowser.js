@@ -738,7 +738,7 @@ function go_to_gene(genename) {
 }
 
 function show_gene_info(gene) {
-    console.log(gene.feature.id);
+    console.log(gene.feature.id, gene.feature.fid);
 
     $('#speciesButton').popover({
         html: true,

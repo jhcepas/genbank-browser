@@ -35,7 +35,7 @@ except ImportError:
     print "Sphinx API could not be imported. Searches will be disabled!"
     
 # Blast DB will be based/upgraded based on these fasta files
-FASTA_FILES = [os.path.join(BASEPATH, "data/v2/C_thermophilum.scaffolds.v2.fa")]
+# FASTA_FILES = [os.path.join(BASEPATH, "data/v2/C_thermophilum.scaffolds.v2.fa")]
 
 # Annotations CDS, rRNA, tRNA and misc_RNA are extracted from the GBF file
 GBF_FILE = os.path.join(BASEPATH, "data/v2/C_thermophilum.annotation.v2.gbf")
@@ -198,13 +198,13 @@ def read_and_index_genome():
     scaffolds = {}
     scaffold_genes = defaultdict(set)
     # Reads genome assembly (Scaffolds) 
-    for fasta_file in FASTA_FILES:
-        print color("Reading assembly sequences from", "green"), fasta_file
-        for sca in SeqIO.parse(open(fasta_file, "rU"), "fasta"):
-            if sca.name in scaffolds:
-                raise ValueError("Duplicated scaffold %s" %sca.name)
-            scaffolds[sca.name] = sca.seq
-    print len(scaffolds), "total scaffolds"
+    #for fasta_file in FASTA_FILES:
+    #    print color("Reading assembly sequences from", "green"), fasta_file
+    #    for sca in SeqIO.parse(open(fasta_file, "rU"), "fasta"):
+    #        if sca.name in scaffolds:
+    #            raise ValueError("Duplicated scaffold %s" %sca.name)
+    #        scaffolds[sca.name] = sca.seq
+    #print len(scaffolds), "total scaffolds"
     
     # Map genebank regions and features into the genome assembly. Every GBF
     # entry should find a match in a scaffold.
@@ -213,6 +213,7 @@ def read_and_index_genome():
     for e in SeqIO.parse(open(GBF_FILE, "rU"), "genbank"):
         gbrecords[e.id] = e
         startpos = None
+        scaffolds[e.id] = e.seq
         
         # Find position of this region in scaffolds
         for sca, seq in scaffolds.iteritems():
